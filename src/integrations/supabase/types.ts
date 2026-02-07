@@ -407,6 +407,7 @@ export type Database = {
           address: string | null
           email: string | null
           id: string
+          instagram: string | null
           phone: string | null
           store_name: string
           updated_at: string
@@ -416,6 +417,7 @@ export type Database = {
           address?: string | null
           email?: string | null
           id?: string
+          instagram?: string | null
           phone?: string | null
           store_name?: string
           updated_at?: string
@@ -425,6 +427,7 @@ export type Database = {
           address?: string | null
           email?: string | null
           id?: string
+          instagram?: string | null
           phone?: string | null
           store_name?: string
           updated_at?: string
