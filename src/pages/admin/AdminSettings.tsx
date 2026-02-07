@@ -8,14 +8,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export default function AdminSettings() {
-  const [store, setStore] = useState({ store_name: '', phone: '', whatsapp: '', email: '', address: '', instagram: '' });
+  const [store, setStore] = useState({ store_name: '', phone: '', whatsapp: '', email: '', address: '' });
   const [delivery, setDelivery] = useState({ base_charge: '', free_delivery_above: '' });
   const [storeId, setStoreId] = useState('');
   const [deliveryId, setDeliveryId] = useState('');
 
   useEffect(() => {
     supabase.from('store_settings').select('*').limit(1).maybeSingle().then(({ data }) => {
-      if (data) { setStore({ store_name: data.store_name, phone: data.phone || '', whatsapp: data.whatsapp || '', email: data.email || '', address: data.address || '', instagram: data.instagram || '' }); setStoreId(data.id); }
+      if (data) { setStore({ store_name: data.store_name, phone: data.phone || '', whatsapp: data.whatsapp || '', email: data.email || '', address: data.address || '' }); setStoreId(data.id); }
     });
     supabase.from('delivery_settings').select('*').eq('is_active', true).maybeSingle().then(({ data }) => {
       if (data) { setDelivery({ base_charge: String(data.base_charge), free_delivery_above: data.free_delivery_above ? String(data.free_delivery_above) : '' }); setDeliveryId(data.id); }
@@ -47,7 +47,6 @@ export default function AdminSettings() {
           </div>
           <div className="space-y-2"><Label>Email</Label><Input value={store.email} onChange={e => setStore(s => ({ ...s, email: e.target.value }))} /></div>
           <div className="space-y-2"><Label>Address</Label><Input value={store.address} onChange={e => setStore(s => ({ ...s, address: e.target.value }))} /></div>
-          <div className="space-y-2"><Label>Instagram URL</Label><Input value={store.instagram} onChange={e => setStore(s => ({ ...s, instagram: e.target.value }))} placeholder="https://www.instagram.com/..." /></div>
           <Button onClick={saveStore}><Save className="mr-2 h-4 w-4" /> Save Store Settings</Button>
         </CardContent>
       </Card>

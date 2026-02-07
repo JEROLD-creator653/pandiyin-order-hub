@@ -1,23 +1,7 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Leaf, Mail, Phone, MapPin, Instagram } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Leaf, Mail, Phone, MapPin } from 'lucide-react';
 
 export default function Footer() {
-  const [store, setStore] = useState({ phone: '+91 98765 43210', email: 'hello@pandiyin.com', address: 'Madurai, Tamil Nadu', instagram: '' });
-
-  useEffect(() => {
-    supabase.from('store_settings').select('*').limit(1).maybeSingle().then(({ data }) => {
-      if (data) {
-        setStore({
-          phone: data.phone || '+91 98765 43210',
-          email: data.email || 'hello@pandiyin.com',
-          address: data.address || 'Madurai, Tamil Nadu',
-          instagram: data.instagram || ''
-        });
-      }
-    });
-  }, []);
   return (
     <footer className="bg-foreground text-primary-foreground pt-12 pb-6">
       <div className="container mx-auto px-4">
@@ -49,25 +33,9 @@ export default function Footer() {
           <div>
             <h4 className="font-display font-semibold mb-4">Contact</h4>
             <div className="flex flex-col gap-3 text-sm opacity-80">
-              <a href={`tel:${store.phone.replace(/\s/g, '')}`} className="flex items-center gap-2 hover:opacity-100 transition-opacity cursor-pointer">
-                <Phone className="h-4 w-4" /> {store.phone}
-              </a>
-              <a href={`mailto:${store.email}`} className="flex items-center gap-2 hover:opacity-100 transition-opacity cursor-pointer">
-                <Mail className="h-4 w-4" /> {store.email}
-              </a>
-              <a 
-                href={`https://www.google.com/maps/search/${encodeURIComponent(store.address)}`} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="flex items-center gap-2 hover:opacity-100 transition-opacity cursor-pointer"
-              >
-                <MapPin className="h-4 w-4" /> {store.address}
-              </a>
-              {store.instagram && (
-                <a href={store.instagram} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-100 transition-opacity cursor-pointer">
-                  <Instagram className="h-4 w-4" /> Instagram
-                </a>
-              )}
+              <span className="flex items-center gap-2"><Phone className="h-4 w-4" /> +91 98765 43210</span>
+              <span className="flex items-center gap-2"><Mail className="h-4 w-4" /> hello@pandiyin.com</span>
+              <span className="flex items-center gap-2"><MapPin className="h-4 w-4" /> Madurai, Tamil Nadu</span>
             </div>
           </div>
         </div>
