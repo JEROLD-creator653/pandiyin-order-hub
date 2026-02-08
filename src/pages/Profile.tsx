@@ -66,7 +66,7 @@ export default function Profile() {
               </div>
               <div className="space-y-1">
                 <Label className="text-sm">Phone</Label>
-                <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91 9876543210" />
+                <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Enter your Mobile Number" />
               </div>
             </div>
             <Button onClick={saveProfile} disabled={saving} className="gap-2">

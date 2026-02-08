@@ -24,6 +24,18 @@ export default function Index() {
   const { items: cartItems } = useCart();
 
   useEffect(() => {
+    const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    if (link) {
+      link.href = '/favicon.ico';
+    } else {
+      const newLink = document.createElement('link');
+      newLink.rel = 'icon';
+      newLink.href = '/favicon.ico';
+      document.head.appendChild(newLink);
+    }
+  }, []);
+
+  useEffect(() => {
     supabase.from('products').select('*, categories(name)').eq('is_featured', true).eq('is_available', true).limit(8).then(({ data }) => setFeatured(data || []));
     supabase.from('banners').select('*').eq('is_active', true).order('sort_order').then(({ data }) => setBanners(data || []));
   }, []);
