@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import AddressManager from '@/components/AddressManager';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -22,7 +23,8 @@ export default function Checkout() {
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [deliveryCharge, setDeliveryCharge] = useState(0);
-  const [address, setAddress] = useState({ full_name: '', phone: '', address_line1: '', address_line2: '', city: 'Madurai', pincode: '' });
+  const [selectedAddress, setSelectedAddress] = useState<any>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) { navigate('/auth'); return; }
@@ -31,9 +33,6 @@ export default function Checkout() {
       if (data) {
         setDeliveryCharge(total >= (data.free_delivery_above || 0) ? 0 : Number(data.base_charge));
       }
-    });
-    supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle().then(({ data }) => {
-      if (data) setAddress(a => ({ ...a, full_name: data.full_name || '', phone: data.phone || '' }));
     });
   }, [user, items.length]);
 
@@ -50,8 +49,8 @@ export default function Checkout() {
   };
 
   const placeOrder = async () => {
-    if (!address.full_name || !address.phone || !address.address_line1 || !address.pincode) {
-      toast({ title: 'Please fill all address fields', variant: 'destructive' }); return;
+    if (!selectedAddress || !selectedAddress.full_name || !selectedAddress.phone || !selectedAddress.address_line1 || !selectedAddress.pincode) {
+      toast({ title: 'Please select or add a delivery address', variant: 'destructive' }); return;
     }
     setLoading(true);
     try {
@@ -66,7 +65,7 @@ export default function Checkout() {
         coupon_code: couponCode || null,
         payment_method: paymentMethod as any,
         payment_status: paymentMethod === 'cod' ? 'pending' : 'pending',
-        delivery_address: address,
+        delivery_address: selectedAddress,
       }).select().single();
       if (error) throw error;
 
@@ -98,17 +97,15 @@ export default function Checkout() {
         <div className="md:col-span-3 space-y-6">
           <Card>
             <CardHeader><CardTitle className="text-lg">Delivery Address</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Full Name</Label><Input value={address.full_name} onChange={e => setAddress(a => ({ ...a, full_name: e.target.value }))} required /></div>
-                <div className="space-y-2"><Label>Phone</Label><Input value={address.phone} onChange={e => setAddress(a => ({ ...a, phone: e.target.value }))} required /></div>
-              </div>
-              <div className="space-y-2"><Label>Address Line 1</Label><Input value={address.address_line1} onChange={e => setAddress(a => ({ ...a, address_line1: e.target.value }))} required /></div>
-              <div className="space-y-2"><Label>Address Line 2</Label><Input value={address.address_line2} onChange={e => setAddress(a => ({ ...a, address_line2: e.target.value }))} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>City</Label><Input value={address.city} onChange={e => setAddress(a => ({ ...a, city: e.target.value }))} /></div>
-                <div className="space-y-2"><Label>Pincode</Label><Input value={address.pincode} onChange={e => setAddress(a => ({ ...a, pincode: e.target.value }))} required /></div>
-              </div>
+            <CardContent>
+              <AddressManager
+                selectable
+                selectedId={selectedAddressId}
+                onSelect={(addr) => {
+                  setSelectedAddress(addr);
+                  // We track selection visually via the address content
+                }}
+              />
             </CardContent>
           </Card>
 

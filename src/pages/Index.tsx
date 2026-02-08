@@ -7,11 +7,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Index() {
-  const [categories, setCategories] = useState<any[]>([]);
   const [featured, setFeatured] = useState<any[]>([]);
 
   useEffect(() => {
-    supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories(data || []));
     supabase.from('products').select('*, categories(name)').eq('is_featured', true).eq('is_available', true).limit(8).then(({ data }) => setFeatured(data || []));
   }, []);
 
@@ -66,31 +64,6 @@ export default function Index() {
           ))}
         </div>
       </section>
-
-      {/* Categories */}
-      {categories.length > 0 && (
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-display font-bold text-center mb-10">Shop by Category</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {categories.map((cat, i) => (
-                <motion.div key={cat.id} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
-                  <Link to={`/products?category=${encodeURIComponent(cat.name)}`}>
-                    <Card className="hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer text-center group">
-                      <CardContent className="p-6">
-                        <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                          <Leaf className="h-7 w-7" />
-                        </div>
-                        <h3 className="font-semibold text-sm font-sans">{cat.name}</h3>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
 
       {/* Featured Products */}
       {featured.length > 0 && (
