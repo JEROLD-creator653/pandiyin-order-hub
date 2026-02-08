@@ -1,19 +1,88 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Leaf, Truck, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Leaf, Truck, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Index() {
   const [categories, setCategories] = useState<any[]>([]);
   const [featured, setFeatured] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+  const isScrollingRef = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories(data || []));
     supabase.from('products').select('*, categories(name)').eq('is_featured', true).eq('is_available', true).limit(8).then(({ data }) => setFeatured(data || []));
+    supabase.from('banners').select('*').eq('is_active', true).order('sort_order').then(({ data }) => setBanners(data || []));
   }, []);
+
+  const handleImageLoad = useCallback((bannerId: string) => {
+    setLoadedImages(prev => ({ ...prev, [bannerId]: true }));
+  }, []);
+
+  // Auto-rotate banners every 5 seconds
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [banners.length]);
+
+  const nextBanner = useCallback(() => {
+    if (isScrollingRef.current || !banners.length) return;
+    isScrollingRef.current = true;
+    
+    setCurrentBannerIndex((prev) => (prev + 1) % (banners.length || 1));
+    
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 300);
+  }, [banners.length]);
+
+  const prevBanner = useCallback(() => {
+    if (isScrollingRef.current || !banners.length) return;
+    isScrollingRef.current = true;
+    
+    setCurrentBannerIndex((prev) => (prev - 1 + (banners.length || 1)) % (banners.length || 1));
+    
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      isScrollingRef.current = false;
+    }, 300);
+  }, [banners.length]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevBanner();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        nextBanner();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [nextBanner, prevBanner]);
 
   return (
     <>
@@ -47,6 +116,95 @@ export default function Index() {
         </div>
         <div className="absolute -bottom-1 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
       </section>
+
+      {/* Professional Banner Carousel */}
+      {banners.length > 0 && (
+        <section className="relative bg-background overflow-hidden group">
+          <div className="relative h-48 md:h-72 lg:h-96 w-full">
+            {banners.map((banner, index) => (
+              <motion.div
+                key={banner.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: index === currentBannerIndex ? 1 : 0 }}
+                transition={{ duration: 0.8 }}
+                className="absolute inset-0"
+                style={{ pointerEvents: index === currentBannerIndex ? 'auto' : 'none' }}
+              >
+                {/* Loading Skeleton */}
+                {!loadedImages[banner.id] && (
+                  <Skeleton className="absolute inset-0 w-full h-full" />
+                )}
+                
+                {banner.link_url ? (
+                  <Link to={banner.link_url} className="block w-full h-full">
+                    <div className="relative w-full h-full">
+                      <img 
+                        src={banner.image_url} 
+                        alt={banner.title} 
+                        onLoad={() => handleImageLoad(banner.id)}
+                        className={`w-full h-full object-cover transition-opacity duration-500 ${loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'}`}
+                      />
+                      <div className="absolute inset-0 bg-black/20" />
+                    </div>
+                  </Link>
+                ) : (
+                  <div className="relative w-full h-full">
+                    <img 
+                      src={banner.image_url} 
+                      alt={banner.title} 
+                      onLoad={() => handleImageLoad(banner.id)}
+                      className={`w-full h-full object-cover transition-opacity duration-500 ${loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'}`}
+                    />
+                    <div className="absolute inset-0 bg-black/20" />
+                  </div>
+                )}
+              </motion.div>
+            ))}
+            
+            {/* Navigation Arrows - Show on Hover */}
+            {banners.length > 1 && (
+              <>
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <button
+                    onClick={prevBanner}
+                    className="bg-white/80 hover:bg-white text-black p-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 active:scale-95"
+                    aria-label="Previous banner"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                </div>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <button
+                    onClick={nextBanner}
+                    className="bg-white/80 hover:bg-white text-black p-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 active:scale-95"
+                    aria-label="Next banner"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Dot Indicators */}
+            {banners.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+                {banners.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentBannerIndex(index)}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      index === currentBannerIndex 
+                        ? 'bg-white w-8' 
+                        : 'bg-white/50 w-2 hover:bg-white/70'
+                    }`}
+                    aria-label={`Go to banner ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Trust Badges */}
       <section className="py-12 border-b">

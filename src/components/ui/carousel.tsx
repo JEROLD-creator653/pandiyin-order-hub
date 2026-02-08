@@ -49,6 +49,8 @@ const Carousel = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEl
     );
     const [canScrollPrev, setCanScrollPrev] = React.useState(false);
     const [canScrollNext, setCanScrollNext] = React.useState(false);
+    const scrollTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+    const isScrollingRef = React.useRef(false);
 
     const onSelect = React.useCallback((api: CarouselApi) => {
       if (!api) {
@@ -60,11 +62,31 @@ const Carousel = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEl
     }, []);
 
     const scrollPrev = React.useCallback(() => {
+      if (isScrollingRef.current) return;
+      isScrollingRef.current = true;
+      
       api?.scrollPrev();
+      
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      scrollTimeoutRef.current = setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 300);
     }, [api]);
 
     const scrollNext = React.useCallback(() => {
+      if (isScrollingRef.current) return;
+      isScrollingRef.current = true;
+      
       api?.scrollNext();
+      
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      scrollTimeoutRef.current = setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 300);
     }, [api]);
 
     const handleKeyDown = React.useCallback(
@@ -99,6 +121,9 @@ const Carousel = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEl
 
       return () => {
         api?.off("select", onSelect);
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
       };
     }, [api, onSelect]);
 
