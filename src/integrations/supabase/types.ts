@@ -60,32 +60,38 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_path: string | null
           image_url: string
           is_active: boolean
           link_url: string | null
           sort_order: number
           subtitle: string | null
           title: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
+          image_path?: string | null
           image_url?: string
           is_active?: boolean
           link_url?: string | null
           sort_order?: number
           subtitle?: string | null
           title?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
+          image_path?: string | null
           image_url?: string
           is_active?: boolean
           link_url?: string | null
           sort_order?: number
           subtitle?: string | null
           title?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -320,6 +326,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          image_path: string | null
           image_url: string | null
           images: string[] | null
           is_available: boolean
@@ -329,6 +336,7 @@ export type Database = {
           stock_quantity: number
           unit: string | null
           updated_at: string
+          user_id: string | null
           weight: string | null
         }
         Insert: {
@@ -337,6 +345,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_path?: string | null
           image_url?: string | null
           images?: string[] | null
           is_available?: boolean
@@ -346,6 +355,7 @@ export type Database = {
           stock_quantity?: number
           unit?: string | null
           updated_at?: string
+          user_id?: string | null
           weight?: string | null
         }
         Update: {
@@ -354,6 +364,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          image_path?: string | null
           image_url?: string | null
           images?: string[] | null
           is_available?: boolean
@@ -363,6 +374,7 @@ export type Database = {
           stock_quantity?: number
           unit?: string | null
           updated_at?: string
+          user_id?: string | null
           weight?: string | null
         }
         Relationships: [
