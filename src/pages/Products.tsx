@@ -122,7 +122,7 @@ export default function Products() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <h1 className="text-3xl font-display font-bold">All Products</h1>
-        <form onSubmit={e => { e.preventDefault(); setSearchParams(s => { if (searchInput) s.set('search', searchInput); else s.delete('search'); return s; }); }} className="relative max-w-sm w-full">
+        <form onSubmit={e => { e.preventDefault(); setSearchParams(s => { if (searchInput) s.set('search', searchInput); else s.delete('search'); return s; }); }} className="relative max-w-sm w-full md:hidden">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search products..." value={searchInput} onChange={e => setSearchInput(e.target.value)} className="pl-9" />
         </form>

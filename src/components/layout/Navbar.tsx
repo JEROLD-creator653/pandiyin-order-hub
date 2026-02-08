@@ -51,7 +51,7 @@ export default function Navbar() {
     { label: 'About', to: '/about' },
   ];
 
-  // Only apply transparency logic on homepage
+  // Only apply transparency logic on homepage and desktop
   const isActive = isHomePage ? (isScrolled || isHovered || mobileOpen) : true;
 
   return (
@@ -60,7 +60,7 @@ export default function Navbar() {
         isHomePage
           ? (isActive
               ? 'bg-white/95 backdrop-blur-md border-b border-black/5 shadow-sm'
-              : 'bg-transparent')
+              : 'md:bg-transparent bg-white/95 md:border-0 border-b border-black/5')
           : 'bg-white border-b border-black/5 shadow-sm'
       }`}
       onMouseEnter={() => isHomePage && setIsHovered(true)}
@@ -69,12 +69,12 @@ export default function Navbar() {
       <div className="container mx-auto px-4 flex items-center justify-between h-16 transition-colors duration-300">
         <Link to="/" className="flex items-center gap-2 transition-colors duration-300">
           <span className={`text-xl font-display font-bold transition-colors duration-300 ${
-            (isHomePage && !isActive) ? 'text-white drop-shadow-lg' : 'text-primary'
+            (isHomePage && !isActive) ? 'md:text-white text-primary md:drop-shadow-lg' : 'text-primary'
           }`}>
             PANDIYIN
           </span>
           <span className={`hidden sm:inline text-xs font-sans transition-colors duration-300 ${
-            (isHomePage && !isActive) ? 'text-white/80 drop-shadow' : 'text-muted-foreground'
+            (isHomePage && !isActive) ? 'md:text-white/80 text-muted-foreground md:drop-shadow' : 'text-muted-foreground'
           }`}>
             Nature In Pack
           </span>
@@ -87,7 +87,7 @@ export default function Navbar() {
               to={l.to}
               className={`text-sm font-medium transition-colors duration-300 ${
                 (isHomePage && !isActive)
-                  ? 'text-white/90 hover:text-white drop-shadow'
+                  ? 'md:text-white/90 md:hover:text-white text-foreground/70 hover:text-primary md:drop-shadow'
                   : 'text-foreground/70 hover:text-primary'
               }`}
             >
@@ -99,7 +99,7 @@ export default function Navbar() {
         <form onSubmit={handleSearch} className="hidden md:flex items-center max-w-xs">
           <div className="relative">
             <Search className={`absolute left-2.5 top-2.5 h-4 w-4 transition-colors duration-300 ${
-              (isHomePage && !isActive) ? 'text-white/60' : 'text-muted-foreground'
+              (isHomePage && !isActive) ? 'md:text-white/60 text-muted-foreground' : 'text-muted-foreground'
             }`} />
             <Input
               placeholder="Search products..."
@@ -107,7 +107,7 @@ export default function Navbar() {
               onChange={e => setSearchQuery(e.target.value)}
               className={`pl-9 h-9 w-48 lg:w-64 transition-all duration-300 ${
                 (isHomePage && !isActive)
-                  ? 'bg-white/20 text-white placeholder:text-white/50 border-white/20'
+                  ? 'md:bg-white/20 md:text-white md:placeholder:text-white/50 md:border-white/20 bg-secondary/50 text-foreground placeholder:text-muted-foreground/60'
                   : 'bg-secondary/50 text-foreground placeholder:text-muted-foreground/60'
               }`}
             />
@@ -120,7 +120,7 @@ export default function Navbar() {
               variant="ghost"
               size="icon"
               className={`transition-colors duration-300 ${
-                (isHomePage && !isActive) ? 'text-white hover:bg-white/10' : 'text-foreground hover:bg-secondary'
+                (isHomePage && !isActive) ? 'md:text-white md:hover:bg-white/10 text-foreground hover:bg-secondary' : 'text-foreground hover:bg-secondary'
               }`}
             >
               <ShoppingCart className="h-5 w-5" />
@@ -139,7 +139,7 @@ export default function Navbar() {
                   variant="ghost"
                   size="icon"
                   className={`transition-colors duration-300 ${
-                    (isHomePage && !isActive) ? 'text-white hover:bg-white/10' : 'text-foreground hover:bg-secondary'
+                    (isHomePage && !isActive) ? 'md:text-white md:hover:bg-white/10 text-foreground hover:bg-secondary' : 'text-foreground hover:bg-secondary'
                   }`}
                 >
                   <User className="h-5 w-5" />
@@ -169,7 +169,7 @@ export default function Navbar() {
               size="sm"
               onClick={() => navigate('/auth')}
               className={`transition-colors duration-300 ${
-                (isHomePage && !isActive) ? 'bg-white text-primary hover:bg-white/90' : ''
+                (isHomePage && !isActive) ? 'md:bg-white md:text-primary md:hover:bg-white/90' : ''
               }`}
             >
               Sign In
@@ -182,7 +182,7 @@ export default function Navbar() {
                 variant="ghost"
                 size="icon"
                 className={`transition-colors duration-300 ${
-                  (isHomePage && !isActive) ? 'text-white hover:bg-white/10' : 'text-foreground hover:bg-secondary'
+                  (isHomePage && !isActive) ? 'md:text-white md:hover:bg-white/10 text-foreground hover:bg-secondary' : 'text-foreground hover:bg-secondary'
                 }`}
               >
                 <Menu className="h-5 w-5" />

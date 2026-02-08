@@ -1,76 +1,145 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Leaf, Shield, FlaskConical, BadgeCheck, Star } from 'lucide-react';
-
 const badges = [
-  { icon: FlaskConical, text: '0% Preservatives', color: 'text-green-600' },
-  { icon: Shield, text: 'Zero Chemicals', color: 'text-emerald-600' },
-  { icon: Leaf, text: '100% Natural', color: 'text-green-700' },
-  { icon: BadgeCheck, text: 'FSSAI Approved', color: 'text-teal-600' },
-  { icon: Star, text: 'Quality Assured', color: 'text-green-600' },
+  { logo: '/Quality_Assured.png', text: 'Quality Assured' },
+  { logo: '/zero_preservatives.png', text: '0% Preservatives' },
+  { logo: '/zero_chemicals.png', text: 'Zero Chemicals' },
+  { logo: '/Natural.png', text: '100% Natural' },
+  { logo: '/FSSAI.png', text: 'FSSAI Approved' },
 ];
 
 export default function TrustBadges() {
-  const [isPaused, setIsPaused] = useState(false);
-  
-  // Duplicate badges for seamless loop
-  const duplicatedBadges = [...badges, ...badges, ...badges];
+  // Duplicate badges for seamless infinite loop
+  const duplicatedBadges = [...badges, ...badges];
 
   return (
-    <div style={{ perspective: '1200px' }} className="group">
-      <section className="relative overflow-hidden bg-gradient-to-r from-green-50/80 via-amber-50/50 to-green-50/80 border-y border-green-100/50 transition-all duration-500 group-hover:shadow-[0_25px_50px_rgba(0,0,0,0.25)] group-hover:translate-y-[-8px]" style={{
-        transform: 'rotateX(0deg) translateZ(0px)',
-        transformStyle: 'preserve-3d',
-        boxShadow: '0 10px 20px rgba(0,0,0,0.1)'
-      }}>
-        <div className="py-4 md:py-5" style={{ transform: 'translateZ(25px)' }}>
-        {/* Scrolling Container */}
-        <motion.div
-          className="flex gap-8 md:gap-12"
-          animate={{
-            x: isPaused ? undefined : ['0%', '-33.333%'],
-          }}
-          transition={{
-            duration: 25,
-            ease: 'linear',
-            repeat: Infinity,
-          }}
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-          style={{
-            width: 'max-content',
-          }}
-        >
-          {duplicatedBadges.map((badge, index) => (
-            <div
-              key={index}
-              className="flex items-center gap-2.5 px-4 group cursor-default"
-            >
-              {/* Icon */}
-              <div className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110">
-                <badge.icon className={`h-5 w-5 md:h-6 md:w-6 ${badge.color}`} strokeWidth={2} />
-              </div>
+    <>
+      {/* CSS Marquee Animation */}
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        
+        .marquee-track {
+          animation: marquee 24s linear infinite;
+        }
+        
+        .marquee-track:hover {
+          animation-play-state: paused;
+        }
 
-              {/* Text */}
-              <span className="text-sm md:text-base font-medium text-gray-700 whitespace-nowrap group-hover:text-gray-900 transition-colors duration-300">
-                {badge.text}
-              </span>
+        .badge-lift {
+          transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
 
-              {/* Divider Dot */}
-              {index < duplicatedBadges.length - 1 && (
-                <div className="flex-shrink-0 ml-4 md:ml-8">
-                  <div className="h-1.5 w-1.5 rounded-full bg-green-300/60" />
+        /* Remove white space from logos */
+        .badge-logo-no-whitespace {
+          /* Scale image to fill container and minimize white space */
+          object-fit: contain;
+          transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+          animation: glitter 3s ease-in-out infinite;
+        }
+
+        @keyframes glitter {
+          0%, 100% { filter: brightness(100%) drop-shadow(0 0 0 transparent); }
+          50% { filter: brightness(120%) drop-shadow(0 0 5px rgba(255,255,255,0.6)); }
+        }
+        
+        @media (max-width: 768px) {
+          .badge-logo-container-mobile {
+            width: 70px !important;
+            height: 70px !important;
+          }
+          
+          .badge-logo-mobile {
+            width: 70px !important;
+            height: 70px !important;
+          }
+          
+          .badge-text-mobile {
+            font-size: 13px !important;
+          }
+          
+          .marquee-gap-mobile {
+            gap: 160px !important;
+          }
+        }
+
+        @media (min-width: 1024px) {
+          .marquee-gap-desktop {
+            gap: 220px !important;
+          }
+        }
+      `}</style>
+      
+      {/* Marquee Strip */}
+      <section 
+        className="relative overflow-hidden w-full"
+        style={{ 
+          background: '#FFFFFF',
+          height: '100px',
+        }}
+      >
+        <div className="flex items-center h-full">
+          <div 
+            className="marquee-track marquee-gap-mobile marquee-gap-desktop flex items-center"
+            style={{
+              width: 'max-content',
+              gap: '180px',
+            }}
+          >
+            {duplicatedBadges.map((badge, index) => (
+              <div
+                key={index}
+                className="flex items-center whitespace-nowrap"
+                style={{
+                  gap: '16px',
+                }}
+              >
+                {/* Badge Logo - No White Space */}
+                <div 
+                  className="flex-shrink-0 badge-logo-container-mobile badge-lift rounded-full overflow-hidden"
+                  style={{
+                    width: '95px',
+                    height: '95px',
+                    background: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: 0,
+                    margin: 0,
+                  }}
+                >
+                  <img 
+                    src={badge.logo} 
+                    alt={badge.text}
+                    className="badge-logo-no-whitespace rounded-full"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      objectPosition: 'center',
+                      display: 'block',
+                    }}
+                  />
                 </div>
-              )}
-            </div>
-          ))}
-        </motion.div>
-      </div>
-
-      {/* Gradient Overlays for Edge Fade Effect */}
-      <div className="absolute left-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-r from-green-50/80 to-transparent pointer-events-none z-10" style={{ transform: 'translateZ(20px)' }} />
-      <div className="absolute right-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-green-50/80 to-transparent pointer-events-none z-10" style={{ transform: 'translateZ(20px)' }} />
+                
+                {/* Text */}
+                <span 
+                  className="font-medium badge-text-mobile"
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: '500',
+                    color: '#6B7280',
+                    letterSpacing: '0.3px',
+                  }}
+                >
+                  {badge.text}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
-    </div>
+    </>
   );
 }

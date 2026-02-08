@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import type { TouchEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Leaf, Truck, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -19,6 +20,8 @@ export default function Index() {
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const isScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const touchStartXRef = useRef<number | null>(null);
+  const touchLastXRef = useRef<number | null>(null);
   const [showReminderPopup, setShowReminderPopup] = useState(false);
   
   const { user } = useAuth();
@@ -89,6 +92,32 @@ export default function Index() {
     }, 300);
   }, [banners.length]);
 
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+    if (banners.length <= 1) return;
+    touchStartXRef.current = e.touches[0].clientX;
+    touchLastXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+    if (touchStartXRef.current === null) return;
+    touchLastXRef.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartXRef.current === null || touchLastXRef.current === null) return;
+    const delta = touchLastXRef.current - touchStartXRef.current;
+    const threshold = 50;
+    if (Math.abs(delta) >= threshold) {
+      if (delta > 0) {
+        prevBanner();
+      } else {
+        nextBanner();
+      }
+    }
+    touchStartXRef.current = null;
+    touchLastXRef.current = null;
+  };
+
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -114,8 +143,13 @@ export default function Index() {
     <>
       {/* Professional Banner Carousel - Hero Banner */}
       {banners.length > 0 ? (
-        <section className="relative w-full h-48 md:h-72 lg:h-96 overflow-hidden group">
-          <div className="relative w-full h-full">
+        <section className="relative w-full h-72 md:h-72 lg:h-96 overflow-hidden group pt-16 md:pt-0">
+          <div
+            className="relative w-full h-full"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
             {banners.map((banner, index) => (
               <motion.div
                 key={banner.id}
@@ -159,7 +193,7 @@ export default function Index() {
             {/* Navigation Arrows - Show on Hover */}
             {banners.length > 1 && (
               <>
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:block">
                   <button
                     onClick={prevBanner}
                     className="bg-white/80 hover:bg-white text-black p-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 active:scale-95"
@@ -168,7 +202,7 @@ export default function Index() {
                     <ChevronLeft className="h-6 w-6" />
                   </button>
                 </div>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:block">
                   <button
                     onClick={nextBanner}
                     className="bg-white/80 hover:bg-white text-black p-3 rounded-full transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-110 active:scale-95"
@@ -199,33 +233,7 @@ export default function Index() {
             )}
           </div>
         </section>
-      ) : (
-        /* Fallback Hero when no banners */
-        <section className="relative w-full h-48 md:h-72 lg:h-96 overflow-hidden flex items-center justify-center bg-gradient-to-br from-primary/20 via-secondary/10 to-background">
-          <div className="text-center max-w-2xl px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-            >
-              <Leaf className="h-16 w-16 mx-auto text-primary mb-6" />
-              <h1 className="text-5xl md:text-7xl font-display font-bold mb-4">PANDIYIN</h1>
-              <p className="text-xl text-muted-foreground mb-8">Nature In Every Pack</p>
-              <p className="text-lg text-muted-foreground mb-8">
-                Discover authentic homemade foods from the heart of Madurai
-              </p>
-              <div className="flex flex-wrap gap-4 justify-center">
-                <Button asChild size="lg" className="rounded-full px-8">
-                  <Link to="/products">Shop Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="rounded-full px-8">
-                  <Link to="/about">Our Story</Link>
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-      )}
+      ) : null}
 
       {/* Trust Badges Scrolling Strip - Separated with spacing */}
       <div className="py-8 md:py-12 lg:py-16">
