@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, Menu, X, Search, LogOut, Package, Shield } from 'lucide-react';
+import { ShoppingCart, User, Menu, X, Search, LogOut, Package, Shield, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -76,6 +76,9 @@ export default function Navbar() {
                 <Button variant="ghost" size="icon"><User className="h-5 w-5" /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate('/profile')}>
+                  <UserCog className="mr-2 h-4 w-4" /> My Profile
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/dashboard')}>
                   <Package className="mr-2 h-4 w-4" /> My Orders
                 </DropdownMenuItem>

@@ -18,6 +18,8 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import Dashboard from "./pages/Dashboard";
+import OrderDetail from "./pages/OrderDetail";
+import Profile from "./pages/Profile";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 
@@ -49,6 +51,8 @@ const App = () => (
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/order-confirmation/:id" element={<OrderConfirmation />} />
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/orders/:id" element={<OrderDetail />} />
+                <Route path="/profile" element={<Profile />} />
                 <Route path="/about" element={<About />} />
               </Route>
               <Route path="/auth" element={<Auth />} />
