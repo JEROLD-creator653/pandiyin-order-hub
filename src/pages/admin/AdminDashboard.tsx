@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BarChart3, Package, ShoppingCart, Users, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -109,7 +110,11 @@ export default function AdminDashboard() {
           ) : (
             <div className="space-y-3">
               {recentOrders.map(o => (
-                <div key={o.id} className="flex items-center justify-between py-2 border-b last:border-0">
+                <Link
+                  key={o.id}
+                  to="/admin/orders"
+                  className="flex items-center justify-between py-2 border-b last:border-0 hover:bg-muted/40 transition-colors rounded-md px-2 -mx-2"
+                >
                   <div>
                     <p className="text-sm font-mono">{o.order_number}</p>
                     <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</p>
@@ -118,7 +123,7 @@ export default function AdminDashboard() {
                     <p className="font-bold text-sm">₹{o.total}</p>
                     <Badge variant="secondary" className="capitalize text-xs">{o.status}</Badge>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}

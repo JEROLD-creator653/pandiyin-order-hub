@@ -44,7 +44,7 @@ export default function Profile() {
   if (!user) return null;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <div className="container mx-auto px-4 pt-24 pb-8 max-w-2xl">
       <h1 className="text-3xl font-display font-bold mb-8">My Profile</h1>
 
       <div className="space-y-6">

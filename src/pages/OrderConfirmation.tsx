@@ -16,7 +16,7 @@ export default function OrderConfirmation() {
   }, [id]);
 
   return (
-    <div className="container mx-auto px-4 py-16 text-center max-w-lg">
+    <div className="container mx-auto px-4 pt-24 pb-16 text-center max-w-lg">
       <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
         <CheckCircle className="h-20 w-20 text-primary mx-auto mb-6" />
         <h1 className="text-3xl font-display font-bold mb-2">Order Confirmed!</h1>

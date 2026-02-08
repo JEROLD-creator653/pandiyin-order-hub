@@ -91,7 +91,7 @@ export default function Checkout() {
   const grandTotal = total - discount + deliveryCharge;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="container mx-auto px-4 pt-24 pb-8 max-w-4xl">
       <h1 className="text-3xl font-display font-bold mb-8">Checkout</h1>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-5 gap-8">
         <div className="md:col-span-3 space-y-6">
