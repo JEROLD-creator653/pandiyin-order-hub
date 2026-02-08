@@ -112,41 +112,10 @@ export default function Index() {
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-secondary to-background py-20 lg:py-32">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7 }}
-            className="max-w-2xl"
-          >
-            <span className="inline-flex items-center gap-2 text-primary font-medium text-sm mb-4 bg-primary/10 px-3 py-1 rounded-full">
-              <Leaf className="h-4 w-4" /> 100% Homemade & Natural
-            </span>
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground leading-tight mb-6">
-              Nature In <span className="text-primary">Every Pack</span>
-            </h1>
-            <p className="text-lg text-muted-foreground mb-8 font-sans">
-              Discover authentic homemade foods from the heart of Madurai. Traditional recipes, pure ingredients, delivered to your doorstep.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <Button asChild size="lg" className="rounded-full px-8">
-                <Link to="/products">Shop Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="rounded-full px-8">
-                <Link to="/about">Our Story</Link>
-              </Button>
-            </div>
-          </motion.div>
-        </div>
-        <div className="absolute -bottom-1 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent" />
-      </section>
-
-      {/* Professional Banner Carousel */}
-      {banners.length > 0 && (
-        <section className="relative bg-background overflow-hidden group mb-8">
-          <div className="relative h-48 md:h-72 lg:h-96 w-full">
+      {/* Professional Banner Carousel - Hero Banner */}
+      {banners.length > 0 ? (
+        <section className="relative w-full h-48 md:h-72 lg:h-96 overflow-hidden group">
+          <div className="relative w-full h-full">
             {banners.map((banner, index) => (
               <motion.div
                 key={banner.id}
@@ -213,7 +182,7 @@ export default function Index() {
 
             {/* Dot Indicators */}
             {banners.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex gap-2">
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
                 {banners.map((_, index) => (
                   <button
                     key={index}
@@ -230,10 +199,38 @@ export default function Index() {
             )}
           </div>
         </section>
+      ) : (
+        /* Fallback Hero when no banners */
+        <section className="relative w-full h-48 md:h-72 lg:h-96 overflow-hidden flex items-center justify-center bg-gradient-to-br from-primary/20 via-secondary/10 to-background">
+          <div className="text-center max-w-2xl px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+            >
+              <Leaf className="h-16 w-16 mx-auto text-primary mb-6" />
+              <h1 className="text-5xl md:text-7xl font-display font-bold mb-4">PANDIYIN</h1>
+              <p className="text-xl text-muted-foreground mb-8">Nature In Every Pack</p>
+              <p className="text-lg text-muted-foreground mb-8">
+                Discover authentic homemade foods from the heart of Madurai
+              </p>
+              <div className="flex flex-wrap gap-4 justify-center">
+                <Button asChild size="lg" className="rounded-full px-8">
+                  <Link to="/products">Shop Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="rounded-full px-8">
+                  <Link to="/about">Our Story</Link>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        </section>
       )}
 
-      {/* Trust Badges Scrolling Strip */}
-      <TrustBadges />
+      {/* Trust Badges Scrolling Strip - Separated with spacing */}
+      <div className="py-8 md:py-12 lg:py-16">
+        <TrustBadges />
+      </div>
 
       {/* Featured Products */}
       {featured.length > 0 && (

@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Eye } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { ChevronRight, Leaf } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -23,7 +21,7 @@ export default function AdminOrders() {
   const [orderItems, setOrderItems] = useState<any[]>([]);
 
   const load = async () => {
-    let q = supabase.from('orders').select('*').order('created_at', { ascending: false });
+    let q = supabase.from('orders').select('*, order_items(*, products(image_url, name))').order('created_at', { ascending: false });
     if (filter !== 'all') q = q.eq('status', filter as any);
     const { data } = await q;
     setOrders(data || []);
@@ -33,13 +31,13 @@ export default function AdminOrders() {
   const updateStatus = async (id: string, status: string) => {
     await supabase.from('orders').update({ status } as any).eq('id', id);
     toast({ title: `Order status updated to ${status}` });
+    setDetail(prev => (prev && prev.id === id ? { ...prev, status } : prev));
     load();
   };
 
-  const viewDetail = async (order: any) => {
+  const viewDetail = (order: any) => {
     setDetail(order);
-    const { data } = await supabase.from('order_items').select('*').eq('order_id', order.id);
-    setOrderItems(data || []);
+    setOrderItems(order.order_items || []);
   };
 
   return (
@@ -56,35 +54,61 @@ export default function AdminOrders() {
       </div>
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Order #</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orders.map(o => (
-                <TableRow key={o.id}>
-                  <TableCell className="font-mono text-sm">{o.order_number}</TableCell>
-                  <TableCell className="text-sm">{new Date(o.created_at).toLocaleDateString()}</TableCell>
-                  <TableCell className="font-bold">₹{o.total}</TableCell>
-                  <TableCell><Badge variant="secondary" className="capitalize">{o.payment_method}</Badge></TableCell>
-                  <TableCell>
-                    <Select value={o.status} onValueChange={v => updateStatus(o.id, v)}>
-                      <SelectTrigger className="w-32 h-8"><SelectValue /></SelectTrigger>
-                      <SelectContent>{statuses.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell><Button variant="ghost" size="icon" onClick={() => viewDetail(o)}><Eye className="h-4 w-4" /></Button></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {orders.length === 0 ? (
+            <div className="p-6 text-sm text-muted-foreground">No orders found.</div>
+          ) : (
+            <div className="divide-y">
+              {orders.map(o => {
+                const items = o.order_items || [];
+                const firstItem = items[0];
+                const imageUrl = firstItem?.products?.image_url;
+                const itemName = firstItem?.products?.name || 'Order';
+                return (
+                  <div
+                    key={o.id}
+                    className="p-4 flex items-center gap-4 hover:bg-muted/40 transition-colors cursor-pointer"
+                    onClick={() => viewDetail(o)}
+                  >
+                    {/* Product Image */}
+                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                      {imageUrl ? (
+                        <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <Leaf className="h-6 w-6 text-muted-foreground/30" />
+                      )}
+                    </div>
+
+                    {/* Order Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-sm truncate">{itemName}</span>
+                        {items.length > 1 && <span className="text-muted-foreground font-normal text-xs">+{items.length - 1} more</span>}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · {o.order_number}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <Select value={o.status} onValueChange={v => updateStatus(o.id, v)}>
+                          <SelectTrigger className="w-32 h-7 capitalize" onClick={(event) => event.stopPropagation()}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statuses.map(s => (
+                              <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <span className="font-bold text-sm">₹{o.total}</span>
+                      </div>
+                    </div>
+
+                    {/* Chevron */}
+                    <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -100,6 +124,17 @@ export default function AdminOrders() {
                 <div><span className="text-muted-foreground">Delivery:</span> ₹{detail.delivery_charge}</div>
                 <div><span className="text-muted-foreground">Discount:</span> ₹{detail.discount}</div>
                 <div className="font-bold"><span className="text-muted-foreground">Total:</span> ₹{detail.total}</div>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm text-muted-foreground">Update status</span>
+                <Select value={detail.status} onValueChange={v => updateStatus(detail.id, v)}>
+                  <SelectTrigger className="w-40 h-8 capitalize"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {statuses.map(s => (
+                      <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               {detail.delivery_address && (
                 <div className="text-sm p-3 bg-muted rounded-lg">

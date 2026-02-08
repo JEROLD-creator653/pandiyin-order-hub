@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
+import ProductRecommendations from '@/components/ProductRecommendations';
 
 export default function Cart() {
   const { items, total, loading, updateQuantity, removeItem } = useCart();
@@ -13,7 +14,7 @@ export default function Cart() {
 
   if (!user) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center">
+      <div className="container mx-auto px-4 pt-24 pb-20 text-center">
         <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
         <h2 className="text-2xl font-display font-bold mb-2">Sign in to view your cart</h2>
         <Button onClick={() => navigate('/auth')} className="mt-4">Sign In</Button>
@@ -23,17 +24,26 @@ export default function Cart() {
 
   if (!loading && items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-20 text-center">
-        <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
-        <h2 className="text-2xl font-display font-bold mb-2">Your cart is empty</h2>
-        <p className="text-muted-foreground mb-6">Add some delicious products to get started!</p>
-        <Button asChild><Link to="/products">Browse Products</Link></Button>
+      <div className="container mx-auto px-4 pt-24 pb-20">
+        <div className="text-center">
+          <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
+          <h2 className="text-2xl font-display font-bold mb-2">Your cart is empty</h2>
+          <p className="text-muted-foreground mb-6">Add some delicious products to get started!</p>
+          <Button asChild><Link to="/products">Browse Products</Link></Button>
+        </div>
+        
+        {/* Show featured recommendations even when cart is empty */}
+        <ProductRecommendations 
+          cartItems={[]} 
+          maxItems={6}
+          title="Featured Products"
+        />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 pt-24 pb-8">
       <h1 className="text-3xl font-display font-bold mb-8">Shopping Cart</h1>
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
@@ -80,6 +90,13 @@ export default function Cart() {
           </Card>
         </div>
       </div>
+
+      {/* Intelligent Product Recommendations */}
+      <ProductRecommendations 
+        cartItems={items} 
+        maxItems={6}
+        title="You may also like"
+      />
     </div>
   );
 }

@@ -32,7 +32,7 @@ export default function OrderDetail() {
   }, [id]);
 
   if (!order) return (
-    <div className="container mx-auto px-4 py-16 text-center">
+    <div className="container mx-auto px-4 pt-24 pb-16 text-center">
       <p className="text-muted-foreground">Loading order...</p>
     </div>
   );
@@ -42,7 +42,7 @@ export default function OrderDetail() {
   const address = order.delivery_address as any;
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
+    <div className="container mx-auto px-4 pt-24 pb-8 max-w-3xl">
       <Button variant="ghost" size="sm" asChild className="mb-4 gap-1">
         <Link to="/dashboard"><ArrowLeft className="h-4 w-4" /> Back to Orders</Link>
       </Button>

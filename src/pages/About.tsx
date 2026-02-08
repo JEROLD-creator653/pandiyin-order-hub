@@ -3,7 +3,7 @@ import { Leaf, Heart, Sun, Users } from 'lucide-react';
 
 export default function About() {
   return (
-    <div className="container mx-auto px-4 py-16 max-w-3xl">
+    <div className="container mx-auto px-4 pt-24 pb-16 max-w-3xl">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
         <Leaf className="h-12 w-12 mx-auto text-primary mb-4" />
         <h1 className="text-4xl font-display font-bold mb-4">Our Story</h1>
