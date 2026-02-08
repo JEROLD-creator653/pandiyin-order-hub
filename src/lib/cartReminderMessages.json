@@ -1,0 +1,49 @@
+{
+  "cartReminderMessages": [
+    "🛒 Quick reminder: {cartCount} item(s) are still in your cart. Checkout now?",
+    "📦 You left {cartCount} item(s) in your cart. Ready to place the order?",
+    "💳 Checkout is one step away. {cartCount} item(s) are still in your cart.",
+    "✅ Saved for you: {cartCount} item(s) in cart. Complete your order now.",
+    "🔒 Secure checkout available. {cartCount} item(s) are ready to purchase.",
+    "🎁 Your picks are saved. {cartCount} item(s) are ready for checkout.",
+    "⭐ Great choice! {cartCount} item(s) are still in your cart. Proceed to checkout?",
+    "🚚 Almost yours! {cartCount} item(s) are ready for order confirmation.",
+    "📌 Quick reminder: {cartCount} item(s) are still waiting in your cart.",
+    "🔔 Just a reminder: {cartCount} item(s) are pending checkout.",
+    "⚡ Don't miss out. {cartCount} item(s) are still waiting in your cart.",
+    "⏳ Items in your cart may sell out soon. Checkout {cartCount} item(s) now.",
+    "🔥 Limited stock alert. Secure your {cartCount} item(s) before they're gone.",
+    "📦 Almost sold out. Complete checkout for your {cartCount} item(s) now.",
+    "📣 Stock is running low. Your {cartCount} item(s) are still in the cart.",
+    "⭐ Popular items sell fast. Checkout your {cartCount} item(s) now.",
+    "⚠ Limited availability. Confirm your {cartCount} item(s) with checkout.",
+    "💳 Checkout now before it's gone. {cartCount} item(s) still pending.",
+    "🔥 Trending picks in your cart. {cartCount} item(s) are waiting for checkout.",
+    "⏱ Don't wait too long. {cartCount} item(s) may sell out anytime."
+  ],
+  "messageCount": 20,
+  "validation": {
+    "professional": true,
+    "minimal_emojis": true,
+    "placeholder_support": true,
+    "conversion_focused": true,
+    "no_childish_emojis": true
+  },
+  "placeholders": {
+    "cartCount": "Number of items in cart (required)",
+    "userName": "User's name or email prefix (optional)"
+  },
+  "emojis_used": [
+    "🛒", "✨", "📦", "🔔", "📌", "⭐", "⚡", "⏳", "🔥", "💳", "🚚", 
+    "✅", "🔒", "📍", "📣", "🎁"
+  ],
+  "message_categories": {
+    "premium_conversational": ["🛒 You have...", "✨ Great selections!...", "📦 Your curated items..."],
+    "friendly_reminders": ["🔔 Welcome back!...", "📌 Quick reminder:...", "⭐ Your cart hasn't forgotten..."],
+    "urgency_based": ["⚡ Don't wait too long...", "⏳ Items are popular...", "🔥 Complete your purchase..."],
+    "premium_minimal": ["💳 One step away...", "🚚 Your order is almost...", "✅ Everything saved!..."],
+    "trust_security": ["🔒 Secure checkout...", "📍 Your items are reserved..."],
+    "action_oriented": ["📣 Last chance!..."],
+    "premium_experience": ["🎁 Curated for you...", "⭐ Premium items selected...", "✨ Your selections are waiting..."]
+  }
+}

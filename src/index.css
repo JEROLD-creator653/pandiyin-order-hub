@@ -100,4 +100,53 @@
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
   }
+
+  /* Professional Scrollbar Styling */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+  }
+
+  .scrollbar-thin:hover {
+    scrollbar-color: #94a3b8 #f1f5f9;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+    border: 2px solid #f1f5f9;
+    transition: all 0.3s ease;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Scrollbar color utilities */
+  .scrollbar-thumb-slate-300::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+  }
+
+  .scrollbar-thumb-slate-300:hover::-webkit-scrollbar-thumb {
+    background: #94a3b8;
+  }
+
+  .scrollbar-track-slate-100::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
 }
+

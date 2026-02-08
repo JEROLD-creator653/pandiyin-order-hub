@@ -30,7 +30,6 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
 
   const searchFilter = searchParams.get('search') || '';
-  const [searchInput, setSearchInput] = useState(searchFilter);
 
   // Filter state
   const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
@@ -44,6 +43,7 @@ export default function Products() {
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [filterOpen, setFilterOpen] = useState(false);
   const [maxPrice, setMaxPrice] = useState(5000);
+  const [searchInput, setSearchInput] = useState('');
 
   useEffect(() => {
     supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories(data || []));
