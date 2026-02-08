@@ -14,14 +14,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 
-type SortOption = 'newest' | 'price_low' | 'price_high' | 'name_az' | 'name_za';
+type SortOption = 'newest' | 'price_low' | 'price_high' | 'popularity';
 
 const sortLabels: Record<SortOption, string> = {
   newest: 'Newest First',
   price_low: 'Price: Low to High',
   price_high: 'Price: High to Low',
-  name_az: 'Name: A–Z',
-  name_za: 'Name: Z–A',
+  popularity: 'Popularity',
 };
 
 export default function Products() {
@@ -91,8 +90,7 @@ export default function Products() {
     switch (sortBy) {
       case 'price_low': result.sort((a, b) => a.price - b.price); break;
       case 'price_high': result.sort((a, b) => b.price - a.price); break;
-      case 'name_az': result.sort((a, b) => a.name.localeCompare(b.name)); break;
-      case 'name_za': result.sort((a, b) => b.name.localeCompare(a.name)); break;
+      case 'popularity': result.sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0)); break;
       default: result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
 

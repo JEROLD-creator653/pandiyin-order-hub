@@ -23,7 +23,7 @@ interface Address {
 }
 
 interface AddressManagerProps {
-  onSelect?: (address: Omit<Address, 'id' | 'is_default'>) => void;
+  onSelect?: (address: Omit<Address, 'id' | 'is_default'> & { id?: string }) => void;
   selectable?: boolean;
   selectedId?: string | null;
 }
@@ -53,7 +53,7 @@ export default function AddressManager({ onSelect, selectable = false, selectedI
   useEffect(() => {
     if (selectable && onSelect && addresses.length > 0 && !selectedId) {
       const def = addresses.find(a => a.is_default) || addresses[0];
-      onSelect({ full_name: def.full_name, phone: def.phone, address_line1: def.address_line1, address_line2: def.address_line2, city: def.city, state: def.state, pincode: def.pincode });
+      onSelect({ id: def.id, full_name: def.full_name, phone: def.phone, address_line1: def.address_line1, address_line2: def.address_line2, city: def.city, state: def.state, pincode: def.pincode });
     }
   }, [addresses]);
 
@@ -97,7 +97,7 @@ export default function AddressManager({ onSelect, selectable = false, selectedI
 
   const selectAddress = (a: Address) => {
     if (onSelect) {
-      onSelect({ full_name: a.full_name, phone: a.phone, address_line1: a.address_line1, address_line2: a.address_line2, city: a.city, state: a.state, pincode: a.pincode });
+      onSelect({ id: a.id, full_name: a.full_name, phone: a.phone, address_line1: a.address_line1, address_line2: a.address_line2, city: a.city, state: a.state, pincode: a.pincode });
     }
   };
 

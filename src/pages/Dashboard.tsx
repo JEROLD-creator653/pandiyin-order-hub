@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Package, Eye } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Package, ChevronRight, Leaf } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -24,13 +24,18 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!user) { navigate('/auth'); return; }
-    supabase.from('orders').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).then(({ data }) => setOrders(data || []));
+    supabase
+      .from('orders')
+      .select('*, order_items(*, products(image_url, name))')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setOrders(data || []));
   }, [user]);
 
   if (!user) return null;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 max-w-3xl">
       <h1 className="text-3xl font-display font-bold mb-8">My Orders</h1>
       {orders.length === 0 ? (
         <div className="text-center py-16">
@@ -39,34 +44,47 @@ export default function Dashboard() {
           <Button asChild><Link to="/products">Start Shopping</Link></Button>
         </div>
       ) : (
-        <Card>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order #</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Payment</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orders.map(o => (
-                  <TableRow key={o.id}>
-                    <TableCell className="font-mono text-sm">{o.order_number}</TableCell>
-                    <TableCell>{new Date(o.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell className="font-bold">₹{o.total}</TableCell>
-                    <TableCell><Badge className={statusColors[o.status] || ''}>{o.status}</Badge></TableCell>
-                    <TableCell className="capitalize">{o.payment_method === 'cod' ? 'COD' : 'Online'}</TableCell>
-                    <TableCell><Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          {orders.map((o, idx) => {
+            const items = o.order_items || [];
+            const firstItem = items[0];
+            const imageUrl = firstItem?.products?.image_url;
+            const itemCount = items.length;
+            return (
+              <motion.div key={o.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}>
+                <Link to={`/orders/${o.id}`}>
+                  <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {imageUrl ? (
+                          <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <Leaf className="h-6 w-6 text-muted-foreground/30" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-sm truncate">
+                            {firstItem?.product_name || 'Order'}
+                            {itemCount > 1 && <span className="text-muted-foreground font-normal"> +{itemCount - 1} more</span>}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(o.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · {o.order_number}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge className={`${statusColors[o.status] || ''} text-xs`}>{o.status}</Badge>
+                          <span className="font-bold text-sm">₹{o.total}</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
       )}
     </div>
   );

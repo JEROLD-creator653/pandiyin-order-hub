@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CreditCard, Banknote } from 'lucide-react';
+import { CreditCard, Banknote, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -103,7 +103,7 @@ export default function Checkout() {
                 selectedId={selectedAddressId}
                 onSelect={(addr) => {
                   setSelectedAddress(addr);
-                  // We track selection visually via the address content
+                  setSelectedAddressId(addr.id || null);
                 }}
               />
             </CardContent>
@@ -152,6 +152,21 @@ export default function Checkout() {
             <div className="border-t mt-3 pt-3 flex justify-between font-bold text-lg">
               <span>Total</span><span className="text-primary">₹{grandTotal.toFixed(2)}</span>
             </div>
+
+            {/* Selected address in summary */}
+            {selectedAddress && selectedAddress.full_name && (
+              <div className="border-t mt-3 pt-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-xs font-semibold">Deliver to</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {selectedAddress.full_name}, {selectedAddress.address_line1}
+                  {selectedAddress.address_line2 ? `, ${selectedAddress.address_line2}` : ''}, {selectedAddress.city} - {selectedAddress.pincode}
+                </p>
+                <p className="text-xs text-muted-foreground">{selectedAddress.phone}</p>
+              </div>
+            )}
 
             <div className="mt-4 flex gap-2">
               <Input placeholder="Coupon code" value={couponCode} onChange={e => setCouponCode(e.target.value)} className="flex-1" />
