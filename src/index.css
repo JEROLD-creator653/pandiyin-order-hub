@@ -4,6 +4,19 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes whatsappPop {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.animate-whatsappPop {
+  animation: whatsappPop 1.8s infinite ease-in-out;
+}
+
 @layer base {
   :root {
     --background: 40 33% 96%;
