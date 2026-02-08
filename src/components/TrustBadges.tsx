@@ -17,8 +17,9 @@ export default function TrustBadges() {
   const duplicatedBadges = [...badges, ...badges, ...badges];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-r from-green-50/80 via-amber-50/50 to-green-50/80 border-y border-green-100/50">
-      <div className="py-4 md:py-5">
+    <div style={{ perspective: '1000px' }}>
+      <section className="relative overflow-hidden bg-gradient-to-r from-green-50/80 via-amber-50/50 to-green-50/80 border-y border-green-100/50 shadow-[0_10px_20px_rgba(0,0,0,0.1)] hover:shadow-[0_15px_30px_rgba(0,0,0,0.15)] transition-all duration-500 hover:translate-y-[-4px]" style={{ transform: 'rotateX(2deg) translateZ(30px)', transformStyle: 'preserve-3d' }}>
+        <div className="py-4 md:py-5" style={{ transform: 'translateZ(20px)' }}>
         {/* Scrolling Container */}
         <motion.div
           className="flex gap-8 md:gap-12"
@@ -63,8 +64,9 @@ export default function TrustBadges() {
       </div>
 
       {/* Gradient Overlays for Edge Fade Effect */}
-      <div className="absolute left-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-r from-green-50/80 to-transparent pointer-events-none z-10" />
-      <div className="absolute right-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-green-50/80 to-transparent pointer-events-none z-10" />
+      <div className="absolute left-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-r from-green-50/80 to-transparent pointer-events-none z-10" style={{ transform: 'translateZ(15px)' }} />
+      <div className="absolute right-0 top-0 bottom-0 w-16 md:w-24 bg-gradient-to-l from-green-50/80 to-transparent pointer-events-none z-10" style={{ transform: 'translateZ(15px)' }} />
     </section>
+    </div>
   );
 }

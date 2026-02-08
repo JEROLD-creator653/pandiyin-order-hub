@@ -132,7 +132,7 @@ export default function Index() {
 
       {/* Professional Banner Carousel */}
       {banners.length > 0 && (
-        <section className="relative bg-background overflow-hidden group mt-8 md:mt-12">
+        <section className="relative bg-background overflow-hidden group mb-8">
           <div className="relative h-48 md:h-72 lg:h-96 w-full">
             {banners.map((banner, index) => (
               <motion.div
