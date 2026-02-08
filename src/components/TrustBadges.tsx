@@ -17,22 +17,7 @@ export default function TrustBadges() {
   const duplicatedBadges = [...badges, ...badges, ...badges];
 
   return (
-    <section 
-      className="relative overflow-hidden bg-gradient-to-r from-green-50/80 via-amber-50/50 to-green-50/80 border-y border-green-100/50 mt-8 md:mt-12"
-      style={{
-        boxShadow: '0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06)',
-        transform: 'translateY(-8px)',
-        transition: 'all 0.3s ease',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-12px)';
-        e.currentTarget.style.boxShadow = '0 15px 50px rgba(0, 0, 0, 0.12), 0 5px 15px rgba(0, 0, 0, 0.08)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(-8px)';
-        e.currentTarget.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.06)';
-      }}
-    >
+    <section className="relative overflow-hidden bg-gradient-to-r from-green-50/80 via-amber-50/50 to-green-50/80 border-y border-green-100/50">
       <div className="py-4 md:py-5">
         {/* Scrolling Container */}
         <motion.div
