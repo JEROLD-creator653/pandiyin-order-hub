@@ -103,7 +103,7 @@ export default function Auth() {
                 className="flex justify-center mb-5"
               >
                 <div
-                  className="w-[90px] h-[90px] rounded-full flex items-center justify-center overflow-hidden relative bg-white"
+                  className="w-[90px] h-[90px] rounded-full flex items-center justify-center overflow-hidden relative"
                   style={{
                     border: "2.5px solid #07ab69",
                     boxShadow: "0 4px 16px #a5fad8",
@@ -112,7 +112,7 @@ export default function Auth() {
                   <img
                     src="/logo.ico"
                     alt="PANDIYIN Logo"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                 </div>
               </motion.div>
