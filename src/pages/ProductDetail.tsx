@@ -1,14 +1,22 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Leaf, ShoppingCart, Minus, Plus, ArrowLeft } from 'lucide-react';
+import { Leaf, ShoppingCart, Minus, Plus, ArrowLeft, Star, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
+import { useProductReviews } from '@/hooks/useProductReviews';
 import { toast } from '@/hooks/use-toast';
+import RatingStars from '@/components/RatingStars';
+import ReviewSummary from '@/components/ReviewSummary';
+import ReviewList from '@/components/ReviewList';
+import ReviewForm from '@/components/ReviewForm';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -18,6 +26,28 @@ export default function ProductDetail() {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [editingReview, setEditingReview] = useState<any>(null);
+  const [deleteReviewId, setDeleteReviewId] = useState<string | null>(null);
+  const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<'recent' | 'helpful' | 'rating_high' | 'rating_low'>('recent');
+  
+  const {
+    reviews,
+    stats,
+    loading: reviewsLoading,
+    hasMore,
+    loadMore,
+    submitReview,
+    voteOnReview,
+    deleteReview,
+    getUserReview
+  } = useProductReviews({
+    productId: id || '',
+    userId: user?.id,
+    sortBy,
+    filterByRating: selectedRating
+  });
 
   useEffect(() => {
     if (!id) return;
@@ -30,6 +60,48 @@ export default function ProductDetail() {
   const handleAddToCart = () => {
     if (!user) { navigate('/auth'); return; }
     addToCart(product.id, qty);
+  };
+
+  const handleWriteReview = async () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    
+    // Check if user already has a review
+    const existingReview = await getUserReview();
+    if (existingReview) {
+      setEditingReview(existingReview);
+    }
+    setShowReviewForm(true);
+  };
+
+  const handleSubmitReview = async (reviewData: any) => {
+    await submitReview({
+      ...reviewData,
+      reviewId: editingReview?.id
+    });
+    setShowReviewForm(false);
+    setEditingReview(null);
+  };
+
+  const handleEditReview = (reviewId: string) => {
+    const review = reviews.find(r => r.id === reviewId);
+    if (review) {
+      setEditingReview(review);
+      setShowReviewForm(true);
+    }
+  };
+
+  const handleDeleteReview = (reviewId: string) => {
+    setDeleteReviewId(reviewId);
+  };
+
+  const confirmDeleteReview = async () => {
+    if (deleteReviewId) {
+      await deleteReview(deleteReviewId);
+      setDeleteReviewId(null);
+    }
   };
 
   if (loading) return (
@@ -70,6 +142,17 @@ export default function ProductDetail() {
             <Badge variant="secondary" className="mb-3">{product.categories.name}</Badge>
           )}
           <h1 className="text-3xl font-display font-bold mb-4">{product.name}</h1>
+          
+          {/* Rating Summary */}
+          {stats && stats.total_reviews > 0 && (
+            <div className="flex items-center gap-3 mb-4">
+              <RatingStars rating={stats.average_rating} showNumber size="md" />
+              <span className="text-sm text-muted-foreground">
+                ({stats.total_reviews} {stats.total_reviews === 1 ? 'review' : 'reviews'})
+              </span>
+            </div>
+          )}
+
           <div className="flex items-center gap-3 mb-6">
             <span className="text-3xl font-bold text-primary">₹{product.price}</span>
             {product.compare_price && (
@@ -107,6 +190,81 @@ export default function ProductDetail() {
           )}
         </div>
       </motion.div>
+
+      {/* Reviews Section */}
+      <div className="mt-12">
+        <Separator className="mb-8" />
+        
+        <Tabs defaultValue="reviews" className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="reviews" className="gap-2">
+              <Star className="h-4 w-4" />
+              Ratings & Reviews
+              {stats && stats.total_reviews > 0 && (
+                <Badge variant="secondary" className="ml-1">{stats.total_reviews}</Badge>
+              )}
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="reviews" className="space-y-8">
+            {/* Write Review Button */}
+            {!showReviewForm && (
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">Customer Reviews</h2>
+                <Button onClick={handleWriteReview} className="gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Write a Review
+                </Button>
+              </div>
+            )}
+
+            {/* Review Form */}
+            {showReviewForm && (
+              <ReviewForm
+                productId={product.id}
+                productName={product.name}
+                existingReview={editingReview}
+                onSubmit={handleSubmitReview}
+                onCancel={() => {
+                  setShowReviewForm(false);
+                  setEditingReview(null);
+                }}
+              />
+            )}
+
+            {/* Review Summary */}
+            <ReviewSummary
+              stats={stats}
+              selectedRating={selectedRating}
+              onFilterByRating={setSelectedRating}
+            />
+
+            {/* Review List */}
+            <ReviewList
+              reviews={reviews}
+              loading={reviewsLoading}
+              currentUserId={user?.id}
+              selectedRating={selectedRating}
+              sortBy={sortBy}
+              onSortChange={(sort) => setSortBy(sort as any)}
+              onVote={voteOnReview}
+              onEdit={handleEditReview}
+              onDelete={handleDeleteReview}
+              onLoadMore={loadMore}
+              hasMore={hasMore}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteReviewId !== null}
+        onOpenChange={(open) => !open && setDeleteReviewId(null)}
+        title="Delete Review"
+        description="Are you sure you want to delete this review? This action cannot be undone."
+        onConfirm={confirmDeleteReview}
+      />
     </div>
   );
 }

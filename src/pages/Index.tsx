@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CartReminderPopup } from '@/components/CartReminderPopup';
+import TrustBadges from '@/components/TrustBadges';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
-import favicon from '@/public/Pandiyin.ico';
 
 export default function Index() {
   const [featured, setFeatured] = useState<any[]>([]);
@@ -26,11 +26,11 @@ export default function Index() {
   useEffect(() => {
     const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
     if (link) {
-      link.href = favicon;
+      link.href = '/favicon.ico';
     } else {
       const newLink = document.createElement('link');
       newLink.rel = 'icon';
-      newLink.href = favicon;
+      newLink.href = '/favicon.ico';
       document.head.appendChild(newLink);
     }
   }, []);
@@ -144,7 +144,7 @@ export default function Index() {
 
       {/* Professional Banner Carousel */}
       {banners.length > 0 && (
-        <section className="relative bg-background overflow-hidden group">
+        <section className="relative bg-background overflow-hidden group mt-8 md:mt-12">
           <div className="relative h-48 md:h-72 lg:h-96 w-full">
             {banners.map((banner, index) => (
               <motion.div
@@ -231,24 +231,8 @@ export default function Index() {
         </section>
       )}
 
-      {/* Trust Badges */}
-      <section className="py-12 border-b">
-        <div className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            { icon: Leaf, title: '100% Natural', desc: 'No preservatives, no chemicals' },
-            { icon: Truck, title: 'Local Delivery', desc: 'Fresh to your door in Madurai' },
-            { icon: ShieldCheck, title: 'Quality Assured', desc: 'Handcrafted with love & care' },
-          ].map((item, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }} className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-primary/10 text-primary"><item.icon className="h-6 w-6" /></div>
-              <div>
-                <h3 className="font-semibold font-sans">{item.title}</h3>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+      {/* Trust Badges Scrolling Strip */}
+      <TrustBadges />
 
       {/* Featured Products */}
       {featured.length > 0 && (
@@ -260,9 +244,9 @@ export default function Index() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
               {featured.map((p, i) => (
-                <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
+                <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="h-full">
                   <Link to={`/products/${p.id}`}>
-                    <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
+                    <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col">
                       <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
                         {p.image_url ? (
                           <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
@@ -270,10 +254,12 @@ export default function Index() {
                           <Leaf className="h-12 w-12 text-muted-foreground/30" />
                         )}
                       </div>
-                      <CardContent className="p-4">
-                        <p className="text-xs text-muted-foreground mb-1">{(p as any).categories?.name}</p>
-                        <h3 className="font-semibold text-sm font-sans line-clamp-2 mb-2">{p.name}</h3>
-                        <div className="flex items-center gap-2">
+                      <CardContent className="p-4 flex flex-col flex-grow justify-between">
+                        <div>
+                          <p className="text-xs text-muted-foreground mb-1">{(p as any).categories?.name}</p>
+                          <h3 className="font-semibold text-sm font-sans line-clamp-2 mb-2">{p.name}</h3>
+                        </div>
+                        <div className="flex items-center gap-2 mt-auto">
                           <span className="font-bold text-primary">₹{p.price}</span>
                           {p.compare_price && <span className="text-xs text-muted-foreground line-through">₹{p.compare_price}</span>}
                         </div>
