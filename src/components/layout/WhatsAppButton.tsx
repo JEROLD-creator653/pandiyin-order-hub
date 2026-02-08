@@ -1,4 +1,4 @@
-import { MessageCircle } from 'lucide-react';
+import { FaWhatsapp } from "react-icons/fa";
 
 export default function WhatsAppButton() {
   return (
@@ -6,10 +6,17 @@ export default function WhatsAppButton() {
       href="https://wa.me/919876543210?text=Hi%20PANDIYIN!%20I%20have%20a%20query."
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-50 bg-[hsl(145,70%,40%)] text-white p-4 rounded-full shadow-lg hover:scale-110 transition-transform"
       aria-label="Chat on WhatsApp"
+      className="fixed bottom-6 right-6 z-50 flex items-center justify-center 
+                 w-16 h-16 rounded-full 
+                 bg-[#25D366] text-white shadow-xl
+                 hover:scale-110 transition-transform duration-300
+                 animate-whatsappPop"
     >
-      <MessageCircle className="h-6 w-6" />
+      <FaWhatsapp className="text-3xl" />
+
+      {/* Glow Ring Effect */}
+      <span className="absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-30 animate-ping"></span>
     </a>
   );
 }

@@ -10,6 +10,7 @@ import TrustBadges from '@/components/TrustBadges';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
+import favicon from '@/public/Pandiyin.ico';
 
 export default function Index() {
   const [featured, setFeatured] = useState<any[]>([]);
@@ -22,6 +23,18 @@ export default function Index() {
   
   const { user } = useAuth();
   const { items: cartItems } = useCart();
+
+  useEffect(() => {
+    const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+    if (link) {
+      link.href = favicon;
+    } else {
+      const newLink = document.createElement('link');
+      newLink.rel = 'icon';
+      newLink.href = favicon;
+      document.head.appendChild(newLink);
+    }
+  }, []);
 
   useEffect(() => {
     supabase.from('products').select('*, categories(name)').eq('is_featured', true).eq('is_available', true).limit(8).then(({ data }) => setFeatured(data || []));
