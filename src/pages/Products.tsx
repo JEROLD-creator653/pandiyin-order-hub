@@ -1,21 +1,50 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Leaf, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Leaf, Search, SlidersHorizontal, ArrowUpDown, X, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
+
+type SortOption = 'newest' | 'price_low' | 'price_high' | 'name_az' | 'name_za';
+
+const sortLabels: Record<SortOption, string> = {
+  newest: 'Newest First',
+  price_low: 'Price: Low to High',
+  price_high: 'Price: High to Low',
+  name_az: 'Name: A–Z',
+  name_za: 'Name: Z–A',
+};
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const categoryFilter = searchParams.get('category') || '';
+
   const searchFilter = searchParams.get('search') || '';
   const [searchInput, setSearchInput] = useState(searchFilter);
+
+  // Filter state
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
+    const cat = searchParams.get('category');
+    return cat ? [cat] : [];
+  });
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
+  const [manualMin, setManualMin] = useState('');
+  const [manualMax, setManualMax] = useState('');
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [maxPrice, setMaxPrice] = useState(5000);
 
   useEffect(() => {
     supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories(data || []));
@@ -24,42 +53,218 @@ export default function Products() {
   useEffect(() => {
     setLoading(true);
     let query = supabase.from('products').select('*, categories(name)').eq('is_available', true);
-    if (categoryFilter) {
-      const catIds = categories.filter(c => c.name === categoryFilter).map(c => c.id);
-      if (catIds.length) query = query.in('category_id', catIds);
-    }
     if (searchFilter) query = query.ilike('name', `%${searchFilter}%`);
     query.order('created_at', { ascending: false }).then(({ data }) => {
-      setProducts(data || []);
+      const all = data || [];
+      setProducts(all);
+      if (all.length > 0) {
+        const mp = Math.ceil(Math.max(...all.map(p => Number(p.price))));
+        setMaxPrice(mp > 0 ? mp : 5000);
+        setPriceRange(prev => [prev[0], mp > 0 ? mp : 5000]);
+      }
       setLoading(false);
     });
-  }, [categoryFilter, searchFilter, categories]);
+  }, [searchFilter]);
+
+  const activeFilterCount = (selectedCategories.length > 0 ? 1 : 0) + (inStockOnly ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0);
+
+  const filtered = useMemo(() => {
+    let result = [...products];
+
+    // Category filter
+    if (selectedCategories.length > 0) {
+      result = result.filter(p => {
+        const catName = (p as any).categories?.name;
+        return catName && selectedCategories.includes(catName);
+      });
+    }
+
+    // Price filter
+    result = result.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+
+    // In stock
+    if (inStockOnly) {
+      result = result.filter(p => p.stock_quantity > 0);
+    }
+
+    // Sort
+    switch (sortBy) {
+      case 'price_low': result.sort((a, b) => a.price - b.price); break;
+      case 'price_high': result.sort((a, b) => b.price - a.price); break;
+      case 'name_az': result.sort((a, b) => a.name.localeCompare(b.name)); break;
+      case 'name_za': result.sort((a, b) => b.name.localeCompare(a.name)); break;
+      default: result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+
+    return result;
+  }, [products, selectedCategories, priceRange, inStockOnly, sortBy]);
+
+  const toggleCategory = (name: string) => {
+    setSelectedCategories(prev =>
+      prev.includes(name) ? prev.filter(c => c !== name) : [...prev, name]
+    );
+  };
+
+  const clearFilters = () => {
+    setSelectedCategories([]);
+    setPriceRange([0, maxPrice]);
+    setManualMin('');
+    setManualMax('');
+    setInStockOnly(false);
+  };
+
+  const applyManualPrice = () => {
+    const min = manualMin ? Number(manualMin) : 0;
+    const max = manualMax ? Number(manualMax) : maxPrice;
+    setPriceRange([Math.max(0, min), Math.min(maxPrice, max)]);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <h1 className="text-3xl font-display font-bold">
-          {categoryFilter || 'All Products'}
-        </h1>
-        <form onSubmit={e => { e.preventDefault(); setSearchParams(s => { s.set('search', searchInput); return s; }); }} className="relative max-w-sm w-full">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <h1 className="text-3xl font-display font-bold">All Products</h1>
+        <form onSubmit={e => { e.preventDefault(); setSearchParams(s => { if (searchInput) s.set('search', searchInput); else s.delete('search'); return s; }); }} className="relative max-w-sm w-full">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search products..." value={searchInput} onChange={e => setSearchInput(e.target.value)} className="pl-9" />
         </form>
       </div>
 
-      {/* Category Tabs */}
-      <div className="flex flex-wrap gap-2 mb-8">
-        <Button variant={!categoryFilter ? 'default' : 'outline'} size="sm" className="rounded-full" onClick={() => setSearchParams({})}>
-          All
-        </Button>
-        {categories.map(c => (
-          <Button key={c.id} variant={categoryFilter === c.name ? 'default' : 'outline'} size="sm" className="rounded-full"
-            onClick={() => setSearchParams({ category: c.name })}>
-            {c.name}
-          </Button>
-        ))}
+      {/* Toolbar: Sort + Filter */}
+      <div className="flex items-center gap-3 mb-6">
+        {/* Sort Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2 rounded-full">
+              <ArrowUpDown className="h-4 w-4" />
+              <span className="hidden sm:inline">{sortLabels[sortBy]}</span>
+              <span className="sm:hidden">Sort</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {(Object.keys(sortLabels) as SortOption[]).map(key => (
+              <DropdownMenuItem key={key} onClick={() => setSortBy(key)} className={sortBy === key ? 'bg-accent' : ''}>
+                {sortLabels[key]}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Filter Button */}
+        <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2 rounded-full relative">
+              <SlidersHorizontal className="h-4 w-4" />
+              Filter
+              {activeFilterCount > 0 && (
+                <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-[10px] rounded-full">
+                  {activeFilterCount}
+                </Badge>
+              )}
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-80 overflow-y-auto">
+            <SheetHeader>
+              <div className="flex items-center justify-between">
+                <SheetTitle>Filters</SheetTitle>
+                {activeFilterCount > 0 && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-muted-foreground">
+                    Clear All
+                  </Button>
+                )}
+              </div>
+            </SheetHeader>
+
+            <div className="mt-6 space-y-6">
+              {/* Categories */}
+              <div>
+                <h4 className="font-semibold text-sm mb-3">Category</h4>
+                <div className="space-y-2">
+                  {categories.map(c => (
+                    <label key={c.id} className="flex items-center gap-2 cursor-pointer text-sm">
+                      <Checkbox
+                        checked={selectedCategories.includes(c.name)}
+                        onCheckedChange={() => toggleCategory(c.name)}
+                      />
+                      {c.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Price Range */}
+              <div>
+                <h4 className="font-semibold text-sm mb-3">Price Range</h4>
+                <Slider
+                  value={priceRange}
+                  min={0}
+                  max={maxPrice}
+                  step={10}
+                  onValueChange={(v) => setPriceRange(v as [number, number])}
+                  className="mb-3"
+                />
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+                  <span>₹{priceRange[0]}</span>
+                  <span>₹{priceRange[1]}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    placeholder="Min"
+                    value={manualMin}
+                    onChange={e => setManualMin(e.target.value)}
+                    className="text-xs h-8"
+                  />
+                  <span className="text-muted-foreground text-xs">to</span>
+                  <Input
+                    type="number"
+                    placeholder="Max"
+                    value={manualMax}
+                    onChange={e => setManualMax(e.target.value)}
+                    className="text-xs h-8"
+                  />
+                  <Button variant="secondary" size="sm" className="h-8 text-xs px-3" onClick={applyManualPrice}>
+                    Go
+                  </Button>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Availability */}
+              <div>
+                <h4 className="font-semibold text-sm mb-3">Availability</h4>
+                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <Checkbox checked={inStockOnly} onCheckedChange={(v) => setInStockOnly(!!v)} />
+                  In Stock Only
+                </label>
+              </div>
+
+              <Button className="w-full rounded-full" onClick={() => setFilterOpen(false)}>
+                Show {filtered.length} Products
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* Active filter chips */}
+        <AnimatePresence>
+          {selectedCategories.map(cat => (
+            <motion.div key={cat} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}>
+              <Badge variant="secondary" className="gap-1 cursor-pointer rounded-full pl-3 pr-1 py-1" onClick={() => toggleCategory(cat)}>
+                {cat}
+                <X className="h-3 w-3" />
+              </Badge>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        <span className="text-sm text-muted-foreground ml-auto">{filtered.length} products</span>
       </div>
 
+      {/* Products Grid */}
       {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {[...Array(8)].map((_, i) => (
@@ -73,15 +278,18 @@ export default function Products() {
             </Card>
           ))}
         </div>
-      ) : products.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <div className="text-center py-20">
           <Leaf className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
-          <p className="text-muted-foreground">No products found. Check back soon!</p>
+          <p className="text-muted-foreground">No products found matching your filters.</p>
+          {activeFilterCount > 0 && (
+            <Button variant="link" onClick={clearFilters} className="mt-2">Clear all filters</Button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {products.map((p, i) => (
-            <motion.div key={p.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+          {filtered.map((p, i) => (
+            <motion.div key={p.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
               <Link to={`/products/${p.id}`}>
                 <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
                   <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden relative">
