@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Leaf, Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { Leaf } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,7 +14,6 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const categoryFilter = searchParams.get('category') || '';
   const searchFilter = searchParams.get('search') || '';
-  const [searchInput, setSearchInput] = useState(searchFilter);
 
   useEffect(() => {
     supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories(data || []));
@@ -41,10 +39,6 @@ export default function Products() {
         <h1 className="text-3xl font-display font-bold">
           {categoryFilter || 'All Products'}
         </h1>
-        <form onSubmit={e => { e.preventDefault(); setSearchParams(s => { s.set('search', searchInput); return s; }); }} className="relative max-w-sm w-full">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search products..." value={searchInput} onChange={e => setSearchInput(e.target.value)} className="pl-9" />
-        </form>
       </div>
 
       {/* Category Tabs */}
