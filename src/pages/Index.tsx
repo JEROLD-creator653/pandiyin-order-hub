@@ -1,10 +1,13 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Leaf, Truck, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CartReminderPopup } from '@/components/CartReminderPopup';
+import { useAuth } from '@/hooks/useAuth';
+import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Index() {
@@ -15,12 +18,23 @@ export default function Index() {
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const isScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showReminderPopup, setShowReminderPopup] = useState(false);
+  
+  const { user } = useAuth();
+  const { items: cartItems } = useCart();
 
   useEffect(() => {
     supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories(data || []));
     supabase.from('products').select('*, categories(name)').eq('is_featured', true).eq('is_available', true).limit(8).then(({ data }) => setFeatured(data || []));
     supabase.from('banners').select('*').eq('is_active', true).order('sort_order').then(({ data }) => setBanners(data || []));
   }, []);
+
+  // Show cart reminder popup on homepage if user has cart items
+  useEffect(() => {
+    if (user && cartItems && cartItems.length > 0) {
+      setShowReminderPopup(true);
+    }
+  }, [user, cartItems]);
 
   const handleImageLoad = useCallback((bannerId: string) => {
     setLoadedImages(prev => ({ ...prev, [bannerId]: true }));
@@ -302,6 +316,18 @@ export default function Index() {
           </motion.div>
         </div>
       </section>
+
+      {/* Cart Reminder Popup */}
+      <AnimatePresence>
+        {showReminderPopup && cartItems && cartItems.length > 0 && (
+          <CartReminderPopup
+            cartCount={cartItems.length}
+            userName={user?.email?.split('@')[0] || user?.user_metadata?.full_name}
+            onClose={() => setShowReminderPopup(false)}
+            onCheckout={() => setShowReminderPopup(false)}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

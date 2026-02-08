@@ -5,39 +5,29 @@
  */
 
 export const CART_REMINDER_MESSAGES = [
-  // Premium & Conversational
-  "🛒 You have {cartCount} item(s) waiting. Shall we complete your order?",
-  "✨ Great selections! {cartCount} item(s) are saved in your cart.",
-  "📦 Your curated items are ready. {cartCount} item(s) pending checkout.",
+  // Standard Reminders
+  "🛒 Quick reminder: {cartCount} item(s) are still in your cart. Checkout now?",
+  "📦 You left {cartCount} item(s) in your cart. Ready to place the order?",
+  "💳 Checkout is one step away. {cartCount} item(s) are still in your cart.",
+  "✅ Saved for you: {cartCount} item(s) in cart. Complete your order now.",
+  "🔒 Secure checkout available. {cartCount} item(s) are ready to purchase.",
+  "🎁 Your picks are saved. {cartCount} item(s) are ready for checkout.",
+  "⭐ Great choice! {cartCount} item(s) are still in your cart. Proceed to checkout?",
+  "🚚 Almost yours! {cartCount} item(s) are ready for order confirmation.",
+  "📌 Quick reminder: {cartCount} item(s) are still waiting in your cart.",
+  "🔔 Just a reminder: {cartCount} item(s) are pending checkout.",
   
-  // Friendly Reminders
-  "🔔 Welcome back! {cartCount} item(s) still in your cart from last time.",
-  "📌 Quick reminder: {cartCount} item(s) are waiting for you in cart.",
-  "⭐ Your cart hasn't forgotten. {cartCount} item(s) ready for purchase.",
-  
-  // Urgency-Based
-  "⚡ Don't wait too long. {cartCount} item(s) are still pending in cart.",
-  "⏳ Items are popular. {cartCount} item(s) in your cart—checkout now?",
-  "🔥 Complete your purchase. {cartCount} item(s) are in your cart.",
-  
-  // Premium & Minimal
-  "💳 One step away. {cartCount} item(s) ready to order.",
-  "🚚 Your order is almost ready. {cartCount} item(s) pending.",
-  "✅ Everything saved! {cartCount} item(s) in cart—ready when you are.",
-  
-  // Trust & Security
-  "🔒 Secure checkout available. {cartCount} item(s) waiting in your cart.",
-  "📍 Your items are reserved. {cartCount} item(s) ready for you.",
-  
-  // Action-Oriented
-  "→ Finish what you started. {cartCount} item(s) in cart waiting.",
-  "❯ Your cart is complete. {cartCount} item(s)—time to checkout?",
-  "📣 Last chance! {cartCount} item(s) in your cart. Proceed now.",
-  
-  // Premium Experience
-  "🎁 Curated for you. {cartCount} item(s) are in your cart.",
-  "⭐ Premium items selected. {cartCount} item(s) ready for checkout.",
-  "✨ Your selections are waiting. Complete your order with {cartCount} item(s).",
+  // Urgency & Scarcity-Based
+  "⚡ Don't miss out. {cartCount} item(s) are still waiting in your cart.",
+  "⏳ Items in your cart may sell out soon. Checkout {cartCount} item(s) now.",
+  "🔥 Limited stock alert. Secure your {cartCount} item(s) before they're gone.",
+  "📦 Almost sold out. Complete checkout for your {cartCount} item(s) now.",
+  "📣 Stock is running low. Your {cartCount} item(s) are still in the cart.",
+  "⭐ Popular items sell fast. Checkout your {cartCount} item(s) now.",
+  "⚠ Limited availability. Confirm your {cartCount} item(s) with checkout.",
+  "💳 Checkout now before it's gone. {cartCount} item(s) still pending.",
+  "🔥 Trending picks in your cart. {cartCount} item(s) are waiting for checkout.",
+  "⏱ Don't wait too long. {cartCount} item(s) may sell out anytime.",
 ];
 
 /**
