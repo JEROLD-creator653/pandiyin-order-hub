@@ -53,14 +53,15 @@ export function useProductReviews({
 
   // Fetch review statistics
   const fetchStats = useCallback(async () => {
+    if (!productId) return;
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('product_review_stats')
         .select('*')
         .eq('product_id', productId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching review stats:', error);
         return;
       }
@@ -82,19 +83,13 @@ export function useProductReviews({
 
   // Fetch reviews
   const fetchReviews = useCallback(async (pageNum: number = 0, append: boolean = false) => {
+    if (!productId) { setLoading(false); return; }
     try {
       setLoading(true);
       
-      let query = (supabase as any)
+      let query = supabase
         .from('product_reviews')
-        .select(`
-          *,
-          users:user_id (
-            id,
-            email,
-            raw_user_meta_data
-          )
-        `, { count: 'exact' })
+        .select('*', { count: 'exact' })
         .eq('product_id', productId)
         .range(pageNum * limit, (pageNum + 1) * limit - 1);
 
@@ -132,32 +127,38 @@ export function useProductReviews({
         return;
       }
 
-      // Fetch user votes if logged in
+      // Fetch user profiles for display names
       let reviewsWithVotes = data || [];
-      if (userId && reviewsWithVotes.length > 0) {
-        const reviewIds = reviewsWithVotes.map((r: any) => r.id);
-        const { data: votes } = await (supabase as any)
-          .from('review_votes')
-          .select('review_id, is_helpful')
-          .eq('user_id', userId)
-          .in('review_id', reviewIds);
+      if (reviewsWithVotes.length > 0) {
+        const userIds = [...new Set(reviewsWithVotes.map((r: any) => r.user_id))];
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, full_name')
+          .in('user_id', userIds);
 
-        const votesMap = new Map(
-          votes?.map((v: any) => [v.review_id, v.is_helpful ? 'helpful' : 'not_helpful']) || []
+        const profilesMap = new Map(
+          profiles?.map((p: any) => [p.user_id, p.full_name]) || []
         );
 
+        // Fetch user votes if logged in
+        let votesMap = new Map();
+        if (userId) {
+          const reviewIds = reviewsWithVotes.map((r: any) => r.id);
+          const { data: votes } = await supabase
+            .from('review_votes')
+            .select('review_id, is_helpful')
+            .eq('user_id', userId)
+            .in('review_id', reviewIds);
+
+          votesMap = new Map(
+            votes?.map((v: any) => [v.review_id, v.is_helpful ? 'helpful' : 'not_helpful']) || []
+          );
+        }
+
         reviewsWithVotes = reviewsWithVotes.map((review: any) => ({
           ...review,
-          user_name: review.users?.raw_user_meta_data?.full_name,
-          user_email: review.users?.email,
+          user_name: profilesMap.get(review.user_id) || 'Anonymous',
           user_vote: votesMap.get(review.id) || null
-        }));
-      } else {
-        reviewsWithVotes = reviewsWithVotes.map((review: any) => ({
-          ...review,
-          user_name: review.users?.raw_user_meta_data?.full_name,
-          user_email: review.users?.email,
-          user_vote: null
         }));
       }
 
@@ -219,15 +220,13 @@ export function useProductReviews({
       let error;
 
       if (reviewData.reviewId) {
-        // Update existing review
-        ({ error } = await (supabase as any)
+        ({ error } = await supabase
           .from('product_reviews')
           .update(payload)
           .eq('id', reviewData.reviewId)
           .eq('user_id', userId));
       } else {
-        // Insert new review
-        ({ error } = await (supabase as any)
+        ({ error } = await supabase
           .from('product_reviews')
           .insert(payload));
       }
@@ -274,31 +273,27 @@ export function useProductReviews({
 
     try {
       // Check if user already voted
-      const { data: existingVote } = await (supabase as any)
+      const { data: existingVote } = await supabase
         .from('review_votes')
         .select('*')
         .eq('review_id', reviewId)
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (existingVote) {
-        // Update existing vote
-        if ((existingVote as any).is_helpful === isHelpful) {
-          // Remove vote if clicking the same button
-          await (supabase as any)
+        if (existingVote.is_helpful === isHelpful) {
+          await supabase
             .from('review_votes')
             .delete()
             .eq('id', existingVote.id);
         } else {
-          // Update to opposite vote
-          await (supabase as any)
+          await supabase
             .from('review_votes')
             .update({ is_helpful: isHelpful })
             .eq('id', existingVote.id);
         }
       } else {
-        // Insert new vote
-        await (supabase as any)
+        await supabase
           .from('review_votes')
           .insert({
             review_id: reviewId,
@@ -325,7 +320,7 @@ export function useProductReviews({
     if (!userId) return;
 
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('product_reviews')
         .delete()
         .eq('id', reviewId)
@@ -360,14 +355,14 @@ export function useProductReviews({
     if (!userId) return null;
 
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('product_reviews')
         .select('*')
         .eq('product_id', productId)
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching user review:', error);
         return null;
       }
