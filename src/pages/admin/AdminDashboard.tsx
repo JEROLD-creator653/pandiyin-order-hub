@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatPrice } from '@/lib/formatters';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ products: 0, orders: 0, customers: 0, revenue: 0 });
@@ -41,7 +42,7 @@ export default function AdminDashboard() {
   }, []);
 
   const statCards = [
-    { label: 'Total Revenue', value: `₹${stats.revenue.toLocaleString()}`, icon: TrendingUp, color: 'text-primary' },
+    { label: 'Total Revenue', value: formatPrice(stats.revenue), icon: TrendingUp, color: 'text-primary' },
     { label: 'Orders', value: stats.orders, icon: ShoppingCart, color: 'text-accent' },
     { label: 'Products', value: stats.products, icon: Package, color: 'text-chart-3' },
     { label: 'Customers', value: stats.customers, icon: Users, color: 'text-chart-4' },
@@ -120,7 +121,7 @@ export default function AdminDashboard() {
                     <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-sm">₹{o.total}</p>
+                    <p className="font-bold text-sm">{formatPrice(o.total)}</p>
                     <Badge variant="secondary" className="capitalize text-xs">{o.status}</Badge>
                   </div>
                 </Link>

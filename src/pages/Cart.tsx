@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import ProductRecommendations from '@/components/ProductRecommendations';
+import { formatPrice } from '@/lib/formatters';
 
 export default function Cart() {
   const { items, total, loading, updateQuantity, removeItem } = useCart();
@@ -59,7 +60,7 @@ export default function Cart() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <Link to={`/products/${item.product_id}`} className="font-semibold text-sm hover:text-primary line-clamp-1">{item.product.name}</Link>
-                  <p className="text-primary font-bold mt-1">₹{item.product.price}</p>
+                  <p className="text-primary font-medium mt-1">{formatPrice(item.product.price)}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex items-center border rounded-md">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity - 1)}><Minus className="h-3 w-3" /></Button>
@@ -69,7 +70,7 @@ export default function Cart() {
                     <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeItem(item.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 </div>
-                <div className="text-right font-bold whitespace-nowrap">₹{(item.product.price * item.quantity).toFixed(2)}</div>
+                <div className="text-right font-medium whitespace-nowrap">{formatPrice(item.product.price * item.quantity)}</div>
               </Card>
             </motion.div>
           ))}
@@ -78,11 +79,11 @@ export default function Cart() {
           <Card className="p-6 sticky top-20">
             <h3 className="font-display font-bold text-lg mb-4">Order Summary</h3>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>₹{total.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(total)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span className="text-primary">Calculated at checkout</span></div>
             </div>
-            <div className="border-t mt-4 pt-4 flex justify-between font-bold text-lg">
-              <span>Total</span><span className="text-primary">₹{total.toFixed(2)}</span>
+            <div className="border-t mt-4 pt-4 flex justify-between text-lg">
+              <span className="font-bold">Total</span><span className="font-medium text-primary">{formatPrice(total)}</span>
             </div>
             <Button className="w-full mt-6 rounded-full" size="lg" onClick={() => navigate('/checkout')}>
               Proceed to Checkout

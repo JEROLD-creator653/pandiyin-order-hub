@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Leaf, Search, SlidersHorizontal, ArrowUpDown, X, ChevronDown, Star } from 'lucide-react';
+import { Leaf, Search, SlidersHorizontal, ArrowUpDown, X, ChevronDown, ShoppingCart } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +13,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
+import { formatPrice } from '@/lib/formatters';
+import { useCart } from '@/hooks/useCart';
 
 type SortOption = 'newest' | 'price_low' | 'price_high' | 'popularity';
 
@@ -28,6 +30,8 @@ export default function Products() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
+  const { addToCart } = useCart();
 
   const searchFilter = searchParams.get('search') || '';
 
@@ -44,6 +48,18 @@ export default function Products() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [maxPrice, setMaxPrice] = useState(5000);
   const [searchInput, setSearchInput] = useState('');
+
+  const handleAddToCart = async (productId: string) => {
+    setAddingItems(prev => new Set(prev).add(productId));
+    await addToCart(productId, 1);
+    setTimeout(() => {
+      setAddingItems(prev => {
+        const next = new Set(prev);
+        next.delete(productId);
+        return next;
+      });
+    }, 600);
+  };
 
   useEffect(() => {
     supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories(data || []));
@@ -204,8 +220,8 @@ export default function Products() {
                   className="mb-3"
                 />
                 <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-                  <span>₹{priceRange[0]}</span>
-                  <span>₹{priceRange[1]}</span>
+                  <span>{formatPrice(priceRange[0])}</span>
+                  <span>{formatPrice(priceRange[1])}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Input
@@ -264,14 +280,14 @@ export default function Products() {
 
       {/* Products Grid */}
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
-            <Card key={i} className="overflow-hidden animate-pulse">
-              <div className="aspect-square bg-muted" />
-              <CardContent className="p-4 space-y-2">
+            <Card key={i} className="overflow-hidden animate-pulse h-full flex flex-col">
+              <div className="h-52 md:h-56 lg:h-64 bg-muted w-full" />
+              <CardContent className="p-4 space-y-2 flex-1 flex flex-col">
                 <div className="h-3 bg-muted rounded w-1/2" />
                 <div className="h-4 bg-muted rounded w-3/4" />
-                <div className="h-4 bg-muted rounded w-1/4" />
+                <div className="mt-auto h-4 bg-muted rounded w-1/4" />
               </CardContent>
             </Card>
           ))}
@@ -285,43 +301,65 @@ export default function Products() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filtered.map((p, i) => (
-            <motion.div key={p.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-              <Link to={`/products/${p.id}`}>
-                <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col">
-                  <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden relative">
+            <motion.div key={p.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="h-full">
+              <Link to={`/products/${p.id}`} className="h-full block">
+                <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col border-0 shadow-sm">
+                  <div className="h-52 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
                     {p.image_url ? (
-                      <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
+                      <img src={p.image_url} alt={p.name} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     ) : (
                       <Leaf className="h-12 w-12 text-muted-foreground/30" />
                     )}
                     {p.stock_quantity <= 5 && p.stock_quantity > 0 && (
-                      <Badge className="absolute top-2 right-2 bg-accent text-accent-foreground text-xs">Few Left</Badge>
+                      <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-600 text-white text-xs border-0 shadow-sm">Few Left</Badge>
                     )}
                     {p.stock_quantity === 0 && (
-                      <Badge variant="destructive" className="absolute top-2 right-2 text-xs">Out of Stock</Badge>
+                      <Badge variant="destructive" className="absolute top-2 right-2 text-xs border-0 shadow-sm">Out of Stock</Badge>
                     )}
                   </div>
-                  <CardContent className="p-3 sm:p-4 flex flex-col flex-1">
-                    <p className="text-xs text-muted-foreground mb-0.5">{(p as any).categories?.name}</p>
-                    <h3 className="font-semibold text-sm font-sans line-clamp-2 mb-1">{p.name}</h3>
-                    {p.weight && (
-                      <p className="text-xs text-muted-foreground mb-1.5">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>
-                    )}
-                    {(p.average_rating ?? 0) > 0 && (
-                      <div className="flex items-center gap-1 mb-1.5">
-                        <span className="flex items-center gap-0.5 bg-primary/10 text-primary text-xs font-semibold px-1.5 py-0.5 rounded">
-                          {Number(p.average_rating).toFixed(1)} <Star className="h-3 w-3 fill-current" />
-                        </span>
-                        {(p.review_count ?? 0) > 0 && (
-                          <span className="text-xs text-muted-foreground">({p.review_count})</span>
+                  <CardContent className="p-4 flex-1 flex flex-col">
+                    <p className="text-xs text-muted-foreground mb-1">{(p as any).categories?.name}</p>
+                    <h3 className="font-semibold text-base font-sans line-clamp-2 mb-3 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-lg text-primary">{formatPrice(p.price)}</span>
+                      {p.compare_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
+                    </div>
+                    <div className="mt-auto pt-3 flex justify-center">
+                      <Button
+                        size="sm"
+                        className="w-full rounded-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                        variant={addingItems.has(p.id) ? "secondary" : "outline"}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleAddToCart(p.id);
+                        }}
+                        disabled={p.stock_quantity === 0 || addingItems.has(p.id)}
+                      >
+                        {addingItems.has(p.id) ? (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="flex items-center gap-1"
+                          >
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 0.5, ease: "easeInOut" }}
+                            >
+                              ✓
+                            </motion.div>
+                            Added
+                          </motion.div>
+                        ) : p.stock_quantity === 0 ? (
+                          'Out of Stock'
+                        ) : (
+                          <>
+                            <ShoppingCart className="h-4 w-4 mr-2" />
+                            Add to Cart
+                          </>
                         )}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 mt-auto">
-                      <span className="font-bold text-primary">₹{p.price}</span>
-                      {p.compare_price && <span className="text-xs text-muted-foreground line-through">₹{p.compare_price}</span>}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>

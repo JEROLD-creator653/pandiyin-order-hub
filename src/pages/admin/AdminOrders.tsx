@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { formatPrice } from '@/lib/formatters';
 
 const statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
 const statusColors: Record<string, string> = {
@@ -98,7 +99,7 @@ export default function AdminOrders() {
                             ))}
                           </SelectContent>
                         </Select>
-                        <span className="font-bold text-sm">₹{o.total}</span>
+                        <span className="font-bold text-sm">{formatPrice(o.total)}</span>
                       </div>
                     </div>
 
@@ -120,10 +121,10 @@ export default function AdminOrders() {
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div><span className="text-muted-foreground">Status:</span> <Badge className={statusColors[detail.status]}>{detail.status}</Badge></div>
                 <div><span className="text-muted-foreground">Payment:</span> {detail.payment_method.toUpperCase()}</div>
-                <div><span className="text-muted-foreground">Subtotal:</span> ₹{detail.subtotal}</div>
-                <div><span className="text-muted-foreground">Delivery:</span> ₹{detail.delivery_charge}</div>
-                <div><span className="text-muted-foreground">Discount:</span> ₹{detail.discount}</div>
-                <div className="font-bold"><span className="text-muted-foreground">Total:</span> ₹{detail.total}</div>
+                <div><span className="text-muted-foreground">Subtotal:</span> {formatPrice(detail.subtotal)}</div>
+                <div><span className="text-muted-foreground">Delivery:</span> {formatPrice(detail.delivery_charge)}</div>
+                <div><span className="text-muted-foreground">Discount:</span> {formatPrice(detail.discount)}</div>
+                <div className="font-bold"><span className="text-muted-foreground">Total:</span> {formatPrice(detail.total)}</div>
               </div>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-muted-foreground">Update status</span>
@@ -148,7 +149,7 @@ export default function AdminOrders() {
                 {orderItems.map(item => (
                   <div key={item.id} className="flex justify-between text-sm py-1 border-b last:border-0">
                     <span>{item.product_name} ×{item.quantity}</span>
-                    <span>₹{item.total}</span>
+                    <span>{formatPrice(item.total)}</span>
                   </div>
                 ))}
               </div>

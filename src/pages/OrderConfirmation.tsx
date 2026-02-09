@@ -5,6 +5,7 @@ import { CheckCircle, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { formatPrice } from '@/lib/formatters';
 
 export default function OrderConfirmation() {
   const { id } = useParams();
@@ -25,7 +26,7 @@ export default function OrderConfirmation() {
           <Card className="p-6 text-left mb-6">
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Order #</span><span className="font-mono">{order.order_number}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Total</span><span className="font-bold text-primary">₹{order.total}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Total</span><span className="font-medium text-primary">{formatPrice(order.total)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Payment</span><span className="capitalize">{order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className="capitalize">{order.status}</span></div>
             </div>

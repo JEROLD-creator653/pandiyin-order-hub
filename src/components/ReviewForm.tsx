@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { X, Upload, Loader2 } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import RatingInput from './RatingInput';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Card } from './ui/card';
@@ -14,9 +13,7 @@ interface ReviewFormProps {
   existingReview?: {
     id: string;
     rating: number;
-    title: string;
-    review_text: string;
-    images?: string[];
+    description: string;
   };
   onSubmit: (data: ReviewFormData) => Promise<void>;
   onCancel?: () => void;
@@ -25,9 +22,7 @@ interface ReviewFormProps {
 
 export interface ReviewFormData {
   rating: number;
-  title: string;
-  review_text: string;
-  images?: string[];
+  description: string;
 }
 
 export default function ReviewForm({
@@ -39,9 +34,7 @@ export default function ReviewForm({
   className
 }: ReviewFormProps) {
   const [rating, setRating] = useState(existingReview?.rating || 0);
-  const [title, setTitle] = useState(existingReview?.title || '');
-  const [reviewText, setReviewText] = useState(existingReview?.review_text || '');
-  const [images, setImages] = useState<string[]>(existingReview?.images || []);
+  const [description, setDescription] = useState(existingReview?.description || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -51,19 +44,12 @@ export default function ReviewForm({
     if (rating === 0) {
       newErrors.rating = 'Please select a rating';
     }
-    if (!title.trim()) {
-      newErrors.title = 'Please enter a title';
-    } else if (title.length < 5) {
-      newErrors.title = 'Title must be at least 5 characters';
-    } else if (title.length > 100) {
-      newErrors.title = 'Title must be less than 100 characters';
-    }
-    if (!reviewText.trim()) {
-      newErrors.review_text = 'Please enter your review';
-    } else if (reviewText.length < 20) {
-      newErrors.review_text = 'Review must be at least 20 characters';
-    } else if (reviewText.length > 2000) {
-      newErrors.review_text = 'Review must be less than 2000 characters';
+    if (!description.trim()) {
+      newErrors.description = 'Please enter your review';
+    } else if (description.trim().length < 20) {
+      newErrors.description = 'Review must be at least 20 characters';
+    } else if (description.length > 2000) {
+      newErrors.description = 'Review must be less than 2000 characters';
     }
 
     setErrors(newErrors);
@@ -79,37 +65,19 @@ export default function ReviewForm({
     try {
       await onSubmit({
         rating,
-        title: title.trim(),
-        review_text: reviewText.trim(),
-        images
+        description: description.trim()
       });
       
       // Reset form if not editing
       if (!existingReview) {
         setRating(0);
-        setTitle('');
-        setReviewText('');
-        setImages([]);
+        setDescription('');
       }
     } catch (error) {
       console.error('Failed to submit review:', error);
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-
-    // In a real implementation, you would upload these to storage
-    // For now, we'll create object URLs
-    const newImages = Array.from(files).map(file => URL.createObjectURL(file));
-    setImages(prev => [...prev, ...newImages].slice(0, 5)); // Max 5 images
-  };
-
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -154,92 +122,24 @@ export default function ReviewForm({
           )}
         </div>
 
-        {/* Title Input */}
+        {/* Review Description */}
         <div className="space-y-2">
-          <Label htmlFor="title">
-            Review Title <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="title"
-            placeholder="Sum up your experience in one line"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            disabled={isSubmitting}
-            maxLength={100}
-          />
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{errors.title || 'Brief and descriptive'}</span>
-            <span>{title.length}/100</span>
-          </div>
-        </div>
-
-        {/* Review Text */}
-        <div className="space-y-2">
-          <Label htmlFor="review_text">
-            Your Review <span className="text-destructive">*</span>
+          <Label htmlFor="description">
+            Review Description <span className="text-destructive">*</span>
           </Label>
           <Textarea
-            id="review_text"
+            id="description"
             placeholder="Share your experience with this product..."
-            value={reviewText}
-            onChange={(e) => setReviewText(e.target.value)}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             disabled={isSubmitting}
             rows={6}
             maxLength={2000}
             className="resize-none"
           />
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{errors.review_text || 'Minimum 20 characters'}</span>
-            <span>{reviewText.length}/2000</span>
-          </div>
-        </div>
-
-        {/* Image Upload */}
-        <div className="space-y-2">
-          <Label>Add Photos (Optional)</Label>
-          <div className="space-y-3">
-            {images.length > 0 && (
-              <div className="flex gap-2 flex-wrap">
-                {images.map((image, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={image}
-                      alt={`Review image ${index + 1}`}
-                      className="w-20 h-20 object-cover rounded-lg border"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            {images.length < 5 && (
-              <div>
-                <label
-                  htmlFor="image-upload"
-                  className="flex items-center justify-center gap-2 border-2 border-dashed rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                >
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    Upload up to {5 - images.length} more {images.length < 4 ? 'photos' : 'photo'}
-                  </span>
-                </label>
-                <input
-                  id="image-upload"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  disabled={isSubmitting}
-                  className="hidden"
-                />
-              </div>
-            )}
+            <span>{errors.description || 'Minimum 20 characters'}</span>
+            <span>{description.length}/2000</span>
           </div>
         </div>
 

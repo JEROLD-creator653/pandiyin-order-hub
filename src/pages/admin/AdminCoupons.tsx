@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { formatPrice } from '@/lib/formatters';
 
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState<any[]>([]);
@@ -68,13 +69,13 @@ export default function AdminCoupons() {
                 <div className="space-y-2"><Label>Type</Label>
                   <Select value={form.discount_type} onValueChange={v => setForm(f => ({ ...f, discount_type: v }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="percentage">Percentage</SelectItem><SelectItem value="fixed">Fixed ₹</SelectItem></SelectContent>
+                    <SelectContent><SelectItem value="percentage">Percentage</SelectItem><SelectItem value="fixed">Fixed Rs.</SelectItem></SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2"><Label>Value</Label><Input type="number" value={form.discount_value} onChange={e => setForm(f => ({ ...f, discount_value: e.target.value }))} /></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><Label>Min Order ₹</Label><Input type="number" value={form.min_order_value} onChange={e => setForm(f => ({ ...f, min_order_value: e.target.value }))} /></div>
+                <div className="space-y-2"><Label>Min Order Rs.</Label><Input type="number" value={form.min_order_value} onChange={e => setForm(f => ({ ...f, min_order_value: e.target.value }))} /></div>
                 <div className="space-y-2"><Label>Max Uses</Label><Input type="number" value={form.max_uses} onChange={e => setForm(f => ({ ...f, max_uses: e.target.value }))} placeholder="Unlimited" /></div>
               </div>
               <div className="space-y-2"><Label>Expiry Date</Label><Input type="date" value={form.expires_at} onChange={e => setForm(f => ({ ...f, expires_at: e.target.value }))} /></div>
@@ -92,8 +93,8 @@ export default function AdminCoupons() {
               {coupons.map(c => (
                 <TableRow key={c.id}>
                   <TableCell className="font-mono font-bold">{c.code}</TableCell>
-                  <TableCell>{c.discount_type === 'percentage' ? `${c.discount_value}%` : `₹${c.discount_value}`}</TableCell>
-                  <TableCell>₹{c.min_order_value}</TableCell>
+                  <TableCell>{c.discount_type === 'percentage' ? `${c.discount_value}%` : formatPrice(c.discount_value)}</TableCell>
+                  <TableCell>{formatPrice(c.min_order_value)}</TableCell>
                   <TableCell>{c.used_count}{c.max_uses ? `/${c.max_uses}` : ''}</TableCell>
                   <TableCell><Badge className={c.is_active ? 'bg-green-100 text-green-800' : ''}>{c.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
                   <TableCell>

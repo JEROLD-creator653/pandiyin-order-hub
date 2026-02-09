@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useProductRecommendations } from '@/hooks/useProductRecommendations';
 import { useCart } from '@/hooks/useCart';
 import { useState } from 'react';
+import { formatPrice } from '@/lib/formatters';
 
 interface ProductRecommendationsProps {
   cartItems: any[];
@@ -52,11 +53,11 @@ export default function ProductRecommendations({
       {isLoading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           {[...Array(maxItems)].map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <div className="aspect-square bg-muted animate-pulse" />
-              <CardContent className="p-3 space-y-2">
+            <Card key={i} className="overflow-hidden h-full flex flex-col">
+              <div className="h-52 md:h-56 lg:h-64 bg-muted animate-pulse w-full" />
+              <CardContent className="p-3 space-y-2 flex-1 flex flex-col">
                 <div className="h-4 bg-muted rounded animate-pulse" />
-                <div className="h-3 bg-muted rounded w-2/3 animate-pulse" />
+                <div className="mt-auto h-8 bg-muted rounded w-full animate-pulse" />
               </CardContent>
             </Card>
           ))}
@@ -69,15 +70,16 @@ export default function ProductRecommendations({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05, duration: 0.3 }}
+              className="h-full"
             >
-              <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col">
+              <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col border-0 shadow-sm">
                 <Link to={`/products/${product.id}`} className="block">
-                  <div className="relative aspect-square bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
+                  <div className="relative h-52 md:h-56 lg:h-64 w-full bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
                     {product.image_url ? (
                       <img
                         src={product.image_url}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
                         loading="lazy"
                       />
                     ) : (
@@ -90,7 +92,7 @@ export default function ProductRecommendations({
                     {product.stock_quantity > 0 && product.stock_quantity < 10 && (
                       <Badge 
                         variant="secondary" 
-                        className="absolute top-2 right-2 text-xs bg-white/90 backdrop-blur-sm"
+                        className="absolute top-2 right-2 text-[10px] px-1.5 py-0.5 bg-white/90 backdrop-blur-sm shadow-sm"
                       >
                         Only {product.stock_quantity} left
                       </Badge>
@@ -100,14 +102,14 @@ export default function ProductRecommendations({
 
                 <CardContent className="p-3 flex-1 flex flex-col">
                   <Link to={`/products/${product.id}`}>
-                    <h3 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors min-h-[2.5rem]">
+                    <h3 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors leading-snug" title={product.name}>
                       {product.name}
                     </h3>
                   </Link>
 
                   <div className="mt-auto space-y-2">
-                    <p className="text-lg font-bold text-primary">
-                      ₹{product.price}
+                    <p className="text-base font-medium text-primary">
+                      {formatPrice(product.price)}
                     </p>
 
                     <Button

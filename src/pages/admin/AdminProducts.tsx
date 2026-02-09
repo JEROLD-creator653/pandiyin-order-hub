@@ -56,6 +56,7 @@ import {
   deleteProduct,
   updateProductImage,
 } from '@/lib/imageUpload';
+import { formatPrice } from '@/lib/formatters';
 
 interface Product {
   id: string;
@@ -356,7 +357,7 @@ export default function AdminProducts() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">
-                    Price (₹) *
+                    Price (Rs.) *
                   </label>
                   <Input
                     type="number"
@@ -550,7 +551,7 @@ export default function AdminProducts() {
                       <TableCell className="text-sm">
                         {p.categories?.name || '-'}
                       </TableCell>
-                      <TableCell className="font-bold">₹{p.price}</TableCell>
+                      <TableCell className="font-medium">{formatPrice(p.price)}</TableCell>
                       <TableCell>
                         <Badge
                           variant={

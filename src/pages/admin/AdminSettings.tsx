@@ -54,8 +54,8 @@ export default function AdminSettings() {
       <Card>
         <CardHeader><CardTitle className="text-base">Delivery Charges</CardTitle></CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2"><Label>Base Delivery Charge (₹)</Label><Input type="number" value={delivery.base_charge} onChange={e => setDelivery(d => ({ ...d, base_charge: e.target.value }))} /></div>
-          <div className="space-y-2"><Label>Free Delivery Above (₹)</Label><Input type="number" value={delivery.free_delivery_above} onChange={e => setDelivery(d => ({ ...d, free_delivery_above: e.target.value }))} placeholder="Leave empty for no free delivery" /></div>
+          <div className="space-y-2"><Label>Base Delivery Charge (Rs.)</Label><Input type="number" value={delivery.base_charge} onChange={e => setDelivery(d => ({ ...d, base_charge: e.target.value }))} /></div>
+          <div className="space-y-2"><Label>Free Delivery Above (Rs.)</Label><Input type="number" value={delivery.free_delivery_above} onChange={e => setDelivery(d => ({ ...d, free_delivery_above: e.target.value }))} placeholder="Leave empty for no free delivery" /></div>
           <Button onClick={saveDelivery}><Save className="mr-2 h-4 w-4" /> Save Delivery Settings</Button>
         </CardContent>
       </Card>

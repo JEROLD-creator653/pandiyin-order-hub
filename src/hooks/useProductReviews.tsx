@@ -7,16 +7,10 @@ interface Review {
   user_id: string;
   product_id: string;
   rating: number;
-  title: string;
-  review_text: string;
-  helpful_count: number;
-  verified_purchase: boolean;
-  images?: string[];
+  description: string;
   created_at: string;
-  updated_at: string;
   user_name?: string;
   user_email?: string;
-  user_vote?: 'helpful' | 'not_helpful' | null;
 }
 
 interface ReviewStats {
@@ -27,14 +21,13 @@ interface ReviewStats {
   three_star: number;
   two_star: number;
   one_star: number;
-  verified_purchases?: number;
 }
 
 interface UseProductReviewsOptions {
   productId: string;
   userId?: string;
   limit?: number;
-  sortBy?: 'recent' | 'helpful' | 'rating_high' | 'rating_low';
+  sortBy?: 'recent' | 'rating_high' | 'rating_low';
   filterByRating?: number | null;
 }
 
@@ -53,15 +46,14 @@ export function useProductReviews({
 
   // Fetch review statistics
   const fetchStats = useCallback(async () => {
-    if (!productId) return;
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('product_review_stats')
         .select('*')
         .eq('product_id', productId)
-        .maybeSingle();
+        .single();
 
-      if (error) {
+      if (error && error.code !== 'PGRST116') {
         console.error('Error fetching review stats:', error);
         return;
       }
@@ -73,8 +65,7 @@ export function useProductReviews({
         four_star: 0,
         three_star: 0,
         two_star: 0,
-        one_star: 0,
-        verified_purchases: 0
+        one_star: 0
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -83,13 +74,19 @@ export function useProductReviews({
 
   // Fetch reviews
   const fetchReviews = useCallback(async (pageNum: number = 0, append: boolean = false) => {
-    if (!productId) { setLoading(false); return; }
     try {
       setLoading(true);
       
-      let query = supabase
+      let query = (supabase as any)
         .from('product_reviews')
-        .select('*', { count: 'exact' })
+        .select(`
+          id,
+          user_id,
+          product_id,
+          rating,
+          description,
+          created_at
+        `, { count: 'exact' })
         .eq('product_id', productId)
         .range(pageNum * limit, (pageNum + 1) * limit - 1);
 
@@ -100,9 +97,6 @@ export function useProductReviews({
 
       // Apply sorting
       switch (sortBy) {
-        case 'helpful':
-          query = query.order('helpful_count', { ascending: false });
-          break;
         case 'rating_high':
           query = query.order('rating', { ascending: false });
           break;
@@ -119,58 +113,39 @@ export function useProductReviews({
 
       if (error) {
         console.error('Error fetching reviews:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
         toast({
           title: 'Error',
-          description: 'Failed to load reviews',
+          description: `Failed to load reviews: ${error.message || 'Unknown error'}`,
           variant: 'destructive'
         });
+        setReviews([]);
+        setLoading(false);
         return;
       }
 
-      // Fetch user profiles for display names
-      let reviewsWithVotes = data || [];
-      if (reviewsWithVotes.length > 0) {
-        const userIds = [...new Set(reviewsWithVotes.map((r: any) => r.user_id))];
-        const { data: profiles } = await supabase
-          .from('profiles')
-          .select('user_id, full_name')
-          .in('user_id', userIds);
-
-        const profilesMap = new Map(
-          profiles?.map((p: any) => [p.user_id, p.full_name]) || []
-        );
-
-        // Fetch user votes if logged in
-        let votesMap = new Map();
-        if (userId) {
-          const reviewIds = reviewsWithVotes.map((r: any) => r.id);
-          const { data: votes } = await supabase
-            .from('review_votes')
-            .select('review_id, is_helpful')
-            .eq('user_id', userId)
-            .in('review_id', reviewIds);
-
-          votesMap = new Map(
-            votes?.map((v: any) => [v.review_id, v.is_helpful ? 'helpful' : 'not_helpful']) || []
-          );
-        }
-
-        reviewsWithVotes = reviewsWithVotes.map((review: any) => ({
-          ...review,
-          user_name: profilesMap.get(review.user_id) || 'Anonymous',
-          user_vote: votesMap.get(review.id) || null
-        }));
-      }
+      // Map reviews without user details (to avoid auth.users RLS issues)
+      const reviewsWithUser = (data || []).map((review: any) => ({
+        ...review,
+        user_name: 'Verified Customer',
+        user_email: ''
+      }));
 
       if (append) {
-        setReviews(prev => [...prev, ...reviewsWithVotes]);
+        setReviews(prev => [...prev, ...reviewsWithUser]);
       } else {
-        setReviews(reviewsWithVotes);
+        setReviews(reviewsWithUser);
       }
 
       setHasMore((count || 0) > (pageNum + 1) * limit);
-    } catch (error) {
-      console.error('Error:', error);
+    } catch (error: any) {
+      console.error('Fetch reviews error:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to load reviews: ${error?.message || 'Unknown error'}`,
+        variant: 'destructive'
+      });
+      setReviews([]);
     } finally {
       setLoading(false);
     }
@@ -193,9 +168,7 @@ export function useProductReviews({
   // Submit or update review
   const submitReview = useCallback(async (reviewData: {
     rating: number;
-    title: string;
-    review_text: string;
-    images?: string[];
+    description: string;
     reviewId?: string;
   }) => {
     if (!userId) {
@@ -207,26 +180,35 @@ export function useProductReviews({
       return;
     }
 
+    if (!reviewData.description.trim() || reviewData.description.trim().length < 20) {
+      toast({
+        title: 'Error',
+        description: 'Review must be at least 20 characters',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     try {
       const payload = {
         user_id: userId,
         product_id: productId,
         rating: reviewData.rating,
-        title: reviewData.title,
-        review_text: reviewData.review_text,
-        images: reviewData.images || []
+        description: reviewData.description.trim()
       };
 
       let error;
 
       if (reviewData.reviewId) {
-        ({ error } = await supabase
+        // Update existing review
+        ({ error } = await (supabase as any)
           .from('product_reviews')
           .update(payload)
           .eq('id', reviewData.reviewId)
           .eq('user_id', userId));
       } else {
-        ({ error } = await supabase
+        // Insert new review
+        ({ error } = await (supabase as any)
           .from('product_reviews')
           .insert(payload));
       }
@@ -260,67 +242,12 @@ export function useProductReviews({
     }
   }, [userId, productId, fetchStats, fetchReviews]);
 
-  // Vote on review
-  const voteOnReview = useCallback(async (reviewId: string, isHelpful: boolean) => {
-    if (!userId) {
-      toast({
-        title: 'Login Required',
-        description: 'Please log in to vote on reviews',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    try {
-      // Check if user already voted
-      const { data: existingVote } = await supabase
-        .from('review_votes')
-        .select('*')
-        .eq('review_id', reviewId)
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (existingVote) {
-        if (existingVote.is_helpful === isHelpful) {
-          await supabase
-            .from('review_votes')
-            .delete()
-            .eq('id', existingVote.id);
-        } else {
-          await supabase
-            .from('review_votes')
-            .update({ is_helpful: isHelpful })
-            .eq('id', existingVote.id);
-        }
-      } else {
-        await supabase
-          .from('review_votes')
-          .insert({
-            review_id: reviewId,
-            user_id: userId,
-            is_helpful: isHelpful
-          });
-      }
-
-      // Refresh reviews to get updated vote counts
-      await fetchReviews(0, false);
-      setPage(0);
-    } catch (error) {
-      console.error('Error voting:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to submit vote',
-        variant: 'destructive'
-      });
-    }
-  }, [userId, fetchReviews]);
-
   // Delete review
   const deleteReview = useCallback(async (reviewId: string) => {
     if (!userId) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('product_reviews')
         .delete()
         .eq('id', reviewId)
@@ -355,14 +282,14 @@ export function useProductReviews({
     if (!userId) return null;
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('product_reviews')
         .select('*')
         .eq('product_id', productId)
         .eq('user_id', userId)
-        .maybeSingle();
+        .single();
 
-      if (error) {
+      if (error && error.code !== 'PGRST116') {
         console.error('Error fetching user review:', error);
         return null;
       }
@@ -381,7 +308,6 @@ export function useProductReviews({
     hasMore,
     loadMore,
     submitReview,
-    voteOnReview,
     deleteReview,
     getUserReview,
     refresh: () => {

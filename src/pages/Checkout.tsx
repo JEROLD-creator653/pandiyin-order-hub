@@ -13,6 +13,7 @@ import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import AddressManager from '@/components/AddressManager';
+import { formatPrice } from '@/lib/formatters';
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -41,11 +42,11 @@ export default function Checkout() {
     const { data } = await supabase.from('coupons').select('*').eq('code', couponCode.trim().toUpperCase()).eq('is_active', true).maybeSingle();
     if (!data) { toast({ title: 'Invalid coupon', variant: 'destructive' }); return; }
     if (data.min_order_value && total < Number(data.min_order_value)) {
-      toast({ title: `Minimum order ₹${data.min_order_value}`, variant: 'destructive' }); return;
+      toast({ title: `Minimum order ${formatPrice(data.min_order_value)}`, variant: 'destructive' }); return;
     }
     const disc = data.discount_type === 'percentage' ? (total * Number(data.discount_value)) / 100 : Number(data.discount_value);
     setDiscount(disc);
-    toast({ title: `Coupon applied! You save ₹${disc.toFixed(2)}` });
+    toast({ title: `Coupon applied! You save ${formatPrice(disc)}` });
   };
 
   const placeOrder = async () => {
@@ -140,17 +141,17 @@ export default function Checkout() {
               {items.map(item => (
                 <div key={item.id} className="flex justify-between">
                   <span className="text-muted-foreground truncate max-w-[60%]">{item.product.name} ×{item.quantity}</span>
-                  <span>₹{(item.product.price * item.quantity).toFixed(2)}</span>
+                  <span>{formatPrice(item.product.price * item.quantity)}</span>
                 </div>
               ))}
             </div>
             <div className="border-t pt-3 space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>₹{total.toFixed(2)}</span></div>
-              {discount > 0 && <div className="flex justify-between text-primary"><span>Discount</span><span>-₹{discount.toFixed(2)}</span></div>}
-              <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{deliveryCharge === 0 ? 'Free' : `₹${deliveryCharge.toFixed(2)}`}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(total)}</span></div>
+              {discount > 0 && <div className="flex justify-between text-primary"><span>Discount</span><span>-{formatPrice(discount)}</span></div>}
+              <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{deliveryCharge === 0 ? 'Free' : formatPrice(deliveryCharge)}</span></div>
             </div>
-            <div className="border-t mt-3 pt-3 flex justify-between font-bold text-lg">
-              <span>Total</span><span className="text-primary">₹{grandTotal.toFixed(2)}</span>
+            <div className="border-t mt-3 pt-3 flex justify-between text-lg">
+              <span className="font-bold">Total</span><span className="font-medium text-primary">{formatPrice(grandTotal)}</span>
             </div>
 
             {/* Selected address in summary */}
@@ -174,7 +175,7 @@ export default function Checkout() {
             </div>
 
             <Button className="w-full mt-6 rounded-full" size="lg" onClick={placeOrder} disabled={loading}>
-              {loading ? 'Placing Order...' : `Place Order · ₹${grandTotal.toFixed(2)}`}
+              {loading ? 'Placing Order...' : `Place Order · ${formatPrice(grandTotal)}`}
             </Button>
           </Card>
         </div>

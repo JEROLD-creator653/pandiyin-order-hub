@@ -10,6 +10,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
+import { formatPrice } from '@/lib/formatters';
 
 interface Banner {
   id: string;
@@ -188,7 +189,7 @@ export function ProductGrid({ categoryFilter?: string }) {
             <h3 className="font-semibold text-sm line-clamp-2">
               {product.name}
             </h3>
-            <p className="font-bold text-primary">₹{product.price}</p>
+            <p className="font-bold text-primary">{formatPrice(product.price)}</p>
           </div>
         </a>
       ))}
@@ -250,7 +251,7 @@ export function ProductDetail({ productId }: { productId: string }) {
         <p className="text-muted-foreground mb-4">
           Category: {product.categories?.name}
         </p>
-        <p className="text-2xl font-bold text-primary mb-4">₹{product.price}</p>
+        <p className="text-2xl font-bold text-primary mb-4">{formatPrice(product.price)}</p>
         <p className="text-muted-foreground mb-6">{product.description}</p>
         {/* Add to Cart Button */}
       </div>
@@ -322,7 +323,7 @@ export function LiveProductList() {
             <p className="text-sm text-muted-foreground">
               {product.description}
             </p>
-            <p className="font-bold text-primary">₹{product.price}</p>
+            <p className="font-bold text-primary">{formatPrice(product.price)}</p>
           </div>
         </div>
       ))}
@@ -529,7 +530,7 @@ export function ProductSearch() {
               />
               <div className="flex-1">
                 <p className="font-semibold text-sm">{product.name}</p>
-                <p className="text-xs text-muted-foreground">₹{product.price}</p>
+                <p className="text-xs text-muted-foreground">{formatPrice(product.price)}</p>
               </div>
             </a>
           ))}

@@ -69,9 +69,9 @@ A professional, intelligent product recommendation system for the cart page that
 ├─────────────────────┬───────────────────┤
 │                     │                   │
 │   Cart Items        │  Order Summary    │
-│   • Product 1       │  Subtotal: ₹500   │
+│   • Product 1       │  Subtotal: rs.500   │
 │   • Product 2       │  Delivery: Free   │
-│   • Product 3       │  Total: ₹500      │
+│   • Product 3       │  Total: rs.500      │
 │                     │                   │
 │                     │  [Checkout Btn]   │
 └─────────────────────┴───────────────────┘
@@ -81,7 +81,7 @@ A professional, intelligent product recommendation system for the cart page that
 ├──────┬──────┬──────┬──────┬──────┬──────┤
 │[🖼️  ]│[🖼️  ]│[🖼️  ]│[🖼️  ]│[🖼️  ]│[🖼️  ]│
 │Name  │Name  │Name  │Name  │Name  │Name  │
-│₹100  │₹150  │₹200  │₹120  │₹180  │₹90   │
+│rs.100  │rs.150  │rs.200  │rs.120  │rs.180  │rs.90   │
 │[Add] │[Add] │[Add] │[Add] │[Add] │[Add] │
 └──────┴──────┴──────┴──────┴──────┴──────┘
 ```
@@ -183,8 +183,8 @@ const COMPLEMENTARY_ITEMS = {
 ## 📊 Expected Business Impact
 
 ### Average Order Value (AOV)
-- **Before:** ₹500 per order
-- **Expected After:** ₹600-650 per order (20-30% uplift)
+- **Before:** rs.500 per order
+- **Expected After:** rs.600-650 per order (20-30% uplift)
 - **Mechanism:** Cross-selling complementary items
 
 ### Conversion Rate

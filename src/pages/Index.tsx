@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import type { TouchEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Leaf, Truck, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Leaf, Truck, ShieldCheck, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -12,12 +12,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
 import favicon from '@/public/Pandiyin.ico';
+import { formatPrice } from '@/lib/formatters';
 
 export default function Index() {
   const [featured, setFeatured] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+  const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
   const isScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const touchStartXRef = useRef<number | null>(null);
@@ -25,7 +27,7 @@ export default function Index() {
   const [showReminderPopup, setShowReminderPopup] = useState(false);
   
   const { user } = useAuth();
-  const { items: cartItems } = useCart();
+  const { items: cartItems, addToCart } = useCart();
 
   useEffect(() => {
     const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
@@ -50,6 +52,18 @@ export default function Index() {
       setShowReminderPopup(true);
     }
   }, [user, cartItems]);
+
+  const handleAddToCart = async (productId: string) => {
+    setAddingItems(prev => new Set(prev).add(productId));
+    await addToCart(productId, 1);
+    setTimeout(() => {
+      setAddingItems(prev => {
+        const next = new Set(prev);
+        next.delete(productId);
+        return next;
+      });
+    }, 600);
+  };
 
   const handleImageLoad = useCallback((bannerId: string) => {
     setLoadedImages(prev => ({ ...prev, [bannerId]: true }));
@@ -143,7 +157,7 @@ export default function Index() {
     <>
       {/* Professional Banner Carousel - Hero Banner */}
       {banners.length > 0 ? (
-        <section className="relative w-full h-72 md:h-72 lg:h-96 overflow-hidden group pt-16 md:pt-0">
+        <section className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden group pt-16 md:pt-0">
           <div
             className="relative w-full h-full"
             onTouchStart={handleTouchStart}
@@ -248,26 +262,61 @@ export default function Index() {
               <h2 className="text-3xl font-display font-bold">Bestsellers</h2>
               <Button asChild variant="ghost"><Link to="/products">View All <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {featured.map((p, i) => (
                 <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="h-full">
-                  <Link to={`/products/${p.id}`}>
-                    <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col">
-                      <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
+                  <Link to={`/products/${p.id}`} className="h-full block">
+                    <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col border-0 shadow-sm">
+                      <div className="h-52 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
                         {p.image_url ? (
-                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" />
                         ) : (
                           <Leaf className="h-12 w-12 text-muted-foreground/30" />
                         )}
                       </div>
-                      <CardContent className="p-4 flex flex-col flex-grow justify-between">
+                      <CardContent className="p-4 flex-1 flex flex-col">
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">{(p as any).categories?.name}</p>
-                          <h3 className="font-semibold text-sm font-sans line-clamp-2 mb-2">{p.name}</h3>
+                          <h3 className="font-semibold text-base font-sans line-clamp-2 mb-3 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
                         </div>
-                        <div className="flex items-center gap-2 mt-auto">
-                          <span className="font-bold text-primary">₹{p.price}</span>
-                          {p.compare_price && <span className="text-xs text-muted-foreground line-through">₹{p.compare_price}</span>}
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-lg text-primary">{formatPrice(p.price)}</span>
+                          {p.compare_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
+                        </div>
+                        <div className="mt-auto pt-3 flex justify-center">
+                          <Button
+                            size="sm"
+                            className="w-full rounded-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                            variant={addingItems.has(p.id) ? "secondary" : "outline"}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleAddToCart(p.id);
+                            }}
+                            disabled={p.stock_quantity === 0 || addingItems.has(p.id)}
+                          >
+                            {addingItems.has(p.id) ? (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="flex items-center gap-1"
+                              >
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                                >
+                                  ✓
+                                </motion.div>
+                                Added
+                              </motion.div>
+                            ) : p.stock_quantity === 0 ? (
+                              'Out of Stock'
+                            ) : (
+                              <>
+                                <ShoppingCart className="h-4 w-4 mr-2" />
+                                Add to Cart
+                              </>
+                            )}
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>

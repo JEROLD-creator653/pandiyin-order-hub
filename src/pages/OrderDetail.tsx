@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
+import { formatPrice } from '@/lib/formatters';
 
 const statusSteps = [
   { key: 'pending', label: 'Order Placed', icon: Clock },
@@ -113,9 +114,9 @@ export default function OrderDetail() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{item.product_name}</p>
-                  <p className="text-xs text-muted-foreground">Qty: {item.quantity} × ₹{item.product_price}</p>
+                  <p className="text-xs text-muted-foreground">Qty: {item.quantity} × {formatPrice(item.product_price)}</p>
                 </div>
-                <span className="font-semibold text-sm">₹{item.total}</span>
+                <span className="font-medium text-sm">{formatPrice(item.total)}</span>
               </div>
             ))}
           </CardContent>
@@ -126,11 +127,11 @@ export default function OrderDetail() {
           <Card>
             <CardHeader><CardTitle className="text-lg">Payment Summary</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>₹{order.subtotal}</span></div>
-              {order.discount > 0 && <div className="flex justify-between text-primary"><span>Discount</span><span>-₹{order.discount}</span></div>}
-              <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{order.delivery_charge == 0 ? 'Free' : `₹${order.delivery_charge}`}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(order.subtotal)}</span></div>
+              {order.discount > 0 && <div className="flex justify-between text-primary"><span>Discount</span><span>-{formatPrice(order.discount)}</span></div>}
+              <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{order.delivery_charge == 0 ? 'Free' : formatPrice(order.delivery_charge)}</span></div>
               <Separator />
-              <div className="flex justify-between font-bold text-base"><span>Total</span><span className="text-primary">₹{order.total}</span></div>
+              <div className="flex justify-between text-base"><span className="font-bold">Total</span><span className="font-medium text-primary">{formatPrice(order.total)}</span></div>
               <div className="flex justify-between text-muted-foreground"><span>Payment</span><span className="capitalize">{order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'}</span></div>
             </CardContent>
           </Card>

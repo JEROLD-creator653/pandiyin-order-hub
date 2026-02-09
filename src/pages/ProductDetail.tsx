@@ -17,6 +17,8 @@ import ReviewSummary from '@/components/ReviewSummary';
 import ReviewList from '@/components/ReviewList';
 import ReviewForm from '@/components/ReviewForm';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import RelatedProducts from '@/components/RelatedProducts';
+import { formatPrice } from '@/lib/formatters';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -30,7 +32,7 @@ export default function ProductDetail() {
   const [editingReview, setEditingReview] = useState<any>(null);
   const [deleteReviewId, setDeleteReviewId] = useState<string | null>(null);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
-  const [sortBy, setSortBy] = useState<'recent' | 'helpful' | 'rating_high' | 'rating_low'>('recent');
+  const [sortBy, setSortBy] = useState<'recent' | 'rating_high' | 'rating_low'>('recent');
   
   const {
     reviews,
@@ -39,7 +41,6 @@ export default function ProductDetail() {
     hasMore,
     loadMore,
     submitReview,
-    voteOnReview,
     deleteReview,
     getUserReview
   } = useProductReviews({
@@ -51,10 +52,15 @@ export default function ProductDetail() {
 
   useEffect(() => {
     if (!id) return;
-    supabase.from('products').select('*, categories(name)').eq('id', id).maybeSingle().then(({ data }) => {
-      setProduct(data);
-      setLoading(false);
-    });
+    supabase
+      .from('products')
+      .select('*, categories(name)')
+      .eq('id', id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setProduct(data);
+        setLoading(false);
+      });
   }, [id]);
 
   const handleAddToCart = () => {
@@ -154,9 +160,9 @@ export default function ProductDetail() {
           )}
 
           <div className="flex items-center gap-3 mb-6">
-            <span className="text-3xl font-bold text-primary">₹{product.price}</span>
+            <span className="text-3xl font-medium text-primary">{formatPrice(product.price)}</span>
             {product.compare_price && (
-              <span className="text-lg text-muted-foreground line-through">₹{product.compare_price}</span>
+              <span className="text-lg text-muted-foreground line-through">{formatPrice(product.compare_price)}</span>
             )}
           </div>
           {product.weight && <p className="text-sm text-muted-foreground mb-4">{product.weight} {product.unit}</p>}
@@ -247,7 +253,6 @@ export default function ProductDetail() {
               selectedRating={selectedRating}
               sortBy={sortBy}
               onSortChange={(sort) => setSortBy(sort as any)}
-              onVote={voteOnReview}
               onEdit={handleEditReview}
               onDelete={handleDeleteReview}
               onLoadMore={loadMore}
@@ -257,10 +262,19 @@ export default function ProductDetail() {
         </Tabs>
       </div>
 
+      {/* Related Products Section */}
+      <RelatedProducts 
+        currentProductId={product.id}
+        categoryId={product.category_id}
+        maxItems={4}
+      />
+
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={deleteReviewId !== null}
-        onOpenChange={(open) => !open && setDeleteReviewId(null)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteReviewId(null);
+        }}
         title="Delete Review"
         description="Are you sure you want to delete this review? This action cannot be undone."
         onConfirm={confirmDeleteReview}

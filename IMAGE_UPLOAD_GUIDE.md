@@ -433,7 +433,7 @@ export function ProductGrid() {
             className="w-full h-48 object-cover"
           />
           <h3>{product.name}</h3>
-          <p>₹{product.price}</p>
+          <p>rs.{product.price}</p>
         </div>
       ))}
     </div>

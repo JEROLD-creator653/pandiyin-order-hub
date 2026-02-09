@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { formatPrice } from '@/lib/formatters';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
@@ -74,7 +75,7 @@ export default function Dashboard() {
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           <Badge className={`${statusColors[o.status] || ''} text-xs`}>{o.status}</Badge>
-                          <span className="font-bold text-sm">₹{o.total}</span>
+                          <span className="font-medium text-sm">{formatPrice(o.total_amount)}</span>
                         </div>
                       </div>
                       <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />

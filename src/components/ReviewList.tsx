@@ -16,16 +16,10 @@ interface Review {
   id: string;
   user_id: string;
   rating: number;
-  title: string;
-  review_text: string;
-  helpful_count: number;
-  verified_purchase: boolean;
-  images?: string[];
+  description: string;
   created_at: string;
-  updated_at: string;
   user_name?: string;
   user_email?: string;
-  user_vote?: 'helpful' | 'not_helpful' | null;
 }
 
 interface ReviewListProps {
@@ -33,8 +27,7 @@ interface ReviewListProps {
   loading?: boolean;
   currentUserId?: string;
   selectedRating?: number | null;
-  sortBy?: 'recent' | 'helpful' | 'rating_high' | 'rating_low';
-  onVote?: (reviewId: string, isHelpful: boolean) => void;
+  sortBy?: 'recent' | 'rating_high' | 'rating_low';
   onDelete?: (reviewId: string) => void;
   onEdit?: (reviewId: string) => void;
   onSortChange?: (sort: string) => void;
@@ -49,7 +42,6 @@ export default function ReviewList({
   currentUserId,
   selectedRating,
   sortBy = 'recent',
-  onVote,
   onDelete,
   onEdit,
   onSortChange,
@@ -84,20 +76,7 @@ export default function ReviewList({
   }
 
   if (!loading && reviews.length === 0) {
-    return (
-      <div className={cn('text-center py-12', className)}>
-        <p className="text-muted-foreground">
-          {selectedRating 
-            ? `No ${selectedRating}-star reviews found` 
-            : 'No reviews yet'}
-        </p>
-        <p className="text-sm text-muted-foreground mt-1">
-          {selectedRating 
-            ? 'Try selecting a different rating filter' 
-            : 'Be the first to review this product'}
-        </p>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -123,7 +102,6 @@ export default function ReviewList({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="recent">Most Recent</SelectItem>
-              <SelectItem value="helpful">Most Helpful</SelectItem>
               <SelectItem value="rating_high">Highest Rating</SelectItem>
               <SelectItem value="rating_low">Lowest Rating</SelectItem>
             </SelectContent>
@@ -138,7 +116,6 @@ export default function ReviewList({
             key={review.id}
             review={review}
             currentUserId={currentUserId}
-            onVote={onVote}
             onDelete={onDelete}
             onEdit={onEdit}
           />
