@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Leaf, Search, SlidersHorizontal, ArrowUpDown, X, ChevronDown } from 'lucide-react';
+import { Leaf, Search, SlidersHorizontal, ArrowUpDown, X, ChevronDown, Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -289,7 +289,7 @@ export default function Products() {
           {filtered.map((p, i) => (
             <motion.div key={p.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
               <Link to={`/products/${p.id}`}>
-                <Card className="overflow-hidden hover:shadow-lg transition-shadow group">
+                <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col">
                   <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden relative">
                     {p.image_url ? (
                       <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
@@ -303,10 +303,23 @@ export default function Products() {
                       <Badge variant="destructive" className="absolute top-2 right-2 text-xs">Out of Stock</Badge>
                     )}
                   </div>
-                  <CardContent className="p-4">
-                    <p className="text-xs text-muted-foreground mb-1">{(p as any).categories?.name}</p>
-                    <h3 className="font-semibold text-sm font-sans line-clamp-2 mb-2">{p.name}</h3>
-                    <div className="flex items-center gap-2">
+                  <CardContent className="p-3 sm:p-4 flex flex-col flex-1">
+                    <p className="text-xs text-muted-foreground mb-0.5">{(p as any).categories?.name}</p>
+                    <h3 className="font-semibold text-sm font-sans line-clamp-2 mb-1">{p.name}</h3>
+                    {p.weight && (
+                      <p className="text-xs text-muted-foreground mb-1.5">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>
+                    )}
+                    {(p.average_rating ?? 0) > 0 && (
+                      <div className="flex items-center gap-1 mb-1.5">
+                        <span className="flex items-center gap-0.5 bg-primary/10 text-primary text-xs font-semibold px-1.5 py-0.5 rounded">
+                          {Number(p.average_rating).toFixed(1)} <Star className="h-3 w-3 fill-current" />
+                        </span>
+                        {(p.review_count ?? 0) > 0 && (
+                          <span className="text-xs text-muted-foreground">({p.review_count})</span>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mt-auto">
                       <span className="font-bold text-primary">₹{p.price}</span>
                       {p.compare_price && <span className="text-xs text-muted-foreground line-through">₹{p.compare_price}</span>}
                     </div>
