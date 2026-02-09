@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import type { TouchEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Leaf, Truck, ShieldCheck, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import favicon from '@/public/Pandiyin.ico';
 import { formatPrice } from '@/lib/formatters';
 
 export default function Index() {
+  const navigate = useNavigate();
   const [featured, setFeatured] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
@@ -54,6 +55,10 @@ export default function Index() {
   }, [user, cartItems]);
 
   const handleAddToCart = async (productId: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     setAddingItems(prev => new Set(prev).add(productId));
     await addToCart(productId, 1);
     setTimeout(() => {
@@ -279,9 +284,17 @@ export default function Index() {
                           <p className="text-xs text-muted-foreground mb-1">{(p as any).categories?.name}</p>
                           <h3 className="font-semibold text-base font-sans line-clamp-2 mb-3 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-lg text-primary">{formatPrice(p.price)}</span>
-                          {p.compare_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-lg text-primary">{formatPrice(p.price)}</span>
+                            {p.compare_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
+                          </div>
+                          {p.average_rating !== null && p.average_rating !== undefined && Number(p.average_rating) > 0 && (
+                            <span className="flex items-center gap-1 text-sm font-medium text-slate-600">
+                              <span className="text-yellow-500">★</span>
+                              {Number(p.average_rating).toFixed(1)}+
+                            </span>
+                          )}
                         </div>
                         <div className="mt-auto pt-3 flex justify-center">
                           <Button

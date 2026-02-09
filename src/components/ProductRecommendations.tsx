@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Leaf, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useProductRecommendations } from '@/hooks/useProductRecommendations';
+import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { useState } from 'react';
 import { formatPrice } from '@/lib/formatters';
@@ -20,11 +21,17 @@ export default function ProductRecommendations({
   maxItems = 6,
   title = "You may also like"
 }: ProductRecommendationsProps) {
+  const navigate = useNavigate();
   const { data: recommendations, isLoading } = useProductRecommendations(cartItems, maxItems);
+  const { user } = useAuth();
   const { addToCart } = useCart();
   const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
 
   const handleAddToCart = async (productId: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     setAddingItems(prev => new Set(prev).add(productId));
     await addToCart(productId, 1);
     setTimeout(() => {
@@ -108,9 +115,17 @@ export default function ProductRecommendations({
                   </Link>
 
                   <div className="mt-auto space-y-2">
-                    <p className="text-base font-medium text-primary">
-                      {formatPrice(product.price)}
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-base font-medium text-primary">
+                        {formatPrice(product.price)}
+                      </p>
+                      {product.average_rating !== null && product.average_rating !== undefined && Number(product.average_rating) > 0 && (
+                        <span className="flex items-center gap-1 text-sm font-medium text-slate-600">
+                          <span className="text-yellow-500">★</span>
+                          {Number(product.average_rating).toFixed(1)}+
+                        </span>
+                      )}
+                    </div>
 
                     <Button
                       size="sm"

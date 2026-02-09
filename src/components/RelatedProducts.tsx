@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Leaf, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { formatPrice } from '@/lib/formatters';
 
@@ -23,6 +24,8 @@ export default function RelatedProducts({
 }: RelatedProductsProps) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { addToCart } = useCart();
   const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
 
@@ -72,6 +75,10 @@ export default function RelatedProducts({
   }, [currentProductId, categoryId, maxItems]);
 
   const handleAddToCart = async (productId: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     setAddingItems(prev => new Set(prev).add(productId));
     await addToCart(productId, 1);
     setTimeout(() => {
@@ -165,9 +172,17 @@ export default function RelatedProducts({
                   </Link>
 
                   <div className="mt-auto space-y-3">
-                    <p className="text-lg font-medium text-primary">
-                      {formatPrice(product.price)}
-                    </p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-lg font-medium text-primary">
+                        {formatPrice(product.price)}
+                      </p>
+                      {product.average_rating !== null && product.average_rating !== undefined && Number(product.average_rating) > 0 && (
+                        <span className="flex items-center gap-1 text-sm font-medium text-slate-600">
+                          <span className="text-yellow-500">★</span>
+                          {Number(product.average_rating).toFixed(1)}+
+                        </span>
+                      )}
+                    </div>
 
                     <Button
                       size="sm"
