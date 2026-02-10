@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Leaf, Search, SlidersHorizontal, ArrowUpDown, X, ChevronDown, ShoppingCart } from 'lucide-react';
+import { Leaf, Search, SlidersHorizontal, ArrowUpDown, X, ChevronDown, ShoppingCart, Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
