@@ -163,3 +163,98 @@
   }
 }
 
+/* Product Description Formatting Styles */
+@layer components {
+  .product-description {
+    @apply text-muted-foreground leading-relaxed;
+  }
+
+  .product-description p {
+    @apply mb-4 leading-relaxed;
+  }
+
+  .product-description h1 {
+    @apply text-3xl font-bold mt-6 mb-3 text-foreground;
+  }
+
+  .product-description h2 {
+    @apply text-2xl font-bold mt-5 mb-3 text-foreground;
+  }
+
+  .product-description h3 {
+    @apply text-xl font-semibold mt-4 mb-2 text-foreground;
+  }
+
+  .product-description h4,
+  .product-description h5,
+  .product-description h6 {
+    @apply text-lg font-semibold mt-3 mb-2 text-foreground;
+  }
+
+  .product-description ul,
+  .product-description ol {
+    @apply ml-6 mb-4;
+  }
+
+  .product-description ul {
+    @apply list-disc;
+  }
+
+  .product-description ol {
+    @apply list-decimal;
+  }
+
+  .product-description li {
+    @apply mb-2 leading-relaxed;
+  }
+
+  .product-description blockquote {
+    @apply border-l-4 border-primary pl-4 py-2 italic text-muted-foreground bg-muted/30 my-4 rounded;
+  }
+
+  .product-description code {
+    @apply bg-muted px-2 py-1 rounded font-mono text-sm;
+  }
+
+  .product-description pre {
+    @apply bg-muted p-3 rounded-lg overflow-x-auto mb-4;
+  }
+
+  .product-description pre code {
+    @apply bg-transparent px-0 py-0;
+  }
+
+  .product-description strong {
+    @apply font-bold text-foreground;
+  }
+
+  .product-description em {
+    @apply italic;
+  }
+
+  .product-description u {
+    @apply underline;
+  }
+
+  .product-description s {
+    @apply line-through;
+  }
+
+  .product-description hr {
+    @apply border-border my-6;
+  }
+
+  .product-description a {
+    @apply text-primary underline hover:text-primary/80 transition-colors;
+  }
+
+  .product-description img {
+    @apply max-w-full h-auto rounded-lg my-4;
+  }
+
+  .product-description div {
+    @apply mb-4;
+  }
+}
+
+

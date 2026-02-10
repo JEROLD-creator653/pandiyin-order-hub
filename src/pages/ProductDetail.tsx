@@ -18,6 +18,7 @@ import ReviewList from '@/components/ReviewList';
 import ReviewForm from '@/components/ReviewForm';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import RelatedProducts from '@/components/RelatedProducts';
+import DescriptionRenderer from '@/components/DescriptionRenderer';
 import { formatPrice } from '@/lib/formatters';
 
 export default function ProductDetail() {
@@ -166,7 +167,10 @@ export default function ProductDetail() {
             )}
           </div>
           {product.weight && <p className="text-sm text-muted-foreground mb-4">{product.weight} {product.unit}</p>}
-          <p className="text-muted-foreground leading-relaxed mb-6">{product.description}</p>
+          <DescriptionRenderer 
+            content={product.description} 
+            className="text-muted-foreground mb-6"
+          />
 
           {product.stock_quantity > 0 ? (
             <>
