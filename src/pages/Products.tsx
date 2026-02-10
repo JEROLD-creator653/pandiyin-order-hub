@@ -320,8 +320,17 @@ export default function Products() {
                     )}
                   </div>
                   <CardContent className="p-4 flex-1 flex flex-col">
-                    <p className="text-xs text-muted-foreground mb-1">{(p as any).categories?.name}</p>
-                    <h3 className="font-semibold text-base font-sans line-clamp-2 mb-3 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
+                    <p className="text-xs text-muted-foreground mb-0.5">{(p as any).categories?.name}</p>
+                    <h3 className="font-semibold text-base font-sans line-clamp-2 mb-1.5 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
+                    {p.weight && <p className="text-xs text-muted-foreground mb-1">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
+                    {Number(p.average_rating) > 0 && (
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <span className="inline-flex items-center gap-0.5 bg-primary/10 text-primary text-xs font-semibold px-1.5 py-0.5 rounded">
+                          {Number(p.average_rating).toFixed(1)} <Star className="h-2.5 w-2.5 fill-current" />
+                        </span>
+                        {p.review_count > 0 && <span className="text-[10px] text-muted-foreground">({p.review_count})</span>}
+                      </div>
+                    )}
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-lg text-primary">{formatPrice(p.price)}</span>
                       {p.compare_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
