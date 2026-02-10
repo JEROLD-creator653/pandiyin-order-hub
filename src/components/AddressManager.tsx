@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, MapPin, Pencil, Trash2, Check } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Plus, MapPin, Pencil, Trash2, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import CountryCodeSelect, { getMaxPhoneLength } from './CountryCodeSelect';
+import { lookupPincode } from '@/lib/pincodeApi';
 
 interface Address {
   id: string;
@@ -36,6 +38,8 @@ export default function AddressManager({ onSelect, selectable = false, selectedI
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Address | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [countryCode, setCountryCode] = useState('+91');
+  const [pincodeLoading, setPincodeLoading] = useState(false);
 
   const load = async () => {
     if (!user) return;
@@ -49,7 +53,6 @@ export default function AddressManager({ onSelect, selectable = false, selectedI
 
   useEffect(() => { load(); }, [user]);
 
-  // Auto-select default address on load
   useEffect(() => {
     if (selectable && onSelect && addresses.length > 0 && !selectedId) {
       const def = addresses.find(a => a.is_default) || addresses[0];
@@ -57,10 +60,23 @@ export default function AddressManager({ onSelect, selectable = false, selectedI
     }
   }, [addresses]);
 
-  const openNew = () => { setEditing(null); setForm(emptyForm); setDialogOpen(true); };
+  const handlePincodeChange = useCallback(async (pincode: string) => {
+    setForm(f => ({ ...f, pincode }));
+    if (pincode.length === 6) {
+      setPincodeLoading(true);
+      const result = await lookupPincode(pincode);
+      if (result) {
+        setForm(f => ({ ...f, city: result.city, state: result.state }));
+      }
+      setPincodeLoading(false);
+    }
+  }, []);
+
+  const openNew = () => { setEditing(null); setForm(emptyForm); setCountryCode('+91'); setDialogOpen(true); };
   const openEdit = (a: Address) => {
     setEditing(a);
     setForm({ full_name: a.full_name, phone: a.phone, address_line1: a.address_line1, address_line2: a.address_line2 || '', city: a.city, state: a.state, pincode: a.pincode });
+    setCountryCode('+91');
     setDialogOpen(true);
   };
 
@@ -69,9 +85,16 @@ export default function AddressManager({ onSelect, selectable = false, selectedI
       toast({ title: 'Please fill required fields', variant: 'destructive' });
       return;
     }
-    const payload = { ...form, user_id: user.id, is_default: addresses.length === 0 };
+    const maxLen = getMaxPhoneLength(countryCode);
+    const cleanPhone = form.phone.replace(/\D/g, '');
+    if (cleanPhone.length > maxLen) {
+      toast({ title: `Phone number too long for ${countryCode}`, variant: 'destructive' });
+      return;
+    }
+    const phoneWithCode = `${countryCode} ${form.phone}`;
+    const payload = { ...form, phone: phoneWithCode, user_id: user.id, is_default: addresses.length === 0 };
     if (editing) {
-      await supabase.from('addresses').update(form).eq('id', editing.id);
+      await supabase.from('addresses').update({ ...form, phone: phoneWithCode }).eq('id', editing.id);
       toast({ title: 'Address updated' });
     } else {
       await supabase.from('addresses').insert(payload);
@@ -114,16 +137,35 @@ export default function AddressManager({ onSelect, selectable = false, selectedI
           <DialogContent className="max-w-md">
             <DialogHeader><DialogTitle>{editing ? 'Edit Address' : 'Add Address'}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1"><Label className="text-xs">Full Name *</Label><Input value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} /></div>
-                <div className="space-y-1"><Label className="text-xs">Phone *</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} /></div>
+              <div className="space-y-1">
+                <Label className="text-xs">Full Name *</Label>
+                <Input value={form.full_name} onChange={e => setForm(f => ({ ...f, full_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Phone *</Label>
+                <div className="flex">
+                  <CountryCodeSelect value={countryCode} onChange={setCountryCode} />
+                  <Input
+                    value={form.phone}
+                    onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                    className="rounded-l-none"
+                    placeholder="9876543210"
+                    maxLength={getMaxPhoneLength(countryCode)}
+                  />
+                </div>
               </div>
               <div className="space-y-1"><Label className="text-xs">Address Line 1 *</Label><Input value={form.address_line1} onChange={e => setForm(f => ({ ...f, address_line1: e.target.value }))} /></div>
               <div className="space-y-1"><Label className="text-xs">Address Line 2</Label><Input value={form.address_line2} onChange={e => setForm(f => ({ ...f, address_line2: e.target.value }))} /></div>
               <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">Pincode *</Label>
+                  <div className="relative">
+                    <Input value={form.pincode} onChange={e => handlePincodeChange(e.target.value)} maxLength={6} placeholder="625001" />
+                    {pincodeLoading && <Loader2 className="h-3 w-3 animate-spin absolute right-2 top-3 text-muted-foreground" />}
+                  </div>
+                </div>
                 <div className="space-y-1"><Label className="text-xs">City</Label><Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} /></div>
                 <div className="space-y-1"><Label className="text-xs">State</Label><Input value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} /></div>
-                <div className="space-y-1"><Label className="text-xs">Pincode *</Label><Input value={form.pincode} onChange={e => setForm(f => ({ ...f, pincode: e.target.value }))} /></div>
               </div>
               <Button onClick={save} className="w-full">{editing ? 'Update' : 'Save'} Address</Button>
             </div>
@@ -141,7 +183,7 @@ export default function AddressManager({ onSelect, selectable = false, selectedI
           return (
             <Card
               key={a.id}
-              className={`cursor-pointer transition-all ${selectable ? 'hover:border-primary' : ''} ${isSelected ? 'border-primary ring-1 ring-primary' : ''}`}
+              className={`cursor-pointer transition-all hover:shadow-md ${selectable ? 'hover:border-primary' : ''} ${isSelected ? 'border-primary ring-1 ring-primary' : ''}`}
               onClick={() => selectable && selectAddress(a)}
             >
               <CardContent className="p-3 flex items-start gap-3">

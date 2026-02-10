@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CreditCard, Banknote, MapPin } from 'lucide-react';
+import { CreditCard, Banknote, MapPin, ShieldCheck, Truck, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { useShippingRegions } from '@/hooks/useShippingRegions';
 import AddressManager from '@/components/AddressManager';
 import { formatPrice } from '@/lib/formatters';
 
@@ -19,6 +21,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { items, total, clearCart } = useCart();
+  const { regions, getDeliveryCharge } = useShippingRegions();
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('cod');
   const [couponCode, setCouponCode] = useState('');
@@ -26,16 +29,30 @@ export default function Checkout() {
   const [deliveryCharge, setDeliveryCharge] = useState(0);
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [notes, setNotes] = useState('');
+  const [gstSettings, setGstSettings] = useState({ gst_enabled: false, gst_percentage: 18, gst_inclusive: true });
 
   useEffect(() => {
     if (!user) { navigate('/auth'); return; }
     if (items.length === 0) { navigate('/cart'); return; }
-    supabase.from('delivery_settings').select('*').eq('is_active', true).maybeSingle().then(({ data }) => {
+    supabase.from('store_settings').select('*').limit(1).maybeSingle().then(({ data }) => {
       if (data) {
-        setDeliveryCharge(total >= (data.free_delivery_above || 0) ? 0 : Number(data.base_charge));
+        setGstSettings({
+          gst_enabled: (data as any).gst_enabled || false,
+          gst_percentage: Number((data as any).gst_percentage) || 18,
+          gst_inclusive: (data as any).gst_inclusive ?? true,
+        });
       }
     });
   }, [user, items.length]);
+
+  // Recalculate delivery when address changes
+  useEffect(() => {
+    if (selectedAddress?.state && regions.length > 0) {
+      const charge = getDeliveryCharge(selectedAddress.state, total);
+      setDeliveryCharge(charge);
+    }
+  }, [selectedAddress, regions, total]);
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -49,13 +66,18 @@ export default function Checkout() {
     toast({ title: `Coupon applied! You save ${formatPrice(disc)}` });
   };
 
+  const gstAmount = gstSettings.gst_enabled && !gstSettings.gst_inclusive
+    ? (total * gstSettings.gst_percentage) / 100
+    : 0;
+
+  const grandTotal = total - discount + deliveryCharge + gstAmount;
+
   const placeOrder = async () => {
     if (!selectedAddress || !selectedAddress.full_name || !selectedAddress.phone || !selectedAddress.address_line1 || !selectedAddress.pincode) {
       toast({ title: 'Please select or add a delivery address', variant: 'destructive' }); return;
     }
     setLoading(true);
     try {
-      const grandTotal = total - discount + deliveryCharge;
       const { data: order, error } = await supabase.from('orders').insert({
         user_id: user!.id,
         order_number: 'temp',
@@ -65,8 +87,9 @@ export default function Checkout() {
         total: grandTotal,
         coupon_code: couponCode || null,
         payment_method: paymentMethod as any,
-        payment_status: paymentMethod === 'cod' ? 'pending' : 'pending',
+        payment_status: 'pending',
         delivery_address: selectedAddress,
+        notes: notes || null,
       }).select().single();
       if (error) throw error;
 
@@ -88,8 +111,6 @@ export default function Checkout() {
       setLoading(false);
     }
   };
-
-  const grandTotal = total - discount + deliveryCharge;
 
   return (
     <div className="container mx-auto px-4 pt-24 pb-8 max-w-4xl">
@@ -129,7 +150,7 @@ export default function Checkout() {
           <Card>
             <CardHeader><CardTitle className="text-lg">Order Notes</CardTitle></CardHeader>
             <CardContent>
-              <Textarea placeholder="Any special instructions..." />
+              <Textarea placeholder="Any special instructions..." value={notes} onChange={e => setNotes(e.target.value)} />
             </CardContent>
           </Card>
         </div>
@@ -145,18 +166,25 @@ export default function Checkout() {
                 </div>
               ))}
             </div>
-            <div className="border-t pt-3 space-y-2 text-sm">
+            <Separator className="mb-3" />
+            <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(total)}</span></div>
               {discount > 0 && <div className="flex justify-between text-primary"><span>Discount</span><span>-{formatPrice(discount)}</span></div>}
-              <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{deliveryCharge === 0 ? 'Free' : formatPrice(deliveryCharge)}</span></div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Delivery</span>
+                <span>{deliveryCharge === 0 ? <span className="text-primary font-medium">Free</span> : formatPrice(deliveryCharge)}</span>
+              </div>
+              {gstSettings.gst_enabled && gstAmount > 0 && (
+                <div className="flex justify-between"><span className="text-muted-foreground">GST ({gstSettings.gst_percentage}%)</span><span>{formatPrice(gstAmount)}</span></div>
+              )}
             </div>
-            <div className="border-t mt-3 pt-3 flex justify-between text-lg">
-              <span className="font-bold">Total</span><span className="font-medium text-primary">{formatPrice(grandTotal)}</span>
+            <Separator className="my-3" />
+            <div className="flex justify-between text-lg">
+              <span className="font-bold">Total</span><span className="font-bold text-primary">{formatPrice(grandTotal)}</span>
             </div>
 
-            {/* Selected address in summary */}
             {selectedAddress && selectedAddress.full_name && (
-              <div className="border-t mt-3 pt-3">
+              <div className="border-t mt-4 pt-3">
                 <div className="flex items-center gap-2 mb-1">
                   <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
                   <span className="text-xs font-semibold">Deliver to</span>
@@ -177,6 +205,13 @@ export default function Checkout() {
             <Button className="w-full mt-6 rounded-full" size="lg" onClick={placeOrder} disabled={loading}>
               {loading ? 'Placing Order...' : `Place Order · ${formatPrice(grandTotal)}`}
             </Button>
+
+            {/* Trust badges */}
+            <div className="mt-5 flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> Secure Checkout</div>
+              <div className="flex items-center gap-1"><Truck className="h-3.5 w-3.5" /> Fast Delivery</div>
+              <div className="flex items-center gap-1"><Award className="h-3.5 w-3.5" /> Quality Assured</div>
+            </div>
           </Card>
         </div>
       </motion.div>
