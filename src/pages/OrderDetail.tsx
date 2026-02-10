@@ -26,11 +26,13 @@ export default function OrderDetail() {
   const { id } = useParams();
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
+  const [store, setStore] = useState<any>(null);
 
   useEffect(() => {
     if (!id) return;
     supabase.from('orders').select('*').eq('id', id).maybeSingle().then(({ data }) => setOrder(data));
     supabase.from('order_items').select('*, products(image_url)').eq('order_id', id).then(({ data }) => setItems(data || []));
+    supabase.from('store_settings').select('*').limit(1).maybeSingle().then(({ data }) => setStore(data));
   }, [id]);
 
   if (!order) return (
