@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, Settings, Leaf, MapPin } from 'lucide-react';
+import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, Settings, Leaf, MapPin, Download, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
+import { generateInvoicePdf } from '@/lib/invoicePdf';
 
 const statusSteps = [
   { key: 'pending', label: 'Order Placed', icon: Clock },
