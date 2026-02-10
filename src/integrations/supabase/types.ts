@@ -322,54 +322,29 @@ export type Database = {
       product_reviews: {
         Row: {
           created_at: string
-          helpful_count: number
+          description: string
           id: string
-          images: string[] | null
-          order_id: string | null
           product_id: string
           rating: number
-          review_text: string
-          title: string
-          updated_at: string
           user_id: string
-          verified_purchase: boolean
         }
         Insert: {
           created_at?: string
-          helpful_count?: number
+          description: string
           id?: string
-          images?: string[] | null
-          order_id?: string | null
           product_id: string
           rating: number
-          review_text: string
-          title: string
-          updated_at?: string
           user_id: string
-          verified_purchase?: boolean
         }
         Update: {
           created_at?: string
-          helpful_count?: number
+          description?: string
           id?: string
-          images?: string[] | null
-          order_id?: string | null
           product_id?: string
           rating?: number
-          review_text?: string
-          title?: string
-          updated_at?: string
           user_id?: string
-          verified_purchase?: boolean
         }
         Relationships: [
-          {
-            foreignKeyName: "product_reviews_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "orders"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "product_reviews_product_id_fkey"
             columns: ["product_id"]
@@ -480,38 +455,6 @@ export type Database = {
         }
         Relationships: []
       }
-      review_votes: {
-        Row: {
-          created_at: string
-          id: string
-          is_helpful: boolean
-          review_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_helpful: boolean
-          review_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_helpful?: boolean
-          review_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "review_votes_review_id_fkey"
-            columns: ["review_id"]
-            isOneToOne: false
-            referencedRelation: "product_reviews"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       store_settings: {
         Row: {
           address: string | null
@@ -572,7 +515,6 @@ export type Database = {
           three_star: number | null
           total_reviews: number | null
           two_star: number | null
-          verified_purchases: number | null
         }
         Relationships: [
           {
