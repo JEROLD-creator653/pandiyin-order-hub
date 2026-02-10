@@ -136,6 +136,39 @@ export default function OrderDetail() {
               <Separator />
               <div className="flex justify-between text-base"><span className="font-bold">Total</span><span className="font-medium text-primary">{formatPrice(order.total)}</span></div>
               <div className="flex justify-between text-muted-foreground"><span>Payment</span><span className="capitalize">{order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'}</span></div>
+              <Separator className="my-2" />
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-2"
+                onClick={() => {
+                  if (!store) return;
+                  const addr = order.delivery_address as any;
+                  const doc = generateInvoicePdf({
+                    storeName: store.store_name,
+                    storeAddress: store.address || '',
+                    storePhone: store.phone || '',
+                    storeEmail: store.email || '',
+                    gstNumber: (store as any).gst_enabled ? (store as any).gst_number : undefined,
+                    orderNumber: order.order_number,
+                    orderDate: new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+                    customerName: addr?.full_name || '',
+                    customerAddress: `${addr?.address_line1 || ''}${addr?.address_line2 ? `, ${addr.address_line2}` : ''}, ${addr?.city || ''}, ${addr?.state || ''} - ${addr?.pincode || ''}`,
+                    customerPhone: addr?.phone || '',
+                    items: items.map(i => ({ name: i.product_name, quantity: i.quantity, price: Number(i.product_price), total: Number(i.total) })),
+                    subtotal: Number(order.subtotal),
+                    deliveryCharge: Number(order.delivery_charge),
+                    discount: Number(order.discount),
+                    total: Number(order.total),
+                    paymentMethod: order.payment_method,
+                    paymentStatus: order.payment_status,
+                  });
+                  doc.save(`Invoice-${order.order_number}.pdf`);
+                }}
+                disabled={!store}
+              >
+                <Download className="h-3.5 w-3.5" /> Download Invoice
+              </Button>
             </CardContent>
           </Card>
 
