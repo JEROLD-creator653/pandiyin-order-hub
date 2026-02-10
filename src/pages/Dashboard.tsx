@@ -75,7 +75,7 @@ export default function Dashboard() {
                         </p>
                         <div className="flex items-center gap-2 mt-1">
                           <Badge className={`${statusColors[o.status] || ''} text-xs`}>{o.status}</Badge>
-                          <span className="font-medium text-sm">{formatPrice(o.total_amount)}</span>
+                          <span className="font-medium text-sm">{formatPrice(o.total)}</span>
                         </div>
                       </div>
                       <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />

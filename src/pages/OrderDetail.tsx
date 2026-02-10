@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, Settings, Leaf, MapPin, Download, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,7 @@ const statusIndex: Record<string, number> = {
 
 export default function OrderDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [store, setStore] = useState<any>(null);
@@ -107,16 +108,28 @@ export default function OrderDetail() {
           <CardHeader><CardTitle className="text-lg">Items ({items.length})</CardTitle></CardHeader>
           <CardContent className="space-y-3">
             {items.map(item => (
-              <div key={item.id} className="flex items-center gap-3">
+              <div
+                key={item.id}
+                onClick={() => {
+                  if (item.product_id) {
+                    navigate(`/products/${item.product_id}`);
+                  } else if (process.env.NODE_ENV === 'development') {
+                    console.warn('Product ID missing for item:', item);
+                  }
+                }}
+                className={`flex items-center gap-3 p-2 -mx-2 rounded-lg transition-colors duration-200 ${
+                  item.product_id ? 'cursor-pointer hover:bg-secondary/40 group' : ''
+                }`}
+              >
                 <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                   {item.products?.image_url ? (
-                    <img src={item.products.image_url} alt="" className="w-full h-full object-cover" />
+                    <img src={item.products.image_url} alt={item.product_name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                   ) : (
                     <Leaf className="h-5 w-5 text-muted-foreground/30" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{item.product_name}</p>
+                  <p className={`text-sm font-medium truncate transition-colors ${item.product_id ? 'group-hover:text-primary group-hover:underline' : ''}`}>{item.product_name}</p>
                   <p className="text-xs text-muted-foreground">Qty: {item.quantity} × {formatPrice(item.product_price)}</p>
                 </div>
                 <span className="font-medium text-sm">{formatPrice(item.total)}</span>
