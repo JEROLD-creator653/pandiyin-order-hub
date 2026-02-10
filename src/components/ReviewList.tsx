@@ -22,15 +22,17 @@ interface Review {
   user_email?: string;
 }
 
+type SortByType = 'recent' | 'rating_high' | 'rating_low';
+
 interface ReviewListProps {
   reviews: Review[];
   loading?: boolean;
   currentUserId?: string;
   selectedRating?: number | null;
-  sortBy?: 'recent' | 'rating_high' | 'rating_low';
+  sortBy?: SortByType;
   onDelete?: (reviewId: string) => void;
   onEdit?: (reviewId: string) => void;
-  onSortChange?: (sort: string) => void;
+  onSortChange?: (sort: SortByType) => void;
   onLoadMore?: () => void;
   hasMore?: boolean;
   className?: string;
@@ -52,8 +54,9 @@ export default function ReviewList({
   const [sortValue, setSortValue] = useState(sortBy);
 
   const handleSortChange = (value: string) => {
-    setSortValue(value as any);
-    onSortChange?.(value);
+    const newSortBy = value as SortByType;
+    setSortValue(newSortBy);
+    onSortChange?.(newSortBy);
   };
 
   if (loading && reviews.length === 0) {

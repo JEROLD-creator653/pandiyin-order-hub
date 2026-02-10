@@ -36,7 +36,7 @@ export default function OrderConfirmation() {
       orderDate: new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
       customerName: address?.full_name || '',
       customerAddress: `${address?.address_line1 || ''}${address?.address_line2 ? `, ${address.address_line2}` : ''}, ${address?.city || ''}, ${address?.state || ''} - ${address?.pincode || ''}`,
-      customerPhone: address?.phone || '',
+      customerPhone: `+91 ${address?.phone || ''}`,
       items: items.map(i => ({ name: i.product_name, quantity: i.quantity, price: Number(i.product_price), total: Number(i.total) })),
       subtotal: Number(order.subtotal),
       deliveryCharge: Number(order.delivery_charge),

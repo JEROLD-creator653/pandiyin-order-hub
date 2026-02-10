@@ -112,7 +112,7 @@ export default function ProductRecommendations({
                     <h3 className="font-semibold text-sm line-clamp-2 mb-1 group-hover:text-primary transition-colors leading-snug" title={product.name}>
                       {product.name}
                     </h3>
-                    {product.weight && <p className="text-xs text-muted-foreground mb-1">{product.weight}{product.unit ? ` ${product.unit}` : ''}</p>}
+                    {(product as any).weight && <p className="text-xs text-muted-foreground mb-1">{(product as any).weight}{(product as any).unit ? ` ${(product as any).unit}` : ''}</p>}
                   </Link>
 
                   <div className="mt-auto space-y-2">
