@@ -455,10 +455,50 @@ export type Database = {
         }
         Relationships: []
       }
+      shipping_regions: {
+        Row: {
+          base_charge: number
+          free_delivery_above: number | null
+          id: string
+          is_enabled: boolean
+          region_key: string
+          region_name: string
+          sort_order: number
+          states: string[]
+          updated_at: string
+        }
+        Insert: {
+          base_charge?: number
+          free_delivery_above?: number | null
+          id?: string
+          is_enabled?: boolean
+          region_key: string
+          region_name: string
+          sort_order?: number
+          states?: string[]
+          updated_at?: string
+        }
+        Update: {
+          base_charge?: number
+          free_delivery_above?: number | null
+          id?: string
+          is_enabled?: boolean
+          region_key?: string
+          region_name?: string
+          sort_order?: number
+          states?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       store_settings: {
         Row: {
           address: string | null
           email: string | null
+          gst_enabled: boolean
+          gst_inclusive: boolean
+          gst_number: string | null
+          gst_percentage: number
           id: string
           phone: string | null
           store_name: string
@@ -468,6 +508,10 @@ export type Database = {
         Insert: {
           address?: string | null
           email?: string | null
+          gst_enabled?: boolean
+          gst_inclusive?: boolean
+          gst_number?: string | null
+          gst_percentage?: number
           id?: string
           phone?: string | null
           store_name?: string
@@ -477,6 +521,10 @@ export type Database = {
         Update: {
           address?: string | null
           email?: string | null
+          gst_enabled?: boolean
+          gst_inclusive?: boolean
+          gst_number?: string | null
+          gst_percentage?: number
           id?: string
           phone?: string | null
           store_name?: string
