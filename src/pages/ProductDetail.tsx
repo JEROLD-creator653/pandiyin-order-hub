@@ -13,9 +13,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProductReviews } from '@/hooks/useProductReviews';
 import { toast } from '@/hooks/use-toast';
 import RatingStars from '@/components/RatingStars';
-import ReviewSummary from '@/components/ReviewSummary';
+import ReviewSummary, { ReviewStats } from '@/components/ReviewSummary';
 import ReviewList from '@/components/ReviewList';
-import ReviewForm from '@/components/ReviewForm';
+import ReviewForm, { ReviewFormData } from '@/components/ReviewForm';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import RelatedProducts from '@/components/RelatedProducts';
 import DescriptionRenderer from '@/components/DescriptionRenderer';
@@ -83,7 +83,7 @@ export default function ProductDetail() {
     setShowReviewForm(true);
   };
 
-  const handleSubmitReview = async (reviewData: any) => {
+  const handleSubmitReview = async (reviewData: ReviewFormData) => {
     await submitReview({
       ...reviewData,
       reviewId: editingReview?.id
@@ -151,7 +151,7 @@ export default function ProductDetail() {
           <h1 className="text-3xl font-display font-bold mb-4">{product.name}</h1>
           
           {/* Rating Summary */}
-          {stats && stats.total_reviews > 0 && (
+          {stats && stats.total_reviews > 0 && stats.average_rating > 0 && (
             <div className="flex items-center gap-3 mb-4">
               <RatingStars rating={stats.average_rating} showNumber size="md" />
               <span className="text-sm text-muted-foreground">
@@ -244,7 +244,7 @@ export default function ProductDetail() {
 
             {/* Review Summary */}
             <ReviewSummary
-              stats={stats}
+              stats={stats as ReviewStats | null}
               selectedRating={selectedRating}
               onFilterByRating={setSelectedRating}
             />
@@ -256,7 +256,7 @@ export default function ProductDetail() {
               currentUserId={user?.id}
               selectedRating={selectedRating}
               sortBy={sortBy}
-              onSortChange={(sort) => setSortBy(sort as any)}
+              onSortChange={(sort) => setSortBy(sort)}
               onEdit={handleEditReview}
               onDelete={handleDeleteReview}
               onLoadMore={loadMore}

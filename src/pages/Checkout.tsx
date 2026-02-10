@@ -14,7 +14,7 @@ import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useShippingRegions } from '@/hooks/useShippingRegions';
-import AddressManager from '@/components/AddressManager';
+import AddressManager, { Address } from '@/components/AddressManager';
 import { formatPrice } from '@/lib/formatters';
 
 export default function Checkout() {
@@ -27,7 +27,7 @@ export default function Checkout() {
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [deliveryCharge, setDeliveryCharge] = useState(0);
-  const [selectedAddress, setSelectedAddress] = useState<any>(null);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
   const [gstSettings, setGstSettings] = useState({ gst_enabled: false, gst_percentage: 18, gst_inclusive: true });
@@ -51,8 +51,10 @@ export default function Checkout() {
     if (selectedAddress?.state && regions.length > 0) {
       const charge = getDeliveryCharge(selectedAddress.state, total);
       setDeliveryCharge(charge);
+    } else {
+      setDeliveryCharge(0);
     }
-  }, [selectedAddress, regions, total]);
+  }, [selectedAddress, regions, total, getDeliveryCharge]);
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -88,7 +90,7 @@ export default function Checkout() {
         coupon_code: couponCode || null,
         payment_method: paymentMethod as any,
         payment_status: 'pending',
-        delivery_address: selectedAddress,
+        delivery_address: selectedAddress as any,
         notes: notes || null,
       }).select().single();
       if (error) throw error;
