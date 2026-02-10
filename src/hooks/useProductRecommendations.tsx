@@ -9,6 +9,8 @@ interface Product {
   stock_quantity: number;
   category_id: string;
   is_available: boolean;
+  average_rating: number | null;
+  review_count: number | null;
   categories?: {
     name: string;
   };
