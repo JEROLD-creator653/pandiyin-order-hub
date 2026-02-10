@@ -3,7 +3,7 @@ import RatingStars from './RatingStars';
 import { Progress } from './ui/progress';
 import { cn } from '@/lib/utils';
 
-interface ReviewStats {
+export interface ReviewStats {
   total_reviews: number;
   average_rating: number;
   five_star: number;

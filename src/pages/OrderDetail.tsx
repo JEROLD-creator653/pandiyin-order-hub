@@ -167,7 +167,7 @@ export default function OrderDetail() {
                     orderDate: new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
                     customerName: addr?.full_name || '',
                     customerAddress: `${addr?.address_line1 || ''}${addr?.address_line2 ? `, ${addr.address_line2}` : ''}, ${addr?.city || ''}, ${addr?.state || ''} - ${addr?.pincode || ''}`,
-                    customerPhone: addr?.phone || '',
+                    customerPhone: `+91 ${addr?.phone || ''}`,
                     items: items.map(i => ({ name: i.product_name, quantity: i.quantity, price: Number(i.product_price), total: Number(i.total) })),
                     subtotal: Number(order.subtotal),
                     deliveryCharge: Number(order.delivery_charge),
@@ -195,7 +195,7 @@ export default function OrderDetail() {
                   {address.address_line2 ? `, ${address.address_line2}` : ''}
                 </p>
                 <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
-                <p className="text-muted-foreground">{address.phone}</p>
+                <p className="text-muted-foreground">+91 {address.phone}</p>
               </CardContent>
             </Card>
           )}

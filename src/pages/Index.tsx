@@ -22,7 +22,7 @@ export default function Index() {
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
   const isScrollingRef = useRef(false);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartXRef = useRef<number | null>(null);
   const touchLastXRef = useRef<number | null>(null);
   const [showReminderPopup, setShowReminderPopup] = useState(false);

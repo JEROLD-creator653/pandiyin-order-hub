@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, User, Menu, Search, LogOut, Package, Shield, UserCog, ArrowRight, Leaf } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,7 +36,7 @@ export default function Navbar() {
   const location = useLocation();
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout>();
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
   
   // Check if we're on the homepage
   const isHomePage = location.pathname === '/';
@@ -49,12 +50,11 @@ export default function Navbar() {
   // Click outside to close suggestions
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        searchRef.current && 
-        !searchRef.current.contains(event.target as Node) &&
-        mobileSearchRef.current &&
-        !mobileSearchRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as Node;
+      const clickedInsideDesktop = searchRef.current?.contains(target);
+      const clickedInsideMobile = mobileSearchRef.current?.contains(target);
+
+      if (!clickedInsideDesktop && !clickedInsideMobile) {
         setShowSuggestions(false);
       }
     };
@@ -82,7 +82,7 @@ export default function Navbar() {
         setSuggestions(data || []);
         setIsLoadingSuggestions(false);
         setShowSuggestions(true);
-      }, 300);
+      }, 200);
     } else {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -191,6 +191,8 @@ export default function Navbar() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 onFocus={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
+                onClick={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
+                onKeyDown={(e) => e.key === 'Escape' && setShowSuggestions(false)}
                 className={`pl-9 h-9 w-48 lg:w-64 transition-all duration-300 ${
                   (isHomePage && !isActive)
                     ? 'md:bg-white/20 md:text-white md:placeholder:text-white/50 md:border-white/20 bg-secondary/50 text-foreground placeholder:text-muted-foreground/60'
@@ -200,8 +202,15 @@ export default function Navbar() {
             </div>
 
             {/* Autocomplete Suggestions Dropdown */}
-            {showSuggestions && searchQuery.trim().length >= 2 && (
-              <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+            <AnimatePresence>
+              {showSuggestions && searchQuery.trim().length >= 2 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50"
+                >
                 {isLoadingSuggestions ? (
                   <div className="p-4 text-center text-sm text-muted-foreground">
                     Searching...
@@ -262,8 +271,9 @@ export default function Navbar() {
                     No products found
                   </div>
                 )}
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </form>
 
@@ -352,13 +362,22 @@ export default function Navbar() {
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
                         onFocus={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
+                        onClick={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
+                        onKeyDown={(e) => e.key === 'Escape' && setShowSuggestions(false)}
                         className="pl-9"
                       />
                     </div>
 
                     {/* Mobile Autocomplete Suggestions Dropdown */}
-                    {showSuggestions && searchQuery.trim().length >= 2 && (
-                      <div className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <AnimatePresence>
+                      {showSuggestions && searchQuery.trim().length >= 2 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50"
+                        >
                         {isLoadingSuggestions ? (
                           <div className="p-4 text-center text-sm text-muted-foreground">
                             Searching...
@@ -420,8 +439,9 @@ export default function Navbar() {
                             No products found
                           </div>
                         )}
-                      </div>
-                    )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </form>
                 {navLinks.map(l => (

@@ -27,15 +27,15 @@ interface CountryCodeSelectProps {
 
 export default function CountryCodeSelect({ value, onChange }: CountryCodeSelectProps) {
   return (
-    <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-[90px] shrink-0 rounded-r-none border-r-0">
+    <Select value={value} onValueChange={onChange}> 
+      <SelectTrigger className="w-[90px] shrink-0 rounded-r-none border-r-0 h-12 text-sm bg-background focus-visible:ring-2 focus-visible:ring-green-700/40 focus-visible:ring-offset-0 outline-none">
         <SelectValue>
           {COUNTRY_CODES.find(c => c.code === value)?.flag} {value}
         </SelectValue>
       </SelectTrigger>
       <SelectContent className="max-h-64">
         {COUNTRY_CODES.map(c => (
-          <SelectItem key={c.code} value={c.code}>
+          <SelectItem key={c.code} value={c.code} className="text-sm">
             <span className="flex items-center gap-2">
               <span>{c.flag}</span>
               <span className="text-xs">{c.code}</span>
