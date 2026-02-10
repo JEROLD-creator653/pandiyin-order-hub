@@ -109,9 +109,10 @@ export default function ProductRecommendations({
 
                 <CardContent className="p-3 flex-1 flex flex-col">
                   <Link to={`/products/${product.id}`}>
-                    <h3 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors leading-snug" title={product.name}>
+                    <h3 className="font-semibold text-sm line-clamp-2 mb-1 group-hover:text-primary transition-colors leading-snug" title={product.name}>
                       {product.name}
                     </h3>
+                    {product.weight && <p className="text-xs text-muted-foreground mb-1">{product.weight}{product.unit ? ` ${product.unit}` : ''}</p>}
                   </Link>
 
                   <div className="mt-auto space-y-2">

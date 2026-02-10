@@ -60,6 +60,7 @@ export default function Cart() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <Link to={`/products/${item.product_id}`} className="font-semibold text-sm hover:text-primary line-clamp-1">{item.product.name}</Link>
+                  {item.product.weight && <p className="text-xs text-muted-foreground mt-0.5">{item.product.weight}{item.product.unit ? ` ${item.product.unit}` : ''}</p>}
                   <p className="text-primary font-medium mt-1">{formatPrice(item.product.price)}</p>
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex items-center border rounded-md">

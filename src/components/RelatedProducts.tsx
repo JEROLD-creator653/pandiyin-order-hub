@@ -166,9 +166,10 @@ export default function RelatedProducts({
                       </Badge>
                     )}
                     
-                    <h3 className="font-semibold text-sm line-clamp-2 mb-3 group-hover:text-primary transition-colors min-h-[2.5rem]">
+                    <h3 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors min-h-[2.5rem]">
                       {product.name}
                     </h3>
+                    {product.weight && <p className="text-xs text-muted-foreground mb-1">{product.weight}{product.unit ? ` ${product.unit}` : ''}</p>}
                   </Link>
 
                   <div className="mt-auto space-y-3">
