@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/hooks/useCart";
+import ScrollToTop from "@/components/ScrollToTop";
 
 import CustomerLayout from "@/components/layout/CustomerLayout";
 import AdminLayout from "@/components/layout/AdminLayout";
@@ -56,6 +57,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <ScrollToTop />
             <Routes>
               <Route element={<CustomerLayout />}>
                 <Route path="/" element={<Index />} />

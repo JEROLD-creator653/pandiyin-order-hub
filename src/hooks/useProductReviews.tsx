@@ -124,10 +124,10 @@ export function useProductReviews({
         return;
       }
 
-      // Map reviews without user details (to avoid auth.users RLS issues)
+      // Map reviews, use stored user_name or fallback to 'Anonymous'
       const reviewsWithUser = (data || []).map((review: any) => ({
         ...review,
-        user_name: 'Verified Customer',
+        user_name: review.user_name || 'Verified Customer',
         user_email: ''
       }));
 
@@ -195,6 +195,7 @@ export function useProductReviews({
         product_id: productId,
         rating: reviewData.rating,
         description: reviewData.description.trim()
+        // Note: user_name will be added once the database column is created
       };
 
       let error;

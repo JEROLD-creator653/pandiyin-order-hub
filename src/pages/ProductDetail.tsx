@@ -134,37 +134,43 @@ export default function ProductDetail() {
   return (
     <div className="min-h-screen bg-background pt-24 pb-8">
       {/* Back Button */}
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 mb-8">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
       </div>
 
-      {/* Amazon-Style Layout: Sticky Image + Scrollable Content */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col lg:flex-row gap-0">
-        {/* Sticky Image Sidebar - Left (Amazon Style) */}
-        <div className="w-full lg:w-2/5 lg:sticky lg:top-24 lg:h-screen lg:overflow-y-auto lg:flex lg:items-start">
-          <div className="w-full aspect-square lg:aspect-auto lg:h-full overflow-hidden flex items-center justify-center p-6 lg:p-8">
-            {product.image_url ? (
-              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover rounded-3xl shadow-sm mx-auto max-w-[92%]" />
-            ) : (
-              <Leaf className="h-20 w-20 text-muted-foreground/30" />
-            )}
+      {/* Main Content Grid: Product Image + Details */}
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-12">
+          {/* Left Column: Product Image Card (Desktop 2/5, Mobile Full Width) */}
+          <div className="lg:col-span-2">
+            <div className="sticky top-28 rounded-2xl overflow-hidden border border-muted shadow-sm bg-muted h-[520px] w-full">
+              {product.image_url ? (
+                <img 
+                  src={product.image_url} 
+                  alt={product.name} 
+                  className="w-full h-full object-cover block" 
+                />
+              ) : (
+                <div className="flex items-center justify-center w-full h-full">
+                  <Leaf className="h-24 w-24 text-muted-foreground/40" />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Scrollable Content Section - Right */}
-        <div className="w-full lg:w-3/5 lg:overflow-y-auto lg:h-screen">
-          <div className="px-4 lg:px-8 py-8 max-w-3xl">
+          {/* Right Column: Product Details (Desktop 3/5, Mobile Full Width) */}
+          <div className="lg:col-span-3 flex flex-col">
             {/* Product Header */}
             {product.categories?.name && (
-              <Badge variant="secondary" className="mb-3">{product.categories.name}</Badge>
+              <Badge variant="secondary" className="mb-3 w-fit">{product.categories.name}</Badge>
             )}
-            <h1 className="text-3xl font-display font-bold mb-4">{product.name}</h1>
+            <h1 className="text-3xl lg:text-4xl font-display font-bold mb-4">{product.name}</h1>
             
             {/* Rating Summary */}
             {stats && stats.total_reviews > 0 && stats.average_rating > 0 && (
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-3 mb-6">
                 <RatingStars rating={stats.average_rating} showNumber size="md" />
                 <span className="text-sm text-muted-foreground">
                   ({stats.total_reviews} {stats.total_reviews === 1 ? 'review' : 'reviews'})
@@ -172,125 +178,158 @@ export default function ProductDetail() {
               </div>
             )}
 
-            {/* Price */}
-            <div className="flex items-center gap-3 mb-6">
-              <span className="text-3xl font-medium text-primary">{formatPrice(product.price)}</span>
+            {/* Price Section */}
+            <div className="flex items-baseline gap-3 mb-6 pb-6 border-b">
+              <span className="text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
               {product.compare_price && (
                 <span className="text-lg text-muted-foreground line-through">{formatPrice(product.compare_price)}</span>
               )}
             </div>
-            {product.weight && <p className="text-sm text-muted-foreground mb-4">{product.weight} {product.unit}</p>}
-            
-            {/* Product Description - With Scrollable Read More */}
-            <div className="mb-8">
+
+            {/* Weight/Unit Info */}
+            {product.weight && (
+              <p className="text-sm text-muted-foreground mb-6">{product.weight} {product.unit}</p>
+            )}
+
+            {/* Product Description - With Smooth Read More */}
+            <div className="mb-8 flex-grow">
               <ProductDescriptionCollapsible
+                key={product.id}
                 content={product.description}
                 imageHeight={400}
               />
             </div>
 
-            {/* Quantity & Add to Cart */}
-            {product.stock_quantity > 0 ? (
-              <>
-                <div className="flex items-center gap-4 mb-6">
-                  <span className="text-sm font-medium">Quantity:</span>
-                  <div className="flex items-center border rounded-lg">
-                    <Button variant="ghost" size="icon" onClick={() => setQty(q => Math.max(1, q - 1))}><Minus className="h-4 w-4" /></Button>
-                    <span className="w-12 text-center font-medium">{qty}</span>
-                    <Button variant="ghost" size="icon" onClick={() => setQty(q => Math.min(product.stock_quantity, q + 1))}><Plus className="h-4 w-4" /></Button>
-                  </div>
-                  <span className="text-sm text-muted-foreground">{product.stock_quantity} in stock</span>
-                </div>
-                <div className="flex gap-3 mb-8">
-                  <Button size="lg" className="flex-1 rounded-full" onClick={handleAddToCart}>
-                    <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
-                  </Button>
-                  <Button size="lg" variant="secondary" className="rounded-full" onClick={() => {
-                    handleAddToCart();
-                    navigate('/cart');
-                  }}>
-                    Buy Now
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <Badge variant="destructive" className="text-base px-4 py-2 mb-8">Out of Stock</Badge>
-            )}
-
-            {/* Reviews Section */}
-            <div className="border-t pt-8">
-              <Tabs defaultValue="reviews" className="w-full">
-                <TabsList className="mb-6">
-                  <TabsTrigger value="reviews" className="gap-2">
-                    <Star className="h-4 w-4" />
-                    Ratings & Reviews
-                    {stats && stats.total_reviews > 0 && (
-                      <Badge variant="secondary" className="ml-1">{stats.total_reviews}</Badge>
-                    )}
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="reviews" className="space-y-8">
-                  {/* Write Review Button */}
-                  {!showReviewForm && (
-                    <div className="flex justify-between items-center">
-                      <h2 className="text-2xl font-bold">Customer Reviews</h2>
-                      <Button onClick={handleWriteReview} className="gap-2">
-                        <MessageSquare className="h-4 w-4" />
-                        Write a Review
+            {/* Quantity & Add to Cart Section */}
+            <div className="space-y-4">
+              {product.stock_quantity > 0 ? (
+                <>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm font-medium text-muted-foreground">Quantity:</span>
+                    <div className="flex items-center border rounded-lg bg-muted/50">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => setQty(q => Math.max(1, q - 1))}
+                        className="h-9 w-9"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="w-12 text-center font-semibold">{qty}</span>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => setQty(q => Math.min(product.stock_quantity, q + 1))}
+                        className="h-9 w-9"
+                      >
+                        <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                  )}
-
-                  {/* Review Form */}
-                  {showReviewForm && (
-                    <ReviewForm
-                      productId={product.id}
-                      productName={product.name}
-                      existingReview={editingReview}
-                      onSubmit={handleSubmitReview}
-                      onCancel={() => {
-                        setShowReviewForm(false);
-                        setEditingReview(null);
+                    <span className="text-xs text-muted-foreground ml-2">{product.stock_quantity} available</span>
+                  </div>
+                  
+                  <div className="flex gap-3 pt-2">
+                    <Button 
+                      size="lg" 
+                      className="flex-1 rounded-full h-12 font-semibold" 
+                      onClick={handleAddToCart}
+                    >
+                      <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
+                    </Button>
+                    <Button 
+                      size="lg" 
+                      variant="outline" 
+                      className="flex-1 rounded-full h-12 font-semibold"
+                      onClick={() => {
+                        handleAddToCart();
+                        navigate('/cart');
                       }}
-                    />
-                  )}
-
-                  {/* Review Summary */}
-                  <ReviewSummary
-                    stats={stats as ReviewStats | null}
-                    selectedRating={selectedRating}
-                    onFilterByRating={setSelectedRating}
-                  />
-
-                  {/* Review List */}
-                  <ReviewList
-                    reviews={reviews}
-                    loading={reviewsLoading}
-                    currentUserId={user?.id}
-                    selectedRating={selectedRating}
-                    sortBy={sortBy}
-                    onSortChange={(sort) => setSortBy(sort)}
-                    onEdit={handleEditReview}
-                    onDelete={handleDeleteReview}
-                    onLoadMore={loadMore}
-                    hasMore={hasMore}
-                  />
-                </TabsContent>
-              </Tabs>
+                    >
+                      Buy Now
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <Badge variant="destructive" className="text-base px-4 py-2 w-fit">Out of Stock</Badge>
+              )}
             </div>
           </div>
         </div>
-      </motion.div>
+
+        {/* Reviews Section */}
+        <div className="border-t pt-12">
+          <Tabs defaultValue="reviews" className="w-full">
+            <TabsList className="mb-8">
+              <TabsTrigger value="reviews" className="gap-2">
+                <Star className="h-4 w-4" />
+                Ratings & Reviews
+                {stats && stats.total_reviews > 0 && (
+                  <Badge variant="secondary" className="ml-2">{stats.total_reviews}</Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="reviews" className="space-y-8">
+              {/* Write Review Button */}
+              {!showReviewForm && (
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <h2 className="text-2xl font-bold">Customer Reviews</h2>
+                  <Button onClick={handleWriteReview} className="gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Write a Review
+                  </Button>
+                </div>
+              )}
+
+              {/* Review Form */}
+              {showReviewForm && (
+                <ReviewForm
+                  productId={product.id}
+                  productName={product.name}
+                  existingReview={editingReview}
+                  onSubmit={handleSubmitReview}
+                  onCancel={() => {
+                    setShowReviewForm(false);
+                    setEditingReview(null);
+                  }}
+                />
+              )}
+
+              {/* Review Summary */}
+              <ReviewSummary
+                stats={stats as ReviewStats | null}
+                selectedRating={selectedRating}
+                onFilterByRating={setSelectedRating}
+              />
+
+              {/* Review List */}
+              <ReviewList
+                reviews={reviews}
+                loading={reviewsLoading}
+                currentUserId={user?.id}
+                selectedRating={selectedRating}
+                sortBy={sortBy}
+                onSortChange={(sort) => setSortBy(sort)}
+                onEdit={handleEditReview}
+                onDelete={handleDeleteReview}
+                onLoadMore={loadMore}
+                hasMore={hasMore}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
 
       {/* Related Products Section - Full Width */}
-      <div className="container mx-auto px-4 mt-16">
+      <div className="mt-20">
         <Separator className="mb-8" />
-        <RelatedProducts 
-          currentProductId={product.id}
-          categoryId={product.category_id}
-          maxItems={4}
-        />
+        <div className="container mx-auto px-4">
+          <RelatedProducts 
+            currentProductId={product.id}
+            categoryId={product.category_id}
+            maxItems={4}
+          />
+        </div>
       </div>
 
       {/* Delete Confirmation Dialog */}
