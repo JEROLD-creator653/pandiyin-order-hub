@@ -32,7 +32,21 @@ import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminSettings from "./pages/admin/AdminSettings";
 
-const queryClient = new QueryClient();
+// Optimized React Query client configuration
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes - data stays fresh for 5 minutes
+      gcTime: 1000 * 60 * 10, // 10 minutes - cached data removed after 10 minutes
+      retry: 1, // Retry failed queries once
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
+      refetchOnMount: false, // Don't refetch when component mounts if data exists
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>

@@ -1,0 +1,165 @@
+/* Global Animations & Smoothness Improvements */
+
+/* Enable smooth scrolling */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+/* Smooth transitions for all interactive elements */
+button,
+a,
+[role="button"],
+input,
+select,
+textarea {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth hover effects */
+@supports (color: var(--color)) {
+  button:not(:disabled):hover,
+  a:hover,
+  [role="button"]:hover {
+    transform: translateY(-1px);
+  }
+
+  button:not(:disabled):active,
+  a:active,
+  [role="button"]:active {
+    transform: translateY(0px);
+  }
+}
+
+/* Card hover animations */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Smooth fade-in animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Skeleton loading animation - smooth pulse */
+@keyframes skeleton-pulse {
+  0% {
+    background-color: hsl(var(--muted) / 0.5);
+  }
+  50% {
+    background-color: hsl(var(--muted) / 0.8);
+  }
+  100% {
+    background-color: hsl(var(--muted) / 0.5);
+  }
+}
+
+.skeleton {
+  animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Smooth modal backdrop and content */
+.modal-content {
+  animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Remove focus outlines for mouse users, keep for keyboard */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Optimize for 60fps animations */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Batch animations to run smoothly */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Micro-interaction: Loading spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Smooth cart update animation */
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.cart-update {
+  animation: pulse-soft 0.6s cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* Lazy fade-in for lazy-loaded content */
+.lazy-fade-in {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: opacity;
+}
+
+/* Smooth backdrop blur */
+.backdrop-blur-smooth {
+  backdrop-filter: blur(4px) !important;
+  transition: backdrop-filter 0.3s ease;
+}

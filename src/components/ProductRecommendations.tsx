@@ -84,11 +84,11 @@ export default function ProductRecommendations({
                   <div className="relative h-52 md:h-56 lg:h-64 w-full bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
                     {product.image_url ? (
                       <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
-                        loading="lazy"
-                      />
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-full h-full object-cover object-center rounded-lg group-hover:scale-110 transition-transform duration-500"
+                          loading="lazy"
+                        />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <Leaf className="h-12 w-12 text-muted-foreground/30" />

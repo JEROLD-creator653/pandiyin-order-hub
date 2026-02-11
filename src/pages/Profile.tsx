@@ -11,7 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import AddressManager from '@/components/AddressManager';
 
 export default function Profile() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
@@ -19,15 +19,23 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!user) { navigate('/auth'); return; }
-    setEmail(user.email || '');
-    supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle().then(({ data }) => {
-      if (data) {
-        setFullName(data.full_name || '');
-        setPhone(data.phone || '');
-      }
-    });
-  }, [user]);
+    // Wait for auth loading to complete before redirecting
+    if (!loading && !user) { 
+      navigate('/auth'); 
+      return; 
+    }
+    
+    // Only load profile if user exists
+    if (user) {
+      setEmail(user.email || '');
+      supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle().then(({ data }) => {
+        if (data) {
+          setFullName(data.full_name || '');
+          setPhone(data.phone || '');
+        }
+      });
+    }
+  }, [user, loading]);
 
   const saveProfile = async () => {
     if (!user) return;
@@ -40,6 +48,15 @@ export default function Profile() {
       toast({ title: 'Profile updated successfully!' });
     }
   };
+
+  // Show loading state while auth is initializing
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 pt-24 pb-8 max-w-2xl">
+        <div className="h-64 bg-muted rounded-lg animate-pulse" />
+      </div>
+    );
+  }
 
   if (!user) return null;
 
