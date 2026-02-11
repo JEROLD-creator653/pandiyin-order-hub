@@ -123,7 +123,7 @@ export default function OrderDetail() {
               >
                 <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                   {item.products?.image_url ? (
-                    <img src={item.products.image_url} alt={item.product_name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                    <img src={item.products.image_url} alt={item.product_name} className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" />
                   ) : (
                     <Leaf className="h-5 w-5 text-muted-foreground/30" />
                   )}

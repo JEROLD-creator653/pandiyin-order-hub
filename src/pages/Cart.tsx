@@ -53,7 +53,7 @@ export default function Cart() {
               <Card className="p-4 flex gap-4">
                 <div className="w-20 h-20 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
                   {item.product.image_url ? (
-                    <img src={item.product.image_url} alt={item.product.name} className="w-full h-full object-cover" />
+                    <img src={item.product.image_url} alt={item.product.name} className="w-full h-full object-cover rounded-lg" />
                   ) : (
                     <Leaf className="h-8 w-8 text-muted-foreground/30" />
                   )}

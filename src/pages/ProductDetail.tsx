@@ -18,7 +18,7 @@ import ReviewList from '@/components/ReviewList';
 import ReviewForm, { ReviewFormData } from '@/components/ReviewForm';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import RelatedProducts from '@/components/RelatedProducts';
-import DescriptionRenderer from '@/components/DescriptionRenderer';
+import ProductDescriptionCollapsible from '@/components/ProductDescriptionCollapsible';
 import { formatPrice } from '@/lib/formatters';
 
 export default function ProductDetail() {
@@ -132,146 +132,166 @@ export default function ProductDetail() {
   );
 
   return (
-    <div className="container mx-auto px-4 pt-24 pb-8">
-      <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
-        <ArrowLeft className="mr-2 h-4 w-4" /> Back
-      </Button>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-2 gap-8 lg:gap-12">
-        <div className="aspect-square bg-muted rounded-lg overflow-hidden flex items-center justify-center">
-          {product.image_url ? (
-            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
-          ) : (
-            <Leaf className="h-20 w-20 text-muted-foreground/30" />
-          )}
-        </div>
-        <div>
-          {product.categories?.name && (
-            <Badge variant="secondary" className="mb-3">{product.categories.name}</Badge>
-          )}
-          <h1 className="text-3xl font-display font-bold mb-4">{product.name}</h1>
-          
-          {/* Rating Summary */}
-          {stats && stats.total_reviews > 0 && stats.average_rating > 0 && (
-            <div className="flex items-center gap-3 mb-4">
-              <RatingStars rating={stats.average_rating} showNumber size="md" />
-              <span className="text-sm text-muted-foreground">
-                ({stats.total_reviews} {stats.total_reviews === 1 ? 'review' : 'reviews'})
-              </span>
-            </div>
-          )}
+    <div className="min-h-screen bg-background pt-24 pb-8">
+      {/* Back Button */}
+      <div className="container mx-auto px-4">
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+        </Button>
+      </div>
 
-          <div className="flex items-center gap-3 mb-6">
-            <span className="text-3xl font-medium text-primary">{formatPrice(product.price)}</span>
-            {product.compare_price && (
-              <span className="text-lg text-muted-foreground line-through">{formatPrice(product.compare_price)}</span>
+      {/* Amazon-Style Layout: Sticky Image + Scrollable Content */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col lg:flex-row gap-0">
+        {/* Sticky Image Sidebar - Left (Amazon Style) */}
+        <div className="w-full lg:w-2/5 lg:sticky lg:top-24 lg:h-screen lg:overflow-y-auto lg:flex lg:items-start">
+          <div className="w-full aspect-square lg:aspect-auto lg:h-full overflow-hidden flex items-center justify-center p-6 lg:p-8">
+            {product.image_url ? (
+              <img src={product.image_url} alt={product.name} className="w-full h-full object-cover rounded-3xl shadow-sm mx-auto max-w-[92%]" />
+            ) : (
+              <Leaf className="h-20 w-20 text-muted-foreground/30" />
             )}
           </div>
-          {product.weight && <p className="text-sm text-muted-foreground mb-4">{product.weight} {product.unit}</p>}
-          <DescriptionRenderer 
-            content={product.description} 
-            className="text-muted-foreground mb-6"
-          />
+        </div>
 
-          {product.stock_quantity > 0 ? (
-            <>
-              <div className="flex items-center gap-4 mb-6">
-                <span className="text-sm font-medium">Quantity:</span>
-                <div className="flex items-center border rounded-lg">
-                  <Button variant="ghost" size="icon" onClick={() => setQty(q => Math.max(1, q - 1))}><Minus className="h-4 w-4" /></Button>
-                  <span className="w-12 text-center font-medium">{qty}</span>
-                  <Button variant="ghost" size="icon" onClick={() => setQty(q => Math.min(product.stock_quantity, q + 1))}><Plus className="h-4 w-4" /></Button>
+        {/* Scrollable Content Section - Right */}
+        <div className="w-full lg:w-3/5 lg:overflow-y-auto lg:h-screen">
+          <div className="px-4 lg:px-8 py-8 max-w-3xl">
+            {/* Product Header */}
+            {product.categories?.name && (
+              <Badge variant="secondary" className="mb-3">{product.categories.name}</Badge>
+            )}
+            <h1 className="text-3xl font-display font-bold mb-4">{product.name}</h1>
+            
+            {/* Rating Summary */}
+            {stats && stats.total_reviews > 0 && stats.average_rating > 0 && (
+              <div className="flex items-center gap-3 mb-4">
+                <RatingStars rating={stats.average_rating} showNumber size="md" />
+                <span className="text-sm text-muted-foreground">
+                  ({stats.total_reviews} {stats.total_reviews === 1 ? 'review' : 'reviews'})
+                </span>
+              </div>
+            )}
+
+            {/* Price */}
+            <div className="flex items-center gap-3 mb-6">
+              <span className="text-3xl font-medium text-primary">{formatPrice(product.price)}</span>
+              {product.compare_price && (
+                <span className="text-lg text-muted-foreground line-through">{formatPrice(product.compare_price)}</span>
+              )}
+            </div>
+            {product.weight && <p className="text-sm text-muted-foreground mb-4">{product.weight} {product.unit}</p>}
+            
+            {/* Product Description - With Scrollable Read More */}
+            <div className="mb-8">
+              <ProductDescriptionCollapsible
+                content={product.description}
+                imageHeight={400}
+              />
+            </div>
+
+            {/* Quantity & Add to Cart */}
+            {product.stock_quantity > 0 ? (
+              <>
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="text-sm font-medium">Quantity:</span>
+                  <div className="flex items-center border rounded-lg">
+                    <Button variant="ghost" size="icon" onClick={() => setQty(q => Math.max(1, q - 1))}><Minus className="h-4 w-4" /></Button>
+                    <span className="w-12 text-center font-medium">{qty}</span>
+                    <Button variant="ghost" size="icon" onClick={() => setQty(q => Math.min(product.stock_quantity, q + 1))}><Plus className="h-4 w-4" /></Button>
+                  </div>
+                  <span className="text-sm text-muted-foreground">{product.stock_quantity} in stock</span>
                 </div>
-                <span className="text-sm text-muted-foreground">{product.stock_quantity} in stock</span>
-              </div>
-              <div className="flex gap-3">
-                <Button size="lg" className="flex-1 rounded-full" onClick={handleAddToCart}>
-                  <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
-                </Button>
-                <Button size="lg" variant="secondary" className="rounded-full" onClick={() => {
-                  handleAddToCart();
-                  navigate('/cart');
-                }}>
-                  Buy Now
-                </Button>
-              </div>
-            </>
-          ) : (
-            <Badge variant="destructive" className="text-base px-4 py-2">Out of Stock</Badge>
-          )}
+                <div className="flex gap-3 mb-8">
+                  <Button size="lg" className="flex-1 rounded-full" onClick={handleAddToCart}>
+                    <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
+                  </Button>
+                  <Button size="lg" variant="secondary" className="rounded-full" onClick={() => {
+                    handleAddToCart();
+                    navigate('/cart');
+                  }}>
+                    Buy Now
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <Badge variant="destructive" className="text-base px-4 py-2 mb-8">Out of Stock</Badge>
+            )}
+
+            {/* Reviews Section */}
+            <div className="border-t pt-8">
+              <Tabs defaultValue="reviews" className="w-full">
+                <TabsList className="mb-6">
+                  <TabsTrigger value="reviews" className="gap-2">
+                    <Star className="h-4 w-4" />
+                    Ratings & Reviews
+                    {stats && stats.total_reviews > 0 && (
+                      <Badge variant="secondary" className="ml-1">{stats.total_reviews}</Badge>
+                    )}
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="reviews" className="space-y-8">
+                  {/* Write Review Button */}
+                  {!showReviewForm && (
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-2xl font-bold">Customer Reviews</h2>
+                      <Button onClick={handleWriteReview} className="gap-2">
+                        <MessageSquare className="h-4 w-4" />
+                        Write a Review
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Review Form */}
+                  {showReviewForm && (
+                    <ReviewForm
+                      productId={product.id}
+                      productName={product.name}
+                      existingReview={editingReview}
+                      onSubmit={handleSubmitReview}
+                      onCancel={() => {
+                        setShowReviewForm(false);
+                        setEditingReview(null);
+                      }}
+                    />
+                  )}
+
+                  {/* Review Summary */}
+                  <ReviewSummary
+                    stats={stats as ReviewStats | null}
+                    selectedRating={selectedRating}
+                    onFilterByRating={setSelectedRating}
+                  />
+
+                  {/* Review List */}
+                  <ReviewList
+                    reviews={reviews}
+                    loading={reviewsLoading}
+                    currentUserId={user?.id}
+                    selectedRating={selectedRating}
+                    sortBy={sortBy}
+                    onSortChange={(sort) => setSortBy(sort)}
+                    onEdit={handleEditReview}
+                    onDelete={handleDeleteReview}
+                    onLoadMore={loadMore}
+                    hasMore={hasMore}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
         </div>
       </motion.div>
 
-      {/* Reviews Section */}
-      <div className="mt-12">
+      {/* Related Products Section - Full Width */}
+      <div className="container mx-auto px-4 mt-16">
         <Separator className="mb-8" />
-        
-        <Tabs defaultValue="reviews" className="w-full">
-          <TabsList className="mb-6">
-            <TabsTrigger value="reviews" className="gap-2">
-              <Star className="h-4 w-4" />
-              Ratings & Reviews
-              {stats && stats.total_reviews > 0 && (
-                <Badge variant="secondary" className="ml-1">{stats.total_reviews}</Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="reviews" className="space-y-8">
-            {/* Write Review Button */}
-            {!showReviewForm && (
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Customer Reviews</h2>
-                <Button onClick={handleWriteReview} className="gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  Write a Review
-                </Button>
-              </div>
-            )}
-
-            {/* Review Form */}
-            {showReviewForm && (
-              <ReviewForm
-                productId={product.id}
-                productName={product.name}
-                existingReview={editingReview}
-                onSubmit={handleSubmitReview}
-                onCancel={() => {
-                  setShowReviewForm(false);
-                  setEditingReview(null);
-                }}
-              />
-            )}
-
-            {/* Review Summary */}
-            <ReviewSummary
-              stats={stats as ReviewStats | null}
-              selectedRating={selectedRating}
-              onFilterByRating={setSelectedRating}
-            />
-
-            {/* Review List */}
-            <ReviewList
-              reviews={reviews}
-              loading={reviewsLoading}
-              currentUserId={user?.id}
-              selectedRating={selectedRating}
-              sortBy={sortBy}
-              onSortChange={(sort) => setSortBy(sort)}
-              onEdit={handleEditReview}
-              onDelete={handleDeleteReview}
-              onLoadMore={loadMore}
-              hasMore={hasMore}
-            />
-          </TabsContent>
-        </Tabs>
+        <RelatedProducts 
+          currentProductId={product.id}
+          categoryId={product.category_id}
+          maxItems={4}
+        />
       </div>
-
-      {/* Related Products Section */}
-      <RelatedProducts 
-        currentProductId={product.id}
-        categoryId={product.category_id}
-        maxItems={4}
-      />
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog

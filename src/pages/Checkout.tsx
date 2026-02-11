@@ -19,7 +19,7 @@ import { formatPrice } from '@/lib/formatters';
 
 export default function Checkout() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { items, total, clearCart } = useCart();
   const { regions, getDeliveryCharge } = useShippingRegions();
   const [loading, setLoading] = useState(false);
@@ -33,8 +33,17 @@ export default function Checkout() {
   const [gstSettings, setGstSettings] = useState({ gst_enabled: false, gst_percentage: 18, gst_inclusive: true });
 
   useEffect(() => {
-    if (!user) { navigate('/auth'); return; }
-    if (items.length === 0) { navigate('/cart'); return; }
+    // Wait for auth loading to complete before redirecting
+    if (!authLoading && !user) { 
+      navigate('/auth'); 
+      return; 
+    }
+    
+    // Check cart only after user is confirmed
+    if (user && items.length === 0) { 
+      navigate('/cart'); 
+      return; 
+    }
     supabase.from('store_settings').select('*').limit(1).maybeSingle().then(({ data }) => {
       if (data) {
         setGstSettings({
@@ -44,7 +53,7 @@ export default function Checkout() {
         });
       }
     });
-  }, [user, items.length]);
+  }, [user, items.length, authLoading]);
 
   // Recalculate delivery when address changes
   useEffect(() => {
@@ -73,6 +82,17 @@ export default function Checkout() {
     : 0;
 
   const grandTotal = total - discount + deliveryCharge + gstAmount;
+
+  // Show loading state while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="container mx-auto px-4 pt-24 pb-8 max-w-3xl">
+        <div className="h-64 bg-muted rounded-lg animate-pulse" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   const placeOrder = async () => {
     if (!selectedAddress || !selectedAddress.full_name || !selectedAddress.phone || !selectedAddress.address_line1 || !selectedAddress.pincode) {

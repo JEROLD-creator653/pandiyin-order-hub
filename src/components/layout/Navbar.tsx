@@ -229,7 +229,7 @@ export default function Navbar() {
                               <img 
                                 src={product.image_url} 
                                 alt={product.name}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover rounded-md"
                               />
                             ) : (
                               <Leaf className="h-5 w-5 text-muted-foreground/30" />
@@ -399,7 +399,7 @@ export default function Navbar() {
                                       <img 
                                         src={product.image_url} 
                                         alt={product.name}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-cover rounded-md"
                                       />
                                     ) : (
                                       <Leaf className="h-4 w-4 text-muted-foreground/30" />

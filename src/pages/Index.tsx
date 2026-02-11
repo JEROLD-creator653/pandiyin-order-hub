@@ -274,7 +274,7 @@ export default function Index() {
                     <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col border-0 shadow-sm">
                       <div className="h-52 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
                         {p.image_url ? (
-                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500" />
+                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover object-center rounded-lg group-hover:scale-105 transition-transform duration-500" />
                         ) : (
                           <Leaf className="h-12 w-12 text-muted-foreground/30" />
                         )}

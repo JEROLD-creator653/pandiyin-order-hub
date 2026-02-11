@@ -198,14 +198,38 @@ export default function AddressManager({
 
     try {
       if (editing) {
-        await supabase.from('addresses').update(payload).eq('id', editing.id);
+        const { error } = await supabase.from('addresses').update(payload).eq('id', editing.id);
+        if (error) throw error;
+        
+        // Immediately update the selected address if it was the one being edited
+        const updatedAddress: Address = {
+          id: editing.id,
+          ...payload,
+        };
+        
+        // Notify parent component of the updated address immediately
+        if (selectedId === editing.id && onSelect) {
+          onSelect(updatedAddress);
+        }
+        
         toast({ title: 'Address updated' });
       } else {
-        await supabase.from('addresses').insert(payload);
+        const { data, error } = await supabase.from('addresses').insert(payload).select().single();
+        if (error) throw error;
+        
+        // Select the newly created address
+        if (onSelect && data) {
+          const newAddress: Address = {
+            id: data.id,
+            ...payload,
+          };
+          onSelect(newAddress);
+        }
+        
         toast({ title: 'Address saved' });
       }
       setDialogOpen(false);
-      load();
+      load(); // Reload all addresses to ensure UI is in sync
     } catch (error) {
       toast({
         title: 'Error saving address',

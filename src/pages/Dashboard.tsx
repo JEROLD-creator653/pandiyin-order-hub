@@ -19,19 +19,36 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<any[]>([]);
 
   useEffect(() => {
-    if (!user) { navigate('/auth'); return; }
-    supabase
-      .from('orders')
-      .select('*, order_items(*, products(image_url, name))')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .then(({ data }) => setOrders(data || []));
-  }, [user]);
+    // Wait for auth loading to complete before redirecting
+    if (!loading && !user) { 
+      navigate('/auth'); 
+      return; 
+    }
+    
+    // Only fetch orders if user exists
+    if (user) {
+      supabase
+        .from('orders')
+        .select('*, order_items(*, products(image_url, name))')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .then(({ data }) => setOrders(data || []));
+    }
+  }, [user, loading]);
+
+  // Show loading state while auth is initializing
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 pt-24 pb-8 max-w-3xl">
+        <div className="h-64 bg-muted rounded-lg animate-pulse" />
+      </div>
+    );
+  }
 
   if (!user) return null;
 
@@ -58,7 +75,7 @@ export default function Dashboard() {
                     <CardContent className="p-4 flex items-center gap-4">
                       <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                         {imageUrl ? (
-                          <img src={imageUrl} alt="" className="w-full h-full object-cover" />
+                          <img src={imageUrl} alt="" className="w-full h-full object-cover rounded-lg" />
                         ) : (
                           <Leaf className="h-6 w-6 text-muted-foreground/30" />
                         )}
