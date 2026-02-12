@@ -12,7 +12,6 @@ export default function SkeletonLoader({
   variant = 'card',
   className = '',
 }: SkeletonLoaderProps) {
-  const container = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,

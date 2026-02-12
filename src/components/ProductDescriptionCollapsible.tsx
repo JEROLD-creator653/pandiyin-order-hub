@@ -74,7 +74,14 @@ export default function ProductDescriptionCollapsible({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => {
+              const next = !isExpanded;
+              setIsExpanded(next);
+              if (next) {
+                // ensure the top of the description is visible so expansion grows downward
+                setTimeout(() => contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+              }
+            }}
             className="gap-2 text-primary hover:text-primary/80 hover:bg-primary/10"
           >
             {isExpanded ? (
