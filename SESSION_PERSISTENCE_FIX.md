@@ -13,8 +13,6 @@ But the pages were redirecting immediately when `user` was null, before restorat
 
 ---
 
-## Solution Implemented ✅
-
 Added proper loading state handling to **4 protected pages**:
 
 ### Pages Fixed:
