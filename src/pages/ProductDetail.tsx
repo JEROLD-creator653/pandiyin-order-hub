@@ -25,7 +25,8 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart, items: cartItems } = useCart();
+  const [adding, setAdding] = useState(false);
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
@@ -66,7 +67,9 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     if (!user) { navigate('/auth'); return; }
-    addToCart(product.id, qty);
+    // optimistic UI: mark as adding so button becomes "Go to Cart" instantly
+    setAdding(true);
+    addToCart(product.id, qty).finally(() => setTimeout(() => setAdding(false), 400));
   };
 
   const handleWriteReview = async () => {
@@ -229,13 +232,26 @@ export default function ProductDetail() {
                   </div>
                   
                   <div className="flex gap-3 pt-2">
-                    <Button 
-                      size="lg" 
-                      className="flex-1 rounded-full h-12 font-semibold" 
-                      onClick={handleAddToCart}
-                    >
-                      <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
-                    </Button>
+                    {((cartItems || []).some(i => i.product_id === product.id) || adding) ? (
+                      <Button
+                        size="lg"
+                        variant="outline"
+                        className="flex-1 rounded-full h-12 font-semibold bg-primary text-primary-foreground group-hover:!bg-transparent group-hover:!text-foreground transition-colors"
+                        onClick={() => navigate('/cart')}
+                      >
+                        <motion.span initial={{ x: -6, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center justify-center">
+                          <ShoppingCart className="mr-2 h-5 w-5" /> Go to Cart
+                        </motion.span>
+                      </Button>
+                    ) : (
+                      <Button 
+                        size="lg" 
+                        className="flex-1 rounded-full h-12 font-semibold" 
+                        onClick={handleAddToCart}
+                      >
+                        <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
+                      </Button>
+                    )}
                     <Button 
                       size="lg" 
                       variant="outline" 

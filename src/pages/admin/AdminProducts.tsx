@@ -72,6 +72,9 @@ interface Product {
   is_featured: boolean;
   weight?: string;
   unit?: string;
+  gst_percentage?: number;
+  hsn_code?: string;
+  tax_inclusive?: boolean;
   categories?: { name: string };
   created_at: string;
 }
@@ -96,6 +99,9 @@ export default function AdminProducts() {
     stock_quantity: '',
     weight: '',
     unit: '',
+    gst_percentage: '5',
+    hsn_code: '',
+    tax_inclusive: true,
     is_available: true,
     is_featured: false,
   });
@@ -136,6 +142,9 @@ export default function AdminProducts() {
       stock_quantity: '',
       weight: '',
       unit: '',
+      gst_percentage: '5',
+      hsn_code: '',
+      tax_inclusive: true,
       is_available: true,
       is_featured: false,
     });
@@ -155,6 +164,9 @@ export default function AdminProducts() {
       stock_quantity: String(p.stock_quantity),
       weight: p.weight || '',
       unit: p.unit || '',
+      gst_percentage: String(p.gst_percentage || 5),
+      hsn_code: p.hsn_code || '',
+      tax_inclusive: p.tax_inclusive !== undefined ? p.tax_inclusive : true,
       is_available: p.is_available,
       is_featured: p.is_featured,
     });
@@ -198,6 +210,9 @@ export default function AdminProducts() {
           stock_quantity: Number(form.stock_quantity),
           weight: form.weight,
           unit: form.unit,
+          gst_percentage: Number(form.gst_percentage),
+          hsn_code: form.hsn_code,
+          tax_inclusive: form.tax_inclusive,
           is_available: form.is_available,
           is_featured: form.is_featured,
         };
@@ -225,6 +240,9 @@ export default function AdminProducts() {
             price: Number(form.price),
             category_id: form.category_id || undefined,
             stock_quantity: Number(form.stock_quantity) || 0,
+            gst_percentage: Number(form.gst_percentage),
+            hsn_code: form.hsn_code,
+            tax_inclusive: form.tax_inclusive,
           },
           user.id
         );
@@ -242,6 +260,9 @@ export default function AdminProducts() {
         stock_quantity: '',
         weight: '',
         unit: '',
+        gst_percentage: '5',
+        hsn_code: '',
+        tax_inclusive: true,
         is_available: true,
         is_featured: false,
       });
@@ -435,6 +456,60 @@ export default function AdminProducts() {
                 </div>
               </div>
 
+              {/* GST & HSN Code */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    GST Percentage
+                  </label>
+                  <Select
+                    value={form.gst_percentage}
+                    onValueChange={(v) => setForm({ ...form, gst_percentage: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select GST rate" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">0% (Exempted)</SelectItem>
+                      <SelectItem value="5">5% (Essential)</SelectItem>
+                      <SelectItem value="12">12% (General)</SelectItem>
+                      <SelectItem value="18">18% (Premium)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    HSN Code
+                  </label>
+                  <Input
+                    placeholder="e.g., 190590"
+                    value={form.hsn_code}
+                    onChange={(e) => setForm({ ...form, hsn_code: e.target.value })}
+                    maxLength="8"
+                  />
+                </div>
+              </div>
+
+              {/* Tax Inclusive */}
+              <div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="tax_inclusive"
+                    checked={form.tax_inclusive}
+                    onChange={(e) =>
+                      setForm({ ...form, tax_inclusive: e.target.checked })
+                    }
+                  />
+                  <label htmlFor="tax_inclusive" className="text-sm font-medium">
+                    Tax Included in Price
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Check if price includes GST, uncheck if GST is exclusive
+                </p>
+              </div>
+
               {/* Toggles */}
               <div className="flex gap-6">
                 <div className="flex items-center gap-2">
@@ -512,6 +587,8 @@ export default function AdminProducts() {
                     <TableHead>Product</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Price</TableHead>
+                    <TableHead>GST %</TableHead>
+                    <TableHead>HSN</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead>Featured</TableHead>
                     <TableHead>Status</TableHead>
@@ -549,6 +626,14 @@ export default function AdminProducts() {
                         {p.categories?.name || '-'}
                       </TableCell>
                       <TableCell className="font-medium">{formatPrice(p.price)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {p.gst_percentage || 5}%
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {p.hsn_code || '-'}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant={

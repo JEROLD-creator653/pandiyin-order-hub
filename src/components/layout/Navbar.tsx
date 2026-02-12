@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, User, Menu, Search, LogOut, Package, Shield, UserCog, ArrowRight, Leaf } from 'lucide-react';
+import { ShoppingCart, User, Menu, Search, LogOut, Package, Shield, UserCog, ArrowRight, Leaf, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,7 @@ export default function Navbar() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const { user, isAdmin, signOut } = useAuth();
@@ -36,18 +37,22 @@ export default function Navbar() {
   const location = useLocation();
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
   
-  // Check if we're on the homepage
   const isHomePage = location.pathname === '/';
 
-  // Sync search query with URL params
   useEffect(() => {
     const urlSearchQuery = searchParams.get('search') || '';
     setSearchQuery(urlSearchQuery);
   }, [searchParams]);
 
-  // Click outside to close suggestions
+  useEffect(() => {
+    if (mobileSearchOpen && mobileSearchInputRef.current) {
+      setTimeout(() => mobileSearchInputRef.current?.focus(), 100);
+    }
+  }, [mobileSearchOpen]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
@@ -56,6 +61,7 @@ export default function Navbar() {
 
       if (!clickedInsideDesktop && !clickedInsideMobile) {
         setShowSuggestions(false);
+        setMobileSearchOpen(false);
       }
     };
 
@@ -63,11 +69,8 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Debounced search suggestions
   useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
 
     if (searchQuery.trim().length >= 2) {
       setIsLoadingSuggestions(true);
@@ -90,23 +93,16 @@ export default function Navbar() {
     }
 
     return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
   }, [searchQuery]);
 
   useEffect(() => {
-    // Only track scroll on homepage
     if (!isHomePage) {
       setIsScrolled(false);
       return;
     }
-    
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
-    };
-
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isHomePage]);
@@ -121,11 +117,13 @@ export default function Navbar() {
 
   const handleSuggestionClick = (productId: string) => {
     setShowSuggestions(false);
+    setMobileSearchOpen(false);
     navigate(`/products/${productId}`);
   };
 
   const handleViewAll = () => {
     setShowSuggestions(false);
+    setMobileSearchOpen(false);
     navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
   };
 
@@ -135,8 +133,68 @@ export default function Navbar() {
     { label: 'About', to: '/about' },
   ];
 
-  // Only apply transparency logic on homepage and desktop
   const isActive = isHomePage ? (isScrolled || isHovered || mobileOpen) : true;
+
+  // Reusable suggestions dropdown
+  const SuggestionsDropdown = ({ isMobile = false }: { isMobile?: boolean }) => (
+    <AnimatePresence>
+      {showSuggestions && searchQuery.trim().length >= 2 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.2 }}
+          className={`absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50 ${isMobile ? 'max-h-[300px]' : 'max-h-[400px]'} overflow-y-auto`}
+        >
+          {isLoadingSuggestions ? (
+            <div className="p-4 text-center text-sm text-muted-foreground">Searching...</div>
+          ) : suggestions.length > 0 ? (
+            <>
+              {suggestions.map((product) => (
+                <button
+                  key={product.id}
+                  type="button"
+                  onClick={() => handleSuggestionClick(product.id)}
+                  className="w-full p-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left border-b border-gray-100 last:border-0"
+                >
+                  <div className={`${isMobile ? 'w-10 h-10' : 'w-12 h-12'} rounded-md bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center`}>
+                    {product.image_url ? (
+                      <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <Leaf className={`${isMobile ? 'h-4 w-4' : 'h-5 w-5'} text-muted-foreground/30`} />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-medium text-foreground truncate ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                      {product.name}
+                    </p>
+                    {product.categories?.name && (
+                      <p className={`text-muted-foreground truncate ${isMobile ? 'text-[10px]' : 'text-xs'}`}>
+                        {product.categories.name}
+                      </p>
+                    )}
+                  </div>
+                  <span className={`font-semibold text-foreground flex-shrink-0 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+                    {formatPrice(product.price)}
+                  </span>
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={handleViewAll}
+                className="w-full p-3 flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 transition-colors text-primary border-t border-gray-200 font-medium"
+              >
+                <span className={isMobile ? 'text-xs' : 'text-sm'}>View all results</span>
+                <ArrowRight className={isMobile ? 'h-3 w-3' : 'h-4 w-4'} />
+              </button>
+            </>
+          ) : (
+            <div className="p-4 text-center text-sm text-muted-foreground">No products found</div>
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   return (
     <header
@@ -150,197 +208,175 @@ export default function Navbar() {
       onMouseEnter={() => isHomePage && setIsHovered(true)}
       onMouseLeave={() => isHomePage && setIsHovered(false)}
     >
-      <div className="container mx-auto px-4 flex items-center justify-between h-16 transition-colors duration-300">
-        <Link to="/" className="flex items-center gap-2 transition-colors duration-300">
-          <span className={`text-xl font-display font-bold transition-colors duration-300 ${
-            (isHomePage && !isActive) ? 'md:text-white text-primary md:drop-shadow-lg' : 'text-primary'
-          }`}>
-            PANDIYIN
-          </span>
-          <span className={`hidden sm:inline text-xs font-sans transition-colors duration-300 ${
-            (isHomePage && !isActive) ? 'md:text-white/80 text-muted-foreground md:drop-shadow' : 'text-muted-foreground'
-          }`}>
-            Nature In Pack
-          </span>
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-6">
-          {navLinks.map(l => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className={`text-sm font-medium transition-colors duration-300 ${
-                (isHomePage && !isActive)
-                  ? 'md:text-white/90 md:hover:text-white text-foreground/70 hover:text-primary md:drop-shadow'
-                  : 'text-foreground/70 hover:text-primary'
-              }`}
-            >
-              {l.label}
-            </Link>
-          ))}
-        </nav>
-
-        <form onSubmit={handleSearch} className="hidden md:flex items-center max-w-xs relative">
-          <div className="relative w-full" ref={searchRef}>
-            <div className="relative">
-              <Search className={`absolute left-2.5 top-2.5 h-4 w-4 transition-colors duration-300 ${
-                (isHomePage && !isActive) ? 'md:text-white/60 text-muted-foreground' : 'text-muted-foreground'
-              }`} />
-              <Input
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                onFocus={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
-                onClick={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
-                onKeyDown={(e) => e.key === 'Escape' && setShowSuggestions(false)}
-                className={`pl-9 h-9 w-48 lg:w-64 transition-all duration-300 ${
-                  (isHomePage && !isActive)
-                    ? 'md:bg-white/20 md:text-white md:placeholder:text-white/50 md:border-white/20 bg-secondary/50 text-foreground placeholder:text-muted-foreground/60'
-                    : 'bg-secondary/50 text-foreground placeholder:text-muted-foreground/60'
-                }`}
-              />
-            </div>
-
-            {/* Autocomplete Suggestions Dropdown */}
-            <AnimatePresence>
-              {showSuggestions && searchQuery.trim().length >= 2 && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50"
-                >
-                {isLoadingSuggestions ? (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    Searching...
-                  </div>
-                ) : suggestions.length > 0 ? (
-                  <>
-                    <div className="max-h-[400px] overflow-y-auto">
-                      {suggestions.map((product) => (
-                        <button
-                          key={product.id}
-                          onClick={() => handleSuggestionClick(product.id)}
-                          className="w-full p-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left border-b border-gray-100 last:border-0"
-                        >
-                          <div className="w-12 h-12 rounded-md bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-                            {product.image_url ? (
-                              <img 
-                                src={product.image_url} 
-                                alt={product.name}
-                                className="w-full h-full object-cover rounded-md"
-                              />
-                            ) : (
-                              <Leaf className="h-5 w-5 text-muted-foreground/30" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">
-                              {product.name}
-                            </p>
-                            {product.categories?.name && (
-                              <p className="text-xs text-muted-foreground truncate">
-                                {product.categories.name}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex flex-col items-end flex-shrink-0">
-                            <span className="text-sm font-semibold text-foreground">
-                              {formatPrice(product.price)}
-                            </span>
-                            {product.compare_price && product.compare_price > product.price && (
-                              <span className="text-xs text-muted-foreground line-through">
-                                {formatPrice(product.compare_price)}
-                              </span>
-                            )}
-                          </div>
-                        </button>
-                      ))}
+      <div className="container mx-auto px-4 h-16 transition-colors duration-300">
+        {/* ===== MOBILE HEADER (4-element layout) ===== */}
+        <div className="md:hidden flex items-center justify-between h-full gap-2">
+          {/* Left: Hamburger */}
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-foreground hover:bg-secondary">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 p-0 flex flex-col">
+              <div className="flex-1 overflow-y-auto">
+                {/* Account Section */}
+                <div className="border-b p-4">
+                  {user ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 pb-3 border-b">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <User className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold truncate">{user.email?.split('@')[0] || 'Profile'}</p>
+                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                        </div>
+                      </div>
+                      <Button variant="outline" className="w-full rounded-full h-9 text-sm" onClick={() => { navigate('/profile'); setMobileOpen(false); }}>
+                        <UserCog className="mr-2 h-4 w-4" /> Profile
+                      </Button>
+                      <Button variant="outline" className="w-full rounded-full h-9 text-sm" onClick={() => { navigate('/dashboard'); setMobileOpen(false); }}>
+                        <Package className="mr-2 h-4 w-4" /> My Orders
+                      </Button>
+                      {isAdmin && (
+                        <Button variant="outline" className="w-full rounded-full h-9 text-sm" onClick={() => { navigate('/admin'); setMobileOpen(false); }}>
+                          <Shield className="mr-2 h-4 w-4" /> Admin
+                        </Button>
+                      )}
                     </div>
-                    <button
-                      onClick={handleViewAll}
-                      className="w-full p-3 flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 transition-colors text-sm font-medium text-primary border-t border-gray-200"
-                    >
-                      View all results
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </>
-                ) : (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    No products found
-                  </div>
-                )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </form>
+                  ) : (
+                    <Button className="w-full rounded-full h-10" onClick={() => { navigate('/auth'); setMobileOpen(false); }}>
+                      <User className="mr-2 h-4 w-4" /> Sign In
+                    </Button>
+                  )}
+                </div>
 
-        <div className="flex items-center gap-2">
-          <Link to="/cart" className="relative">
+                {/* Menu Items */}
+                <div className="p-4 space-y-1">
+                  {[
+                    { label: 'Home', to: '/' },
+                    { label: 'Products', to: '/products' },
+                    { label: 'About', to: '/about' },
+                  ].map(l => (
+                    <Link
+                      key={l.to}
+                      to={l.to}
+                      onClick={() => setMobileOpen(false)}
+                      className="block px-3 py-3 text-base font-medium rounded-lg hover:bg-secondary transition-colors"
+                    >
+                      {l.label}
+                    </Link>
+                  ))}
+                  <button
+                    onClick={() => {
+                      setMobileOpen(false);
+                      const footer = document.getElementById('footer');
+                      if (footer) footer.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="block w-full text-left px-3 py-3 text-base font-medium rounded-lg hover:bg-secondary transition-colors"
+                  >
+                    Contact
+                  </button>
+                </div>
+              </div>
+
+              {/* Logout */}
+              {user && (
+                <div className="border-t p-4">
+                  <Button variant="destructive" className="w-full rounded-full h-10" onClick={() => { signOut(); setMobileOpen(false); }}>
+                    <LogOut className="mr-2 h-4 w-4" /> Sign Out
+                  </Button>
+                </div>
+              )}
+            </SheetContent>
+          </Sheet>
+
+          {/* Center: Logo */}
+          <Link to="/" className="flex-1 flex justify-center mx-2">
+            <span className="text-lg font-display font-bold text-primary">PANDIYIN</span>
+          </Link>
+
+          {/* Right: Search + Cart */}
+          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="icon"
-              className={`transition-colors duration-300 ${
-                (isHomePage && !isActive) ? 'md:text-white md:hover:bg-white/10 text-foreground hover:bg-secondary' : 'text-foreground hover:bg-secondary'
-              }`}
+              className="text-foreground hover:bg-secondary"
+              onClick={() => setMobileSearchOpen(true)}
             >
-              <ShoppingCart className="h-5 w-5" />
-              {itemCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent text-accent-foreground">
-                  {itemCount}
-                </Badge>
-              )}
+              <Search className="h-5 w-5" />
             </Button>
+            <Link to="/cart" className="relative">
+              <Button variant="ghost" size="icon" className="text-foreground hover:bg-secondary">
+                <ShoppingCart className="h-5 w-5" />
+                {itemCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent text-accent-foreground">
+                    {itemCount}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* ===== DESKTOP HEADER ===== */}
+        <div className="hidden md:flex items-center justify-between h-full gap-4">
+          <Link to="/" className="flex items-center gap-2 transition-colors duration-300">
+            <span className={`text-xl font-display font-bold transition-colors duration-300 ${
+              (isHomePage && !isActive) ? 'md:text-white text-primary md:drop-shadow-lg' : 'text-primary'
+            }`}>
+              PANDIYIN
+            </span>
+            <span className={`hidden sm:inline text-xs font-sans transition-colors duration-300 ${
+              (isHomePage && !isActive) ? 'md:text-white/80 text-muted-foreground md:drop-shadow' : 'text-muted-foreground'
+            }`}>
+              Nature In Pack
+            </span>
           </Link>
 
-          {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`transition-colors duration-300 ${
-                    (isHomePage && !isActive) ? 'md:text-white md:hover:bg-white/10 text-foreground hover:bg-secondary' : 'text-foreground hover:bg-secondary'
-                  }`}
-                >
-                  <User className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate('/profile')}>
-                  <UserCog className="mr-2 h-4 w-4" /> My Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                  <Package className="mr-2 h-4 w-4" /> My Orders
-                </DropdownMenuItem>
-                {isAdmin && (
-                  <DropdownMenuItem onClick={() => navigate('/admin')}>
-                    <Shield className="mr-2 h-4 w-4" /> Admin Dashboard
-                  </DropdownMenuItem>
-                )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
-                  <LogOut className="mr-2 h-4 w-4" /> Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => navigate('/auth')}
-              className={`transition-colors duration-300 ${
-                (isHomePage && !isActive) ? 'md:bg-white md:text-primary md:hover:bg-white/90' : ''
-              }`}
-            >
-              Sign In
-            </Button>
-          )}
+          <nav className="hidden md:flex items-center gap-6">
+            {navLinks.map(l => (
+              <Link
+                key={l.to}
+                to={l.to}
+                className={`text-sm font-medium transition-colors duration-300 ${
+                  (isHomePage && !isActive)
+                    ? 'md:text-white/90 md:hover:text-white text-foreground/70 hover:text-primary md:drop-shadow'
+                    : 'text-foreground/70 hover:text-primary'
+                }`}
+              >
+                {l.label}
+              </Link>
+            ))}
+          </nav>
 
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild className="md:hidden">
+          <form onSubmit={handleSearch} className="hidden md:flex items-center max-w-xs relative">
+            <div className="relative w-full" ref={searchRef}>
+              <div className="relative">
+                <Search className={`absolute left-2.5 top-2.5 h-4 w-4 transition-colors duration-300 ${
+                  (isHomePage && !isActive) ? 'md:text-white/60 text-muted-foreground' : 'text-muted-foreground'
+                }`} />
+                <Input
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onFocus={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
+                  onClick={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
+                  onKeyDown={(e) => e.key === 'Escape' && setShowSuggestions(false)}
+                  className={`pl-9 h-9 w-48 lg:w-64 transition-all duration-300 ${
+                    (isHomePage && !isActive)
+                      ? 'md:bg-white/20 md:text-white md:placeholder:text-white/50 md:border-white/20 bg-secondary/50 text-foreground placeholder:text-muted-foreground/60'
+                      : 'bg-secondary/50 text-foreground placeholder:text-muted-foreground/60'
+                  }`}
+                />
+              </div>
+              <SuggestionsDropdown isMobile={false} />
+            </div>
+          </form>
+
+          <div className="hidden md:flex items-center gap-2">
+            <Link to="/cart" className="relative">
               <Button
                 variant="ghost"
                 size="icon"
@@ -348,117 +384,114 @@ export default function Navbar() {
                   (isHomePage && !isActive) ? 'md:text-white md:hover:bg-white/10 text-foreground hover:bg-secondary' : 'text-foreground hover:bg-secondary'
                 }`}
               >
-                <Menu className="h-5 w-5" />
+                <ShoppingCart className="h-5 w-5" />
+                {itemCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent text-accent-foreground">
+                    {itemCount}
+                  </Badge>
+                )}
               </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-72">
-              <div className="flex flex-col gap-4 mt-8">
-                <form onSubmit={e => { handleSearch(e); setMobileOpen(false); }} className="relative">
-                  <div className="relative" ref={mobileSearchRef}>
-                    <div className="relative">
-                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="Search..."
-                        value={searchQuery}
-                        onChange={e => setSearchQuery(e.target.value)}
-                        onFocus={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
-                        onClick={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
-                        onKeyDown={(e) => e.key === 'Escape' && setShowSuggestions(false)}
-                        className="pl-9"
-                      />
-                    </div>
+            </Link>
 
-                    {/* Mobile Autocomplete Suggestions Dropdown */}
-                    <AnimatePresence>
-                      {showSuggestions && searchQuery.trim().length >= 2 && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2 }}
-                          className="absolute top-full mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50"
-                        >
-                        {isLoadingSuggestions ? (
-                          <div className="p-4 text-center text-sm text-muted-foreground">
-                            Searching...
-                          </div>
-                        ) : suggestions.length > 0 ? (
-                          <>
-                            <div className="max-h-[300px] overflow-y-auto">
-                              {suggestions.map((product) => (
-                                <button
-                                  key={product.id}
-                                  onClick={() => {
-                                    handleSuggestionClick(product.id);
-                                    setMobileOpen(false);
-                                  }}
-                                  className="w-full p-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left border-b border-gray-100 last:border-0"
-                                >
-                                  <div className="w-10 h-10 rounded-md bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
-                                    {product.image_url ? (
-                                      <img 
-                                        src={product.image_url} 
-                                        alt={product.name}
-                                        className="w-full h-full object-cover rounded-md"
-                                      />
-                                    ) : (
-                                      <Leaf className="h-4 w-4 text-muted-foreground/30" />
-                                    )}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-medium text-foreground truncate">
-                                      {product.name}
-                                    </p>
-                                    {product.categories?.name && (
-                                      <p className="text-[10px] text-muted-foreground truncate">
-                                        {product.categories.name}
-                                      </p>
-                                    )}
-                                  </div>
-                                  <div className="flex flex-col items-end flex-shrink-0">
-                                    <span className="text-xs font-semibold text-foreground">
-                                      {formatPrice(product.price)}
-                                    </span>
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                            <button
-                              onClick={() => {
-                                handleViewAll();
-                                setMobileOpen(false);
-                              }}
-                              className="w-full p-3 flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 transition-colors text-sm font-medium text-primary border-t border-gray-200"
-                            >
-                              View all results
-                              <ArrowRight className="h-4 w-4" />
-                            </button>
-                          </>
-                        ) : (
-                          <div className="p-4 text-center text-sm text-muted-foreground">
-                            No products found
-                          </div>
-                        )}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </form>
-                {navLinks.map(l => (
-                  <Link
-                    key={l.to}
-                    to={l.to}
-                    onClick={() => setMobileOpen(false)}
-                    className="text-lg font-medium py-2 border-b hover:text-primary transition-colors"
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`transition-colors duration-300 ${
+                      (isHomePage && !isActive) ? 'md:text-white md:hover:bg-white/10 text-foreground hover:bg-secondary' : 'text-foreground hover:bg-secondary'
+                    }`}
                   >
-                    {l.label}
-                  </Link>
-                ))}
-              </div>
-            </SheetContent>
-          </Sheet>
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <UserCog className="mr-2 h-4 w-4" /> My Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                    <Package className="mr-2 h-4 w-4" /> My Orders
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <Shield className="mr-2 h-4 w-4" /> Admin Dashboard
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => signOut()}>
+                    <LogOut className="mr-2 h-4 w-4" /> Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => navigate('/auth')}
+                className={`transition-colors duration-300 ${
+                  (isHomePage && !isActive) ? 'md:bg-white md:text-primary md:hover:bg-white/90' : ''
+                }`}
+              >
+                Sign In
+              </Button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* ===== MOBILE FLOATING SEARCH OVERLAY ===== */}
+      <AnimatePresence>
+        {mobileSearchOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-black/40 md:hidden"
+            onClick={() => setMobileSearchOpen(false)}
+          >
+            <motion.div
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute top-0 left-0 right-0 bg-white pt-4 pb-6 shadow-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="container mx-auto px-4">
+                <form onSubmit={e => { handleSearch(e); setMobileSearchOpen(false); }} ref={mobileSearchRef} className="relative space-y-2">
+                  <div className="relative flex items-center gap-2">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      ref={mobileSearchInputRef}
+                      placeholder="Search products..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      onFocus={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
+                      onClick={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
+                      onKeyDown={(e) => e.key === 'Escape' && setMobileSearchOpen(false)}
+                      className="pl-9"
+                      autoComplete="off"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => setSearchQuery('')}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  <SuggestionsDropdown isMobile={true} />
+                </form>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
+
