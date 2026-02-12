@@ -18,8 +18,10 @@ export type Database = {
         Row: {
           address_line1: string
           address_line2: string | null
+          area: string | null
           city: string
           created_at: string
+          district: string | null
           full_name: string
           id: string
           is_default: boolean
@@ -31,8 +33,10 @@ export type Database = {
         Insert: {
           address_line1?: string
           address_line2?: string | null
+          area?: string | null
           city?: string
           created_at?: string
+          district?: string | null
           full_name?: string
           id?: string
           is_default?: boolean
@@ -44,8 +48,10 @@ export type Database = {
         Update: {
           address_line1?: string
           address_line2?: string | null
+          area?: string | null
           city?: string
           created_at?: string
+          district?: string | null
           full_name?: string
           id?: string
           is_default?: boolean
@@ -327,6 +333,7 @@ export type Database = {
           product_id: string
           rating: number
           user_id: string
+          user_name: string | null
         }
         Insert: {
           created_at?: string
@@ -335,6 +342,7 @@ export type Database = {
           product_id: string
           rating: number
           user_id: string
+          user_name?: string | null
         }
         Update: {
           created_at?: string
@@ -343,6 +351,7 @@ export type Database = {
           product_id?: string
           rating?: number
           user_id?: string
+          user_name?: string | null
         }
         Relationships: [
           {
