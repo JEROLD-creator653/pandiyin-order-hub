@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
 import { useCart } from '@/hooks/useCart';
+import { useNavigate } from 'react-router-dom';
 
 type SortOption = 'newest' | 'price_low' | 'price_high' | 'popularity';
 
@@ -31,7 +32,10 @@ export default function Products() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
-  const { addToCart } = useCart();
+  const { addToCart, items: cartItems } = useCart();
+  const navigate = useNavigate();
+
+  const isInCart = (productId: string) => cartItems.some(i => i.product_id === productId);
 
   const searchFilter = searchParams.get('search') || '';
 
@@ -336,39 +340,38 @@ export default function Products() {
                       {p.compare_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
                     </div>
                     <div className="mt-auto pt-3 flex justify-center">
-                      <Button
-                        size="sm"
-                        className="w-full rounded-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
-                        variant={addingItems.has(p.id) ? "secondary" : "outline"}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleAddToCart(p.id);
-                        }}
-                        disabled={p.stock_quantity === 0 || addingItems.has(p.id)}
-                      >
-                        {addingItems.has(p.id) ? (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="flex items-center gap-1"
-                          >
-                            <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 0.5, ease: "easeInOut" }}
+                      <AnimatePresence mode="wait">
+                        {isInCart(p.id) ? (
+                          <motion.div key="go" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ duration: 0.2 }} className="w-full">
+                            <Button
+                              size="sm"
+                              className="w-full rounded-full text-sm bg-green-600 hover:bg-green-700 text-white transition-all"
+                              onClick={(e) => { e.preventDefault(); navigate('/cart'); }}
                             >
-                              ✓
-                            </motion.div>
-                            Added
+                              <ShoppingCart className="h-4 w-4 mr-2" />
+                              Go to Cart
+                            </Button>
                           </motion.div>
-                        ) : p.stock_quantity === 0 ? (
-                          'Out of Stock'
                         ) : (
-                          <>
-                            <ShoppingCart className="h-4 w-4 mr-2" />
-                            Add to Cart
-                          </>
+                          <motion.div key="add" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ duration: 0.2 }} className="w-full">
+                            <Button
+                              size="sm"
+                              className="w-full rounded-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                              variant={addingItems.has(p.id) ? "secondary" : "outline"}
+                              onClick={(e) => { e.preventDefault(); handleAddToCart(p.id); }}
+                              disabled={p.stock_quantity === 0 || addingItems.has(p.id)}
+                            >
+                              {addingItems.has(p.id) ? (
+                                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-1">
+                                  ✓ Added
+                                </motion.div>
+                              ) : p.stock_quantity === 0 ? 'Out of Stock' : (
+                                <><ShoppingCart className="h-4 w-4 mr-2" />Add to Cart</>
+                              )}
+                            </Button>
+                          </motion.div>
                         )}
-                      </Button>
+                      </AnimatePresence>
                     </div>
                   </CardContent>
                 </Card>

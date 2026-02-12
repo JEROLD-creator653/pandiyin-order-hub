@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Leaf, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,14 +17,14 @@ interface ProductRecommendationsProps {
 }
 
 export default function ProductRecommendations({ 
-  cartItems, 
+  cartItems: propCartItems, 
   maxItems = 6,
   title = "You may also like"
 }: ProductRecommendationsProps) {
   const navigate = useNavigate();
-  const { data: recommendations, isLoading } = useProductRecommendations(cartItems, maxItems);
+  const { data: recommendations, isLoading } = useProductRecommendations(propCartItems, maxItems);
   const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart, items: cartItems } = useCart();
   const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
 
   const handleAddToCart = async (productId: string) => {
@@ -128,36 +128,21 @@ export default function ProductRecommendations({
                       )}
                     </div>
 
-                    <Button
-                      size="sm"
-                      className="w-full rounded-full text-xs h-8 group-hover:bg-primary group-hover:text-primary-foreground transition-all"
-                      variant={addingItems.has(product.id) ? "secondary" : "outline"}
-                      onClick={() => handleAddToCart(product.id)}
-                      disabled={product.stock_quantity === 0 || addingItems.has(product.id)}
-                    >
-                      {addingItems.has(product.id) ? (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="flex items-center gap-1"
-                        >
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 0.5, ease: "easeInOut" }}
-                          >
-                            ✓
-                          </motion.div>
-                          Added
+                    <AnimatePresence mode="wait">
+                      {cartItems.some(ci => ci.product_id === product.id) ? (
+                        <motion.div key="go" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ duration: 0.2 }} className="w-full">
+                          <Button size="sm" className="w-full rounded-full text-xs h-8 bg-green-600 hover:bg-green-700 text-white" onClick={() => navigate('/cart')}>
+                            <ShoppingCart className="h-3 w-3 mr-1" />Go to Cart
+                          </Button>
                         </motion.div>
-                      ) : product.stock_quantity === 0 ? (
-                        'Out of Stock'
                       ) : (
-                        <>
-                          <ShoppingCart className="h-3 w-3 mr-1" />
-                          Add to Cart
-                        </>
+                        <motion.div key="add" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} transition={{ duration: 0.2 }} className="w-full">
+                          <Button size="sm" className="w-full rounded-full text-xs h-8 group-hover:bg-primary group-hover:text-primary-foreground transition-all" variant={addingItems.has(product.id) ? "secondary" : "outline"} onClick={() => handleAddToCart(product.id)} disabled={product.stock_quantity === 0 || addingItems.has(product.id)}>
+                            {addingItems.has(product.id) ? <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="flex items-center gap-1">✓ Added</motion.div> : product.stock_quantity === 0 ? 'Out of Stock' : <><ShoppingCart className="h-3 w-3 mr-1" />Add to Cart</>}
+                          </Button>
+                        </motion.div>
                       )}
-                    </Button>
+                    </AnimatePresence>
                   </div>
                 </CardContent>
               </Card>

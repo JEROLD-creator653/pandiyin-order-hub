@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Leaf, ShoppingCart, Minus, Plus, ArrowLeft, Star, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +25,8 @@ export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { addToCart } = useCart();
+  const { addToCart, items: cartItems } = useCart();
+  const isInCart = cartItems.some(i => i.product_id === id);
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
@@ -202,11 +203,23 @@ export default function ProductDetail() {
                   <span className="text-sm text-muted-foreground">{product.stock_quantity} in stock</span>
                 </div>
                 <div className="flex gap-3 mb-8">
-                  <Button size="lg" className="flex-1 rounded-full" onClick={handleAddToCart}>
-                    <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
-                  </Button>
+                  <AnimatePresence mode="wait">
+                    {isInCart ? (
+                      <motion.div key="go" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ duration: 0.2 }} className="flex-1">
+                        <Button size="lg" className="w-full rounded-full bg-green-600 hover:bg-green-700 text-white" onClick={() => navigate('/cart')}>
+                          <ShoppingCart className="mr-2 h-5 w-5" /> Go to Cart
+                        </Button>
+                      </motion.div>
+                    ) : (
+                      <motion.div key="add" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ duration: 0.2 }} className="flex-1">
+                        <Button size="lg" className="w-full rounded-full" onClick={handleAddToCart}>
+                          <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
+                        </Button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                   <Button size="lg" variant="secondary" className="rounded-full" onClick={() => {
-                    handleAddToCart();
+                    if (!isInCart) handleAddToCart();
                     navigate('/cart');
                   }}>
                     Buy Now

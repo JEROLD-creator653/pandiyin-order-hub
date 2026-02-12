@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ChevronRight, Leaf } from 'lucide-react';
+import { ChevronRight, Leaf, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,14 +21,16 @@ export default function AdminOrders() {
   const [filter, setFilter] = useState('all');
   const [detail, setDetail] = useState<any>(null);
   const [orderItems, setOrderItems] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const load = async () => {
     let q = supabase.from('orders').select('*, order_items(*, products(image_url, name))').order('created_at', { ascending: false });
     if (filter !== 'all') q = q.eq('status', filter as any);
+    if (searchQuery.trim()) q = q.ilike('order_number', `%${searchQuery.trim()}%`);
     const { data } = await q;
     setOrders(data || []);
   };
-  useEffect(() => { load(); }, [filter]);
+  useEffect(() => { load(); }, [filter, searchQuery]);
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from('orders').update({ status } as any).eq('id', id);
@@ -43,15 +46,26 @@ export default function AdminOrders() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h2 className="text-xl font-bold font-sans">Orders ({orders.length})</h2>
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Orders</SelectItem>
-            {statuses.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by Order ID..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="pl-9 h-9"
+            />
+          </div>
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="w-36 h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Orders</SelectItem>
+              {statuses.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <Card>
         <CardContent className="p-0">
