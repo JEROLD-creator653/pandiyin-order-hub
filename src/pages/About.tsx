@@ -1,253 +1,234 @@
 import { motion } from 'framer-motion';
-import { Leaf, Heart, Sun, Users, Sparkles, Award, Shield, Zap, TrendingUp, Target } from 'lucide-react';
+import {
+  Leaf,
+  Heart,
+  Sun,
+  Users,
+  Shield,
+  Target,
+  Eye,
+  CheckCircle,
+  Handshake,
+} from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+
+const fadeUp = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.2 },
+  transition: { duration: 0.5, ease: [0.22, 0.61, 0.36, 1] },
+};
+
+const timeline = [
+  {
+    year: '2020',
+    title: 'Founded in Madurai',
+    desc: 'Established with a commitment to reviving Tamil Nadu food practices.',
+  },
+  {
+    year: '2021',
+    title: 'First Products Launch',
+    desc: 'Introduced signature pickles to regional markets.',
+  },
+  {
+    year: '2022',
+    title: 'Portfolio Expansion',
+    desc: 'Added health mixes and millets, partnering with local artisans.',
+  },
+  {
+    year: '2023',
+    title: 'National Distribution',
+    desc: 'Launched e-commerce platform for India-wide delivery.',
+  },
+  {
+    year: '2024',
+    title: 'Growth Milestone',
+    desc: 'Reached 5,000+ customers with consistent quality.',
+  },
+];
+
+const coreValues = [
+  {
+    icon: Heart,
+    title: 'Small-Batch Production',
+    desc: 'Each product is handcrafted by experienced home cooks who bring decades of culinary expertise.',
+  },
+  {
+    icon: Leaf,
+    title: 'Clean Ingredients',
+    desc: 'Locally sourced ingredients with no synthetic additives or preservatives.',
+  },
+  {
+    icon: Sun,
+    title: 'Heritage Methods',
+    desc: 'Sun-drying and time-tested preparation techniques ensure optimal flavor and nutrition.',
+  },
+  {
+    icon: Users,
+    title: 'Community Partnership',
+    desc: 'Supporting Tamil Nadu farmers, artisans, and women-led enterprises through direct sourcing.',
+  },
+];
+
+const qualityStandards = [
+  'FSSAI-certified production facilities',
+  'Multi-point quality verification',
+  'Food-grade packaging materials',
+  'Batch traceability system',
+  'Sustainable local farm sourcing',
+  'Comprehensive hygiene protocols',
+];
+
+interface InfoCardProps {
+  icon: React.ElementType;
+  title: string;
+  children: React.ReactNode;
+}
+
+function InfoCard({ icon: Icon, title, children }: InfoCardProps) {
+  return (
+    <div className="p-8 rounded-xl bg-primary/5 border border-primary/10">
+      <Icon className="h-10 w-10 text-primary mb-4" aria-hidden="true" />
+      <h3 className="text-2xl font-display font-bold mb-4">{title}</h3>
+      <p className="text-muted-foreground leading-relaxed">{children}</p>
+    </div>
+  );
+}
 
 export default function About() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: 'easeOut' },
-    },
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-secondary/10">
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="container mx-auto px-4 pt-24 pb-16 max-w-4xl text-center"
-      >
-        <motion.div className="mb-6">
-          <Leaf className="h-16 w-16 mx-auto text-green-600 mb-4" />
-        </motion.div>
-        <h1 className="text-5xl md:text-6xl font-bold font-display mb-4 bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
-          Our Story
+    <div className="container mx-auto px-4 pt-24 pb-20 max-w-5xl">
+      {/* Hero */}
+      <motion.section {...fadeUp} className="text-center mb-24">
+        <Leaf className="h-16 w-16 mx-auto text-primary mb-6" aria-hidden="true" />
+      <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-bold mb-6 tracking-tight">
+
+
+          About Us
         </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          From the heart of Madurai, we bring you authentic, handcrafted food products made with love, tradition, and the finest natural ingredients.
+        <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          Bringing the culinary heritage of Madurai to homes across India through thoughtfully crafted foods.
         </p>
-      </motion.div>
+      </motion.section>
 
-      {/* Main Story Section */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, margin: '-100px' }}
-        className="container mx-auto px-4 max-w-4xl py-12"
-      >
-        <motion.div variants={itemVariants} className="prose prose-lg max-w-none space-y-6 text-muted-foreground mb-16">
-          <div>
-            <h2 className="text-3xl font-bold text-foreground mb-4">The Beginning</h2>
-            <p>
-              PANDIYIN was born from a simple belief — food should be pure, honest, and full of the flavors our grandmothers knew. In a world of mass-produced packaged foods with artificial ingredients and preservatives, we chose a different path.
-            </p>
-          </div>
-          <div>
-            <h2 className="text-3xl font-bold text-foreground mb-4">Our Philosophy</h2>
-            <p>
-              Every product in our collection is handcrafted in small batches by skilled home cooks in Madurai. We use only the finest locally sourced ingredients — no preservatives, no artificial colors, no shortcuts. What you get is authenticity in every bite, just like home-made food.
-            </p>
-          </div>
-        </motion.div>
-
-        {/* Timeline Section */}
-        <motion.div variants={itemVariants} className="mb-16">
-          <h2 className="text-3xl font-bold text-foreground mb-8 text-center">Our Journey</h2>
-          <div className="space-y-6">
-            {[
-              {
-                year: '2020',
-                title: 'The Spark',
-                description: 'Started with a vision to preserve traditional recipes and bring them to modern homes.',
-              },
-              {
-                year: '2021',
-                title: 'First Products',
-                description: 'Launched our signature pickles, dry goods, and spice blends with 100% natural ingredients.',
-              },
-              {
-                year: '2022',
-                title: 'Community Growth',
-                description: 'Expanded our artisan network, now supporting 20+ home-based food producers.',
-              },
-              {
-                year: '2023',
-                title: 'Quality Recognition',
-                description: 'Received certifications for food safety and quality standards from certified bodies.',
-              },
-              {
-                year: '2024',
-                title: 'National Reach',
-                description: 'Expanded delivery across India, bringing authentic flavors to thousands of families.',
-              },
-            ].map((milestone, i) => (
-              <motion.div
-                key={i}
-                variants={itemVariants}
-                className="flex gap-6 pb-8 relative"
-              >
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 rounded-full bg-green-600 text-white flex items-center justify-center font-bold text-sm">
-                    {milestone.year.slice(-2)}
-                  </div>
-                  {i !== 4 && <div className="w-1 h-16 bg-green-600/30 mt-4" />}
-                </div>
-                <div className="py-2">
-                  <h3 className="text-xl font-bold text-foreground">{milestone.title}</h3>
-                  <p className="text-muted-foreground mt-2">{milestone.description}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Core Values Grid */}
-        <motion.div variants={itemVariants} className="mb-16">
-          <h2 className="text-3xl font-bold text-foreground mb-8 text-center">Why Choose PANDIYIN</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: Heart,
-                title: 'Made with Love',
-                desc: 'Every product is handcrafted with care and traditional recipes from our hearts.',
-              },
-              {
-                icon: Leaf,
-                title: '100% Natural',
-                desc: 'Pure ingredients sourced locally. Zero preservatives, no artificial colors or flavors.',
-              },
-              {
-                icon: Sun,
-                title: 'Traditional Methods',
-                desc: 'Sun-dried, slow-cooked, and aged using time-tested methods for authentic taste.',
-              },
-              {
-                icon: Users,
-                title: 'Community Driven',
-                desc: 'Supporting local artisans, farmers, and home-based food producers from Madurai.',
-              },
-              {
-                icon: Award,
-                title: 'Quality Assured',
-                desc: 'Certified food safety standards and rigorous quality control at every step.',
-              },
-              {
-                icon: Zap,
-                title: 'Fresh & Fast',
-                desc: 'Small batches ensure freshness. Prepared to order with quick nationwide delivery.',
-              },
-            ].map((item, i) => (
-              <motion.div
-                key={i}
-                variants={itemVariants}
-                whileHover={{ y: -5, transition: { duration: 0.3 } }}
-                className="p-6 rounded-xl bg-white/50 dark:bg-slate-900/50 border border-green-200/50 dark:border-green-900/30 hover:shadow-lg transition-shadow"
-              >
-                <item.icon className="h-10 w-10 text-green-600 mb-4" />
-                <h3 className="font-bold text-lg text-foreground mb-2">{item.title}</h3>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Quality & Hygiene Section */}
-        <motion.div
-          variants={itemVariants}
-          className="mb-16 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 rounded-xl p-8 border border-green-200/50"
-        >
-          <h2 className="text-3xl font-bold text-foreground mb-6">Quality & Food Safety</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Shield className="h-5 w-5 text-green-600" />
-                Safety Standards
-              </h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>✓ FSSAI certified kitchen facilities</li>
-                <li>✓ Regular health inspections</li>
-                <li>✓ Hygienic packaging and handling</li>
-                <li>✓ Traceability for all ingredients</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-green-600" />
-                Natural Ingredients
-              </h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>✓ No artificial preservatives</li>
-                <li>✓ No synthetic additives</li>
-                <li>✓ No refined sugars (in select products)</li>
-                <li>✓ Sourced from trusted local suppliers</li>
-              </ul>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Mission & Vision */}
-        <motion.div variants={itemVariants} className="grid md:grid-cols-2 gap-8 mb-16">
-          <div className="p-8 rounded-xl bg-white/50 dark:bg-slate-900/50 border border-blue-200/50">
-            <Target className="h-10 w-10 text-blue-600 mb-4" />
-            <h3 className="text-2xl font-bold text-foreground mb-3">Our Mission</h3>
-            <p className="text-muted-foreground">
-              To bring authentic, handcrafted, naturally-made food products from local artisans to families across India, preserving traditional recipes while maintaining the highest quality and food safety standards.
-            </p>
-          </div>
-          <div className="p-8 rounded-xl bg-white/50 dark:bg-slate-900/50 border border-purple-200/50">
-            <TrendingUp className="h-10 w-10 text-purple-600 mb-4" />
-            <h3 className="text-2xl font-bold text-foreground mb-3">Our Vision</h3>
-            <p className="text-muted-foreground">
-              A world where every home can enjoy pure, natural food made with love and tradition — supporting local communities and celebrating the rich culinary heritage of India.
-            </p>
-          </div>
-        </motion.div>
-
-        {/* Trust & Testimonials */}
-        <motion.div variants={itemVariants} className="mb-16 text-center">
-          <h2 className="text-3xl font-bold text-foreground mb-8">Trusted by Families</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { number: '5000+', label: 'Happy Customers' },
-              { number: '50+', label: 'Product Varieties' },
-              { number: '25+', label: 'Home Producers' },
-            ].map((stat, i) => (
-              <motion.div key={i} variants={itemVariants} className="p-6">
-                <p className="text-4xl font-bold text-green-600 mb-2">{stat.number}</p>
-                <p className="text-muted-foreground">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Call to Action */}
-        <motion.div
-          variants={itemVariants}
-          className="text-center pt-8 border-t border-border"
-        >
-          <p className="text-lg text-muted-foreground mb-4">
-            Thank you for being part of our journey. Every purchase supports local artisans and helps preserve traditional food practices.
+      {/* Brand Story */}
+      <motion.section {...fadeUp} className="mb-24">
+        <div className="space-y-6 text-base md:text-lg text-muted-foreground leading-relaxed max-w-4xl mx-auto">
+          <p>
+            <span className="font-semibold text-foreground">PANDIYIN</span> was founded to honor the food traditions of Tamil Nadu. We create products that reflect generations of culinary wisdom, prepared with the same care our grandmothers brought to their kitchens. Every recipe follows time-tested methods that prioritize flavor, nutrition, and quality above convenience.
           </p>
-          <p className="text-sm text-muted-foreground italic">
-            "Food prepared with love, delivered with care" - PANDIYIN
+          <p>
+            Our approach is built on transparency and community. We work directly with local farmers and skilled artisans who bring deep expertise to each batch. From ingredient selection to final packaging, we maintain strict standards while supporting the people and practices that make our work possible.
           </p>
-        </motion.div>
-      </motion.div>
+        </div>
+      </motion.section>
+
+      <Separator className="mb-24" />
+
+      {/* Timeline */}
+      <motion.section {...fadeUp} className="mb-24">
+        <h2 className="text-3xl md:text-4xl font-display font-bold text-center mb-14">
+          Our Journey
+        </h2>
+        <div className="relative max-w-4xl mx-auto">
+          <div
+            className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-border md:-translate-x-px"
+            aria-hidden="true"
+          />
+          {timeline.map((item, i) => (
+            <motion.div
+              key={item.year}
+              initial={{ opacity: 0, x: i % 2 === 0 ? -24 : 24 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ delay: i * 0.08, duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
+              className={`relative flex items-start mb-12 last:mb-0 ${
+                i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
+              }`}
+            >
+              <div className="hidden md:block md:w-1/2" />
+              <div
+                className="absolute left-4 md:left-1/2 w-3.5 h-3.5 bg-primary rounded-full -translate-x-[7px] md:-translate-x-[7px] mt-1.5 border-[3px] border-background shadow-sm z-10"
+                aria-hidden="true"
+              />
+              <div
+                className={`pl-12 md:pl-0 md:w-1/2 md:px-10 ${
+                  i % 2 === 0 ? 'md:text-right' : 'md:text-left'
+                }`}
+              >
+                <span className="inline-block text-primary font-bold text-sm tracking-wider mb-2 uppercase">
+                  {item.year}
+                </span>
+                <h3 className="font-semibold text-lg md:text-xl mb-2 text-foreground">{item.title}</h3>
+                <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{item.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+
+      <Separator className="mb-24" />
+
+      {/* Core Values */}
+      <motion.section {...fadeUp} className="mb-24">
+        <h2 className="text-3xl md:text-4xl font-display font-bold text-center mb-14">
+          What Defines Us
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+          {coreValues.map((item, i) => (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ delay: i * 0.08, duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
+              className="p-6 md:p-8 rounded-xl bg-secondary/30 border border-border/60 hover:border-primary/30 transition-colors duration-300"
+            >
+              <item.icon className="h-9 w-9 text-primary mb-4" aria-hidden="true" />
+              <h3 className="font-semibold text-lg md:text-xl mb-3 text-foreground">{item.title}</h3>
+              <p className="text-sm md:text-base text-muted-foreground leading-relaxed">{item.desc}</p>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+
+      <Separator className="mb-24" />
+
+      {/* Quality Standards */}
+      <motion.section {...fadeUp} className="mb-24">
+        <div className="flex items-center justify-center gap-3 mb-12">
+          <Shield className="h-8 w-8 text-primary" aria-hidden="true" />
+          <h2 className="text-3xl md:text-4xl font-display font-bold">Quality Standards</h2>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4 max-w-4xl mx-auto">
+          {qualityStandards.map((standard, i) => (
+            <motion.div
+              key={standard}
+              initial={{ opacity: 0, x: -16 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ delay: i * 0.05, duration: 0.4, ease: [0.22, 0.61, 0.36, 1] }}
+              className="flex items-start gap-3 p-5 rounded-lg bg-muted/30 border border-border/50"
+            >
+              <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <span className="text-sm md:text-base font-medium text-foreground leading-relaxed">
+                {standard}
+              </span>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+
+      <Separator className="mb-24" />
+
+      {/* Customer Commitment */}
+      <motion.section {...fadeUp} className="text-center max-w-3xl mx-auto">
+        <Handshake className="h-12 w-12 mx-auto text-primary mb-6" aria-hidden="true" />
+        <h2 className="text-2xl md:text-3xl font-display font-bold mb-6">Our Commitment</h2>
+        <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
+          We stand behind every product we make. If something doesn't meet your expectations, we want to know. Our commitment is to continuous improvement, transparency, and building lasting trust with the families we serve.
+        </p>
+      </motion.section>
     </div>
   );
 }
