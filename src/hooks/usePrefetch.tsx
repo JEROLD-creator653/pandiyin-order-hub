@@ -37,11 +37,11 @@ export function usePrefetchBanners() {
     await queryClient.prefetchQuery({
       queryKey: ['banners'],
       queryFn: async () => {
-        const { data, error } = await supabase
-          .from('website_banners')
+        const { data, error } = await (supabase as any)
+          .from('banners')
           .select('*')
           .eq('is_active', true)
-          .order('position', { ascending: true });
+          .order('sort_order', { ascending: true });
 
         if (error) throw error;
         return data;
@@ -62,10 +62,9 @@ export function usePrefetchCategories() {
     await queryClient.prefetchQuery({
       queryKey: ['categories'],
       queryFn: async () => {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('categories')
           .select('*')
-          .eq('is_active', true)
           .order('name', { ascending: true });
 
         if (error) throw error;
