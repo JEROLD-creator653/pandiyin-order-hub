@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { ChevronRight, Leaf } from 'lucide-react';
+import { ChevronRight, Leaf, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,16 +20,34 @@ const statusColors: Record<string, string> = {
 export default function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([]);
   const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [loading, setLoading] = useState(false);
   const [detail, setDetail] = useState<any>(null);
   const [orderItems, setOrderItems] = useState<any[]>([]);
 
   const load = async () => {
-    let q = supabase.from('orders').select('*, order_items(*, products(image_url, name))').order('created_at', { ascending: false });
-    if (filter !== 'all') q = q.eq('status', filter as any);
-    const { data } = await q;
-    setOrders(data || []);
+    setLoading(true);
+    try {
+      let q = supabase.from('orders').select('*, order_items(*, products(image_url, name))').order('created_at', { ascending: false });
+      if (filter !== 'all') q = q.eq('status', filter as any);
+      if (debouncedSearch && debouncedSearch.trim() !== '') {
+        // search by order_number (partial) - case-insensitive
+        q = q.ilike('order_number', `%${debouncedSearch}%`);
+      }
+      const { data } = await q;
+      setOrders(data || []);
+    } finally {
+      setLoading(false);
+    }
   };
-  useEffect(() => { load(); }, [filter]);
+  useEffect(() => { load(); }, [filter, debouncedSearch]);
+
+  // Debounce search input
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from('orders').update({ status } as any).eq('id', id);
@@ -43,8 +63,19 @@ export default function AdminOrders() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold font-sans">Orders ({orders.length})</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3 w-full">
+          <div className="relative max-w-sm w-full">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by Order ID..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <h2 className="text-xl font-bold font-sans">Orders ({orders.length})</h2>
+        </div>
         <Select value={filter} onValueChange={setFilter}>
           <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -55,8 +86,10 @@ export default function AdminOrders() {
       </div>
       <Card>
         <CardContent className="p-0">
-          {orders.length === 0 ? (
-            <div className="p-6 text-sm text-muted-foreground">No orders found.</div>
+          {loading ? (
+            <div className="p-6 text-sm text-muted-foreground">Loading...</div>
+          ) : orders.length === 0 ? (
+            <div className="p-6 text-sm text-muted-foreground">No order found.</div>
           ) : (
             <div className="divide-y">
               {orders.map(o => {
@@ -64,10 +97,14 @@ export default function AdminOrders() {
                 const firstItem = items[0];
                 const imageUrl = firstItem?.products?.image_url;
                 const itemName = firstItem?.products?.name || 'Order';
+                const matchesSearch = debouncedSearch && o.order_number?.toLowerCase().includes(debouncedSearch.toLowerCase());
                 return (
-                  <div
+                  <motion.div
                     key={o.id}
-                    className="p-4 flex items-center gap-4 hover:bg-muted/40 transition-colors cursor-pointer"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className={`p-4 flex items-center gap-4 transition-colors cursor-pointer ${matchesSearch ? 'bg-yellow-50 ring-1 ring-yellow-100' : 'hover:bg-muted/40'}`}
                     onClick={() => viewDetail(o)}
                   >
                     {/* Product Image */}
@@ -105,7 +142,7 @@ export default function AdminOrders() {
 
                     {/* Chevron */}
                     <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>

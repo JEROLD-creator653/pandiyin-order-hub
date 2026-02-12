@@ -267,7 +267,7 @@ export default function Index() {
               <h2 className="text-3xl font-display font-bold">Bestsellers</h2>
               <Button asChild variant="ghost"><Link to="/products">View All <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {featured.map((p, i) => (
                 <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="h-full">
                   <Link to={`/products/${p.id}`} className="h-full block">
@@ -298,39 +298,52 @@ export default function Index() {
                           )}
                         </div>
                         <div className="mt-auto pt-3 flex justify-center">
-                          <Button
-                            size="sm"
-                            className="w-full rounded-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
-                            variant={addingItems.has(p.id) ? "secondary" : "outline"}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleAddToCart(p.id);
-                            }}
-                            disabled={p.stock_quantity === 0 || addingItems.has(p.id)}
-                          >
-                            {addingItems.has(p.id) ? (
-                              <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                className="flex items-center gap-1"
-                              >
+                          {((cartItems || []).some(i => i.product_id === p.id) || addingItems.has(p.id)) ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full rounded-full text-sm bg-primary text-primary-foreground group-hover:!bg-transparent group-hover:!text-foreground transition-all"
+                              onClick={(e) => { e.preventDefault(); navigate('/cart'); }}
+                            >
+                              <motion.span initial={{ x: -6, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center justify-center">
+                                <ShoppingCart className="h-4 w-4 mr-2" /> Go to Cart
+                              </motion.span>
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              className="w-full rounded-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                              variant={addingItems.has(p.id) ? "secondary" : "outline"}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleAddToCart(p.id);
+                              }}
+                              disabled={p.stock_quantity === 0 || addingItems.has(p.id)}
+                            >
+                              {addingItems.has(p.id) ? (
                                 <motion.div
-                                  animate={{ rotate: 360 }}
-                                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  className="flex items-center gap-1"
                                 >
-                                  ✓
+                                  <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                                  >
+                                    ✓
+                                  </motion.div>
+                                  Added
                                 </motion.div>
-                                Added
-                              </motion.div>
-                            ) : p.stock_quantity === 0 ? (
-                              'Out of Stock'
-                            ) : (
-                              <>
-                                <ShoppingCart className="h-4 w-4 mr-2" />
-                                Add to Cart
-                              </>
-                            )}
-                          </Button>
+                              ) : p.stock_quantity === 0 ? (
+                                'Out of Stock'
+                              ) : (
+                                <>
+                                  <ShoppingCart className="h-4 w-4 mr-2" />
+                                  Add to Cart
+                                </>
+                              )}
+                            </Button>
+                          )}
                         </div>
                       </CardContent>
                     </Card>

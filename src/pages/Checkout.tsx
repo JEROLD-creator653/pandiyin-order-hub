@@ -17,6 +17,12 @@ import { useShippingRegions } from '@/hooks/useShippingRegions';
 import AddressManager, { Address } from '@/components/AddressManager';
 import { formatPrice } from '@/lib/formatters';
 
+// Helper function to get GST type based on state
+const getGSTType = (state: string): 'cgst_sgst' | 'igst' => {
+  const sameSateStates = ['Tamil Nadu', 'Puducherry'];
+  return sameSateStates.includes(state) ? 'cgst_sgst' : 'igst';
+};
+
 export default function Checkout() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -100,6 +106,19 @@ export default function Checkout() {
     }
     setLoading(true);
     try {
+      // Determine GST type based on state
+      const gstType = getGSTType(selectedAddress.state || '');
+      let cgstAmount = 0, sgstAmount = 0, igstAmount = 0;
+      
+      if (gstType === 'cgst_sgst') {
+        // Split GST 50-50 for same-state delivery
+        cgstAmount = gstAmount / 2;
+        sgstAmount = gstAmount / 2;
+      } else {
+        // Full GST is IGST for inter-state
+        igstAmount = gstAmount;
+      }
+
       const { data: order, error } = await supabase.from('orders').insert({
         user_id: user!.id,
         order_number: 'temp',
@@ -107,6 +126,13 @@ export default function Checkout() {
         delivery_charge: deliveryCharge,
         discount,
         total: grandTotal,
+        gst_amount: gstAmount,
+        gst_percentage: gstSettings.gst_percentage,
+        gst_type: gstType,
+        cgst_amount: cgstAmount,
+        sgst_amount: sgstAmount,
+        igst_amount: igstAmount,
+        delivery_state: selectedAddress.state || '',
         coupon_code: couponCode || null,
         payment_method: paymentMethod as any,
         payment_status: 'pending',
@@ -115,14 +141,37 @@ export default function Checkout() {
       }).select().single();
       if (error) throw error;
 
-      const orderItems = items.map(item => ({
-        order_id: order.id,
-        product_id: item.product_id,
-        product_name: item.product.name,
-        product_price: item.product.price,
-        quantity: item.quantity,
-        total: item.product.price * item.quantity,
-      }));
+      // Fetch product details to get GST info
+      const productIds = items.map(item => item.product_id);
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('id, gst_percentage, hsn_code, tax_inclusive')
+        .in('id', productIds);
+      
+      const productGstMap = new Map(productsData?.map(p => [p.id, p]) || []);
+
+      const orderItems = items.map(item => {
+        const productGst = productGstMap.get(item.product_id) || {};
+        const itemGstPercentage = (productGst as any)?.gst_percentage || 5;
+        const itemBasePrice = (productGst as any)?.tax_inclusive ? 
+          item.product.price * 100 / (100 + itemGstPercentage) : 
+          item.product.price;
+        const itemGstAmount = (itemBasePrice * itemGstPercentage / 100) * item.quantity;
+
+        return {
+          order_id: order.id,
+          product_id: item.product_id,
+          product_name: item.product.name,
+          product_price: item.product.price,
+          quantity: item.quantity,
+          total: item.product.price * item.quantity,
+          gst_percentage: itemGstPercentage,
+          hsn_code: (productGst as any)?.hsn_code || '',
+          gst_amount: itemGstAmount,
+          tax_inclusive: (productGst as any)?.tax_inclusive ?? true,
+          product_base_price: itemBasePrice,
+        };
+      });
       await supabase.from('order_items').insert(orderItems);
       clearCart();
       toast({ title: 'Order placed successfully!' });

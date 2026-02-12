@@ -4,7 +4,7 @@ import { FaWhatsapp } from "react-icons/fa";
 
 export default function Footer() {
   return (
-    <footer className="bg-foreground text-primary-foreground pt-12 pb-6">
+    <footer id="footer" className="bg-foreground text-primary-foreground pt-12 pb-6">
       <div className="container mx-auto px-4">
 
         {/* Main Footer Grid */}

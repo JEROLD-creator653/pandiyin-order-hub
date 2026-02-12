@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Leaf, Search, SlidersHorizontal, ArrowUpDown, X, ChevronDown, ShoppingCart, Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,8 @@ export default function Products() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
-  const { addToCart } = useCart();
+  const { addToCart, items: cartItems } = useCart();
+  const navigate = useNavigate();
 
   const searchFilter = searchParams.get('search') || '';
 
@@ -280,7 +282,7 @@ export default function Products() {
 
       {/* Products Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           {[...Array(8)].map((_, i) => (
             <Card key={i} className="overflow-hidden animate-pulse h-full flex flex-col">
               <div className="h-52 md:h-56 lg:h-64 bg-muted w-full" />
@@ -301,7 +303,7 @@ export default function Products() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
           {filtered.map((p, i) => (
             <motion.div key={p.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="h-full">
               <Link to={`/products/${p.id}`} className="h-full block">
@@ -336,39 +338,52 @@ export default function Products() {
                       {p.compare_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
                     </div>
                     <div className="mt-auto pt-3 flex justify-center">
-                      <Button
-                        size="sm"
-                        className="w-full rounded-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
-                        variant={addingItems.has(p.id) ? "secondary" : "outline"}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleAddToCart(p.id);
-                        }}
-                        disabled={p.stock_quantity === 0 || addingItems.has(p.id)}
-                      >
-                        {addingItems.has(p.id) ? (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="flex items-center gap-1"
-                          >
+                      {((cartItems || []).some(i => i.product_id === p.id) || addingItems.has(p.id)) ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full rounded-full text-sm bg-primary text-primary-foreground group-hover:!bg-transparent group-hover:!text-foreground transition-all"
+                          onClick={(e) => { e.preventDefault(); navigate('/cart'); }}
+                        >
+                          <motion.span initial={{ x: -6, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center justify-center">
+                            <ShoppingCart className="h-4 w-4 mr-2" /> Go to Cart
+                          </motion.span>
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="w-full rounded-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                          variant={addingItems.has(p.id) ? "secondary" : "outline"}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleAddToCart(p.id);
+                          }}
+                          disabled={p.stock_quantity === 0 || addingItems.has(p.id)}
+                        >
+                          {addingItems.has(p.id) ? (
                             <motion.div
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 0.5, ease: "easeInOut" }}
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="flex items-center gap-1"
                             >
-                              ✓
+                              <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 0.5, ease: "easeInOut" }}
+                              >
+                                ✓
+                              </motion.div>
+                              Added
                             </motion.div>
-                            Added
-                          </motion.div>
-                        ) : p.stock_quantity === 0 ? (
-                          'Out of Stock'
-                        ) : (
-                          <>
-                            <ShoppingCart className="h-4 w-4 mr-2" />
-                            Add to Cart
-                          </>
-                        )}
-                      </Button>
+                          ) : p.stock_quantity === 0 ? (
+                            'Out of Stock'
+                          ) : (
+                            <>
+                              <ShoppingCart className="h-4 w-4 mr-2" />
+                              Add to Cart
+                            </>
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

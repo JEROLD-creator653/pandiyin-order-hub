@@ -13,11 +13,16 @@ interface InvoiceData {
   customerName: string;
   customerAddress: string;
   customerPhone: string;
-  items: { name: string; quantity: number; price: number; total: number }[];
+  items: { name: string; quantity: number; price: number; total: number; gst?: number; hsn?: string }[];
   subtotal: number;
   deliveryCharge: number;
   discount: number;
   gstAmount?: number;
+  gstPercentage?: number;
+  gstType?: 'cgst_sgst' | 'igst';
+  cgstAmount?: number;
+  sgstAmount?: number;
+  igstAmount?: number;
   total: number;
   paymentMethod: string;
   paymentStatus: string;
@@ -73,13 +78,15 @@ export function generateInvoicePdf(data: InvoiceData) {
   // Items table
   autoTable(doc, {
     startY: y,
-    head: [['#', 'Item', 'Qty', 'Price', 'Total']],
+    head: [['#', 'Item', 'HSN', 'Qty', 'Price', 'Total', 'GST']],
     body: data.items.map((item, i) => [
       (i + 1).toString(),
       item.name,
+      item.hsn || '-',
       item.quantity.toString(),
       formatPrice(item.price),
       formatPrice(item.total),
+      item.gst ? formatPrice(item.gst) : '-',
     ]),
     theme: 'grid',
     headStyles: { fillColor: [45, 55, 72], fontSize: 9 },
@@ -87,9 +94,11 @@ export function generateInvoicePdf(data: InvoiceData) {
     columnStyles: {
       0: { cellWidth: 12 },
       1: { cellWidth: 'auto' },
-      2: { cellWidth: 18, halign: 'center' },
-      3: { cellWidth: 30, halign: 'right' },
-      4: { cellWidth: 30, halign: 'right' },
+      2: { cellWidth: 20, halign: 'center' },
+      3: { cellWidth: 15, halign: 'center' },
+      4: { cellWidth: 25, halign: 'right' },
+      5: { cellWidth: 25, halign: 'right' },
+      6: { cellWidth: 20, halign: 'right' },
     },
     margin: { left: 14, right: 14 },
   });
@@ -109,7 +118,25 @@ export function generateInvoicePdf(data: InvoiceData) {
   addLine('Subtotal', formatPrice(data.subtotal));
   if (data.discount > 0) addLine('Discount', `-${formatPrice(data.discount)}`);
   addLine('Delivery', data.deliveryCharge === 0 ? 'Free' : formatPrice(data.deliveryCharge));
-  if (data.gstAmount && data.gstAmount > 0) addLine('GST', formatPrice(data.gstAmount));
+  
+  // Display GST breakdown based on type
+  if ((data.gstAmount && data.gstAmount > 0) || (data.cgstAmount && data.cgstAmount > 0) || (data.igstAmount && data.igstAmount > 0)) {
+    if (data.gstType === 'cgst_sgst') {
+      if (data.cgstAmount && data.cgstAmount > 0) {
+        addLine(`CGST (${(data.gstPercentage || 0) / 2}%)`, formatPrice(data.cgstAmount));
+      }
+      if (data.sgstAmount && data.sgstAmount > 0) {
+        addLine(`SGST (${(data.gstPercentage || 0) / 2}%)`, formatPrice(data.sgstAmount));
+      }
+    } else if (data.gstType === 'igst') {
+      if (data.igstAmount && data.igstAmount > 0) {
+        addLine(`IGST (${data.gstPercentage || 0}%)`, formatPrice(data.igstAmount));
+      }
+    } else if (data.gstAmount && data.gstAmount > 0) {
+      addLine(`GST (${data.gstPercentage || 0}%)`, formatPrice(data.gstAmount));
+    }
+  }
+  
   y += 2;
   doc.line(summaryX, y, pageWidth - 14, y);
   y += 6;

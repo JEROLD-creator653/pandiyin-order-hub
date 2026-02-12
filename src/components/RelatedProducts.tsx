@@ -120,110 +120,193 @@ export default function RelatedProducts({
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {products.map((product, index) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05, duration: 0.3 }}
-              className="h-full"
-            >
-              <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col">
-                <Link to={`/products/${product.id}`} className="block">
-                  <div className="relative aspect-square w-full bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
-                    {product.image_url ? (
-                      <img
-                        src={product.image_url}
-                        alt={product.name}
-                        className="w-full h-full object-cover rounded-lg group-hover:scale-110 transition-transform duration-500"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Leaf className="h-12 w-12 text-muted-foreground/30" />
-                      </div>
-                    )}
-                    
-                    {/* Stock badge */}
-                    {product.stock_quantity > 0 && product.stock_quantity < 10 && (
-                      <Badge 
-                        variant="secondary" 
-                        className="absolute top-2 right-2 text-xs bg-white/90 backdrop-blur-sm"
-                      >
-                        Only {product.stock_quantity} left
-                      </Badge>
-                    )}
-                  </div>
-                </Link>
-
-                <CardContent className="p-4 flex-1 flex flex-col">
-                  <Link to={`/products/${product.id}`}>
-                    {/* Category tag */}
-                    {product.categories?.name && (
-                      <Badge variant="outline" className="mb-2 text-xs">
-                        {product.categories.name}
-                      </Badge>
-                    )}
-                    
-                    <h3 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors min-h-[2.5rem]">
-                      {product.name}
-                    </h3>
-                    {product.weight && <p className="text-xs text-muted-foreground mb-1">{product.weight}{product.unit ? ` ${product.unit}` : ''}</p>}
-                  </Link>
-
-                  <div className="mt-auto space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-lg font-medium text-primary">
-                        {formatPrice(product.price)}
-                      </p>
-                      {product.average_rating !== null && product.average_rating !== undefined && Number(product.average_rating) > 0 && (
-                        <span className="flex items-center gap-1 text-sm font-medium text-slate-600">
-                          <span className="text-yellow-500">★</span>
-                          {Number(product.average_rating).toFixed(1)}+
-                        </span>
+        <>
+          {/* Desktop Grid */}
+          <div className="hidden sm:grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {products.map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05, duration: 0.3 }}
+                className="h-full"
+              >
+                <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col">
+                  <Link to={`/products/${product.id}`} className="block">
+                    <div className="relative aspect-square w-full bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="w-full h-full object-cover rounded-lg group-hover:scale-110 transition-transform duration-500"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Leaf className="h-12 w-12 text-muted-foreground/30" />
+                        </div>
+                      )}
+                      
+                      {product.stock_quantity > 0 && product.stock_quantity < 10 && (
+                        <Badge 
+                          variant="secondary" 
+                          className="absolute top-2 right-2 text-xs bg-white/90 backdrop-blur-sm"
+                        >
+                          Only {product.stock_quantity} left
+                        </Badge>
                       )}
                     </div>
+                  </Link>
 
-                    <Button
-                      size="sm"
-                      className="w-full rounded-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
-                      variant={addingItems.has(product.id) ? "secondary" : "outline"}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleAddToCart(product.id);
-                      }}
-                      disabled={product.stock_quantity === 0 || addingItems.has(product.id)}
-                    >
-                      {addingItems.has(product.id) ? (
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          className="flex items-center gap-1"
-                        >
-                          <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 0.5, ease: "easeInOut" }}
-                          >
-                            ✓
-                          </motion.div>
-                          Added
-                        </motion.div>
-                      ) : product.stock_quantity === 0 ? (
-                        'Out of Stock'
-                      ) : (
-                        <>
-                          <ShoppingCart className="h-4 w-4 mr-2" />
-                          Add to Cart
-                        </>
+                  <CardContent className="p-4 flex-1 flex flex-col">
+                    <Link to={`/products/${product.id}`}>
+                      {product.categories?.name && (
+                        <Badge variant="outline" className="mb-2 text-xs">
+                          {product.categories.name}
+                        </Badge>
                       )}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+                      
+                      <h3 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors min-h-[2.5rem]">
+                        {product.name}
+                      </h3>
+                      {product.weight && <p className="text-xs text-muted-foreground mb-1">{product.weight}{product.unit ? ` ${product.unit}` : ''}</p>}
+                    </Link>
+
+                    <div className="mt-auto space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-lg font-medium text-primary">
+                          {formatPrice(product.price)}
+                        </p>
+                        {product.average_rating !== null && product.average_rating !== undefined && Number(product.average_rating) > 0 && (
+                          <span className="flex items-center gap-1 text-sm font-medium text-slate-600">
+                            <span className="text-yellow-500">★</span>
+                            {Number(product.average_rating).toFixed(1)}+
+                          </span>
+                        )}
+                      </div>
+
+                      <Button
+                        size="sm"
+                        className="w-full rounded-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                        variant={addingItems.has(product.id) ? "secondary" : "outline"}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleAddToCart(product.id);
+                        }}
+                        disabled={product.stock_quantity === 0 || addingItems.has(product.id)}
+                      >
+                        {addingItems.has(product.id) ? (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="flex items-center gap-1"
+                          >
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 0.5, ease: "easeInOut" }}
+                            >
+                              ✓
+                            </motion.div>
+                            Added
+                          </motion.div>
+                        ) : product.stock_quantity === 0 ? (
+                          'Out of Stock'
+                        ) : (
+                          <>
+                            <ShoppingCart className="h-4 w-4 mr-2" />
+                            Add to Cart
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Mobile Horizontal Slider */}
+          <div className="sm:hidden overflow-x-auto -mx-4 px-4 scrollbar-hide">
+            <div className="flex gap-3 pb-2" style={{ width: `${(products.length / 2.2) * 100}%`, minWidth: '100%' }}>
+              {products.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex-shrink-0" 
+                  style={{ width: 'calc(50% - 6px)' }}
+                >
+                  <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                    <Link to={`/products/${product.id}`} className="block">
+                      <div className="relative aspect-square w-full bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
+                        {product.image_url ? (
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Leaf className="h-8 w-8 text-muted-foreground/30" />
+                          </div>
+                        )}
+                        
+                        {product.stock_quantity > 0 && product.stock_quantity < 10 && (
+                          <Badge 
+                            variant="secondary" 
+                            className="absolute top-1 right-1 text-[10px] bg-white/90"
+                          >
+                            {product.stock_quantity} left
+                          </Badge>
+                        )}
+                      </div>
+                    </Link>
+
+                    <CardContent className="p-3 flex-1 flex flex-col">
+                      <Link to={`/products/${product.id}`}>
+                        {product.categories?.name && (
+                          <Badge variant="outline" className="mb-1 text-[10px]">
+                            {product.categories.name}
+                          </Badge>
+                        )}
+                        
+                        <h3 className="font-semibold text-xs line-clamp-2 mb-1 group-hover:text-primary transition-colors">
+                          {product.name}
+                        </h3>
+                      </Link>
+
+                      <div className="mt-auto space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-primary">
+                            {formatPrice(product.price)}
+                          </p>
+                          {product.average_rating !== null && product.average_rating !== undefined && Number(product.average_rating) > 0 && (
+                            <span className="flex items-center gap-0.5 text-xs font-medium"><span className="text-yellow-500">★</span>{Number(product.average_rating).toFixed(1)}</span>
+                          )}
+                        </div>
+
+                        <Button
+                          size="sm"
+                          className="w-full rounded-full text-xs h-8"
+                          variant={addingItems.has(product.id) ? "secondary" : "outline"}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleAddToCart(product.id);
+                          }}
+                          disabled={product.stock_quantity === 0 || addingItems.has(product.id)}
+                        >
+                          {addingItems.has(product.id) ? '✓ Added' : 'Add'}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </>
       )}
     </section>
   );
