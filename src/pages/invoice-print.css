@@ -1,0 +1,326 @@
+/* 
+ * Professional Invoice Print Styles
+ * Optimized for A4 paper size and business invoices
+ */
+
+/* Invoice Container - Screen Styles */
+.invoice-container {
+  padding: 2rem;
+  background: white;
+  min-height: 100vh;
+}
+
+.invoice-header {
+  margin-bottom: 2rem;
+}
+
+.invoice-table {
+  margin-bottom: 2rem;
+}
+
+.invoice-table table {
+  border-collapse: collapse;
+  border: 1px solid #e5e7eb;
+}
+
+.invoice-table thead tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.invoice-table tbody tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.invoice-summary {
+  margin-top: 2rem;
+  padding-top: 2rem;
+}
+
+.invoice-footer {
+  margin-top: 3rem;
+}
+
+/* Print Styles */
+@media print {
+  /* Reset page */
+  @page {
+    size: A4;
+    margin: 1.5cm 1.5cm 2cm 1.5cm;
+  }
+
+  /* Hide non-printable elements */
+  .no-print,
+  .no-print *,
+  button,
+  nav,
+  header,
+  footer,
+  .sticky,
+  [role="navigation"] {
+    display: none !important;
+  }
+
+  /* Body and root styles */
+  body {
+    background: white !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Main container */
+  .invoice-container {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    box-shadow: none !important;
+    background: white !important;
+  }
+
+  /* Remove shadows and backgrounds */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Typography optimization for print */
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 11pt;
+    line-height: 1.4;
+    color: #000;
+  }
+
+  h1 {
+    font-size: 22pt;
+    font-weight: bold;
+    margin-bottom: 8pt;
+  }
+
+  h2 {
+    font-size: 18pt;
+    font-weight: bold;
+    margin-bottom: 6pt;
+  }
+
+  h3 {
+    font-size: 12pt;
+    font-weight: bold;
+    margin-bottom: 4pt;
+  }
+
+  /* Invoice header */
+  .invoice-header {
+    margin-bottom: 20pt;
+  }
+
+  /* Table styles for print */
+  .invoice-table table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #000;
+    font-size: 10pt;
+  }
+
+  .invoice-table thead {
+    display: table-header-group;
+  }
+
+  .invoice-table tbody {
+    display: table-row-group;
+  }
+
+  .invoice-table tfoot {
+    display: table-footer-group;
+  }
+
+  .invoice-table th {
+    background-color: #333 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    border: 1px solid #000;
+    padding: 8pt 6pt;
+    font-weight: bold;
+    text-align: left;
+  }
+
+  .invoice-table td {
+    border: 1px solid #ddd;
+    padding: 6pt;
+    color: #000;
+  }
+
+  .invoice-table thead tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .invoice-table tbody tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Prevent page breaks in important sections */
+  .invoice-summary {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-top: 20pt;
+    padding-top: 10pt;
+  }
+
+  /* Summary totals alignment */
+  .invoice-summary .flex {
+    display: flex;
+    justify-content: space-between;
+    padding: 4pt 0;
+  }
+
+  /* Border and divider lines */
+  .border-t,
+  .border-b,
+  .border-gray-200,
+  .border-gray-800 {
+    border-color: #000 !important;
+  }
+
+  /* Ensure colors print correctly */
+  .bg-gray-800,
+  .bg-gray-50 {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Footer */
+  .invoice-footer {
+    margin-top: 30pt;
+    padding-top: 10pt;
+    border-top: 1px solid #ddd;
+    page-break-inside: avoid;
+  }
+
+  /* Links should be regular text in print */
+  a {
+    text-decoration: none;
+    color: #000;
+  }
+
+  /* Hide hover effects */
+  *:hover {
+    background: transparent !important;
+  }
+
+  /* Ensure proper spacing */
+  .space-y-1 > * + * {
+    margin-top: 0.25rem;
+  }
+
+  .space-y-2 > * + * {
+    margin-top: 0.5rem;
+  }
+
+  /* Prevent orphans and widows */
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Keep sections together */
+  section,
+  .invoice-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Ensure grid layouts work in print */
+  .grid {
+    display: block !important;
+  }
+
+  .grid-cols-2 > * {
+    display: inline-block;
+    width: 48%;
+    margin-right: 2%;
+    vertical-align: top;
+  }
+
+  /* Currency/number alignment */
+  .text-right {
+    text-align: right;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  /* Font weight preservation */
+  .font-bold {
+    font-weight: bold;
+  }
+
+  .font-semibold {
+    font-weight: 600;
+  }
+
+  .font-medium {
+    font-weight: 500;
+  }
+
+  /* Primary color for totals */
+  .text-primary {
+    color: #1e5128 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Background colors that should print */
+  .bg-gray-50 {
+    background-color: #f9fafb !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ensure proper margin for page numbers */
+  @page {
+    @bottom-right {
+      content: counter(page) " of " counter(pages);
+      font-size: 9pt;
+      color: #666;
+    }
+  }
+}
+
+/* Additional responsive tweaks for screen view */
+@media screen and (max-width: 768px) {
+  .invoice-container {
+    padding: 1rem;
+  }
+
+  .invoice-table table {
+    font-size: 0.875rem;
+  }
+
+  .invoice-table th,
+  .invoice-table td {
+    padding: 0.5rem 0.25rem;
+  }
+
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}

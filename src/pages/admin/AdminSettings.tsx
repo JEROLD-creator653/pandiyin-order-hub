@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export default function AdminSettings() {
-  const [store, setStore] = useState({ store_name: '', phone: '', whatsapp: '', email: '', address: '', gst_enabled: false, gst_number: '', gst_percentage: 18, gst_inclusive: true });
+  const [store, setStore] = useState({ store_name: '', phone: '', whatsapp: '', email: '', address: '', gst_enabled: false, gst_number: '' });
   const [storeId, setStoreId] = useState('');
   const [regions, setRegions] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
@@ -26,8 +26,6 @@ export default function AdminSettings() {
           address: data.address || '',
           gst_enabled: (data as any).gst_enabled || false,
           gst_number: (data as any).gst_number || '',
-          gst_percentage: Number((data as any).gst_percentage) || 18,
-          gst_inclusive: (data as any).gst_inclusive ?? true,
         });
         setStoreId(data.id);
       }
@@ -50,8 +48,6 @@ export default function AdminSettings() {
       address: store.address,
       gst_enabled: store.gst_enabled,
       gst_number: store.gst_number,
-      gst_percentage: store.gst_percentage,
-      gst_inclusive: store.gst_inclusive,
     } as any).eq('id', storeId);
     toast({ title: 'Store settings saved' });
     setSaving(false);
@@ -108,14 +104,10 @@ export default function AdminSettings() {
             </div>
             {store.gst_enabled && (
               <div className="space-y-3 pl-1 border-l-2 border-primary/20 ml-1">
-                <div className="pl-3 space-y-2"><Label className="text-xs">GST Number (GSTIN)</Label><Input value={store.gst_number} onChange={e => setStore(s => ({ ...s, gst_number: e.target.value }))} placeholder="22AAAAA0000A1Z5" /></div>
-                <div className="pl-3 space-y-2"><Label className="text-xs">GST Percentage (%)</Label><Input type="number" value={store.gst_percentage} onChange={e => setStore(s => ({ ...s, gst_percentage: Number(e.target.value) }))} /></div>
-                <div className="pl-3 flex items-center justify-between">
-                  <div>
-                    <Label className="text-xs">GST Inclusive</Label>
-                    <p className="text-[10px] text-muted-foreground">Prices already include GST</p>
-                  </div>
-                  <Switch checked={store.gst_inclusive} onCheckedChange={v => setStore(s => ({ ...s, gst_inclusive: v }))} />
+                <div className="pl-3 space-y-2">
+                  <Label className="text-xs">GST Number (GSTIN)</Label>
+                  <Input value={store.gst_number} onChange={e => setStore(s => ({ ...s, gst_number: e.target.value }))} placeholder="22AAAAA0000A1Z5" />
+                  <p className="text-[10px] text-muted-foreground mt-1">GST percentage is set per-product in the Products section</p>
                 </div>
               </div>
             )}

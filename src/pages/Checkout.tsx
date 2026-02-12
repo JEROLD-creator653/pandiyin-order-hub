@@ -36,7 +36,9 @@ export default function Checkout() {
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
-  const [gstSettings, setGstSettings] = useState({ gst_enabled: false, gst_percentage: 18, gst_inclusive: true });
+  const [gstSettings, setGstSettings] = useState({ gst_enabled: false });
+  const [productGstMap, setProductGstMap] = useState<Map<string, any>>(new Map());
+  const [calculatedGstAmount, setCalculatedGstAmount] = useState(0);
 
   useEffect(() => {
     // Wait for auth loading to complete before redirecting
@@ -54,12 +56,42 @@ export default function Checkout() {
       if (data) {
         setGstSettings({
           gst_enabled: (data as any).gst_enabled || false,
-          gst_percentage: Number((data as any).gst_percentage) || 18,
-          gst_inclusive: (data as any).gst_inclusive ?? true,
         });
       }
     });
   }, [user, items.length, authLoading]);
+
+  // Fetch product GST details and calculate total GST
+  useEffect(() => {
+    if (items.length === 0) return;
+    
+    const fetchProductGst = async () => {
+      const productIds = items.map(item => item.product_id);
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('id, gst_percentage, hsn_code, tax_inclusive')
+        .in('id', productIds);
+      
+      const gstMap = new Map(productsData?.map(p => [p.id, p]) || []);
+      setProductGstMap(gstMap);
+      
+      // Calculate total GST from all products
+      let totalGst = 0;
+      items.forEach(item => {
+        const productGst = gstMap.get(item.product_id) || {};
+        const itemGstPercentage = (productGst as any)?.gst_percentage || 5;
+        const itemBasePrice = (productGst as any)?.tax_inclusive ? 
+          item.product.price * 100 / (100 + itemGstPercentage) : 
+          item.product.price;
+        const itemGstAmount = (itemBasePrice * itemGstPercentage / 100) * item.quantity;
+        totalGst += itemGstAmount;
+      });
+      
+      setCalculatedGstAmount(totalGst);
+    };
+    
+    fetchProductGst();
+  }, [items]);
 
   // Recalculate delivery when address changes
   useEffect(() => {
@@ -83,9 +115,7 @@ export default function Checkout() {
     toast({ title: `Coupon applied! You save ${formatPrice(disc)}` });
   };
 
-  const gstAmount = gstSettings.gst_enabled && !gstSettings.gst_inclusive
-    ? (total * gstSettings.gst_percentage) / 100
-    : 0;
+  const gstAmount = gstSettings.gst_enabled ? calculatedGstAmount : 0;
 
   const grandTotal = total - discount + deliveryCharge + gstAmount;
 
@@ -119,6 +149,9 @@ export default function Checkout() {
         igstAmount = gstAmount;
       }
 
+      // Calculate average GST percentage for order (for display purposes)
+      const avgGstPercentage = total > 0 ? (gstAmount / total) * 100 : 0;
+
       const { data: order, error } = await supabase.from('orders').insert({
         user_id: user!.id,
         order_number: 'temp',
@@ -127,7 +160,7 @@ export default function Checkout() {
         discount,
         total: grandTotal,
         gst_amount: gstAmount,
-        gst_percentage: gstSettings.gst_percentage,
+        gst_percentage: avgGstPercentage,
         gst_type: gstType,
         cgst_amount: cgstAmount,
         sgst_amount: sgstAmount,
@@ -140,15 +173,6 @@ export default function Checkout() {
         notes: notes || null,
       }).select().single();
       if (error) throw error;
-
-      // Fetch product details to get GST info
-      const productIds = items.map(item => item.product_id);
-      const { data: productsData } = await supabase
-        .from('products')
-        .select('id, gst_percentage, hsn_code, tax_inclusive')
-        .in('id', productIds);
-      
-      const productGstMap = new Map(productsData?.map(p => [p.id, p]) || []);
 
       const orderItems = items.map(item => {
         const productGst = productGstMap.get(item.product_id) || {};
@@ -246,7 +270,20 @@ export default function Checkout() {
                 <span>{deliveryCharge === 0 ? <span className="text-primary font-medium">Free</span> : formatPrice(deliveryCharge)}</span>
               </div>
               {gstSettings.gst_enabled && gstAmount > 0 && (
-                <div className="flex justify-between"><span className="text-muted-foreground">GST ({gstSettings.gst_percentage}%)</span><span>{formatPrice(gstAmount)}</span></div>
+                <div className="space-y-1">
+                  <div className="flex justify-between"><span className="text-muted-foreground">GST (calculated per product)</span><span>{formatPrice(gstAmount)}</span></div>
+                  <div className="text-xs text-muted-foreground pl-2">
+                    {items.map(item => {
+                      const productGst = productGstMap.get(item.product_id) || {};
+                      const itemGstPercentage = (productGst as any)?.gst_percentage || 5;
+                      return (
+                        <div key={item.id} className="flex justify-between">
+                          <span>{item.product.name}: {itemGstPercentage}%</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
             </div>
             <Separator className="my-3" />

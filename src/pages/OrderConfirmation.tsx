@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle, Package, ShoppingBag, Download, FileText } from 'lucide-react';
+import { CheckCircle, Package, ShoppingBag, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -27,14 +27,6 @@ export default function OrderConfirmation() {
   const handleDownload = (type: 'receipt' | 'invoice') => {
     if (!order || !store) return;
     
-    // Calculate GST display info
-    let gstDisplay = '';
-    if (order.gst_type === 'cgst_sgst' && (order.cgst_amount > 0 || order.sgst_amount > 0)) {
-      gstDisplay = `CGST ${Number(order.cgst_amount).toFixed(2)} + SGST ${Number(order.sgst_amount).toFixed(2)}`;
-    } else if (order.igst_amount > 0) {
-      gstDisplay = `IGST ${Number(order.igst_amount).toFixed(2)}`;
-    }
-    
     const doc = generateInvoicePdf({
       storeName: store.store_name,
       storeAddress: store.address || '',
@@ -46,7 +38,7 @@ export default function OrderConfirmation() {
       customerName: address?.full_name || '',
       customerAddress: `${address?.address_line1 || ''}${address?.address_line2 ? `, ${address.address_line2}` : ''}, ${address?.city || ''}, ${address?.state || ''} - ${address?.pincode || ''}`,
       customerPhone: `+91 ${address?.phone || ''}`,
-      items: items.map(i => ({ name: i.product_name, quantity: i.quantity, price: Number(i.product_price), total: Number(i.total), gst: Number(i.gst_amount || 0), hsn: i.hsn_code })),
+      items: items.map(i => ({ name: i.product_name, quantity: i.quantity, price: Number(i.product_price), total: Number(i.total), gst: Number(i.gst_amount || 0), hsn: i.hsn_code, gstPercentage: Number(i.gst_percentage || 0) })),
       subtotal: Number(order.subtotal),
       deliveryCharge: Number(order.delivery_charge),
       discount: Number(order.discount),
@@ -122,11 +114,11 @@ export default function OrderConfirmation() {
                   <div className="flex flex-col gap-1">
                     {order.gst_type === 'cgst_sgst' ? (
                       <>
-                        <div className="flex justify-between text-xs text-muted-foreground"><span>CGST ({Number(order.gst_percentage || 0) / 2}%)</span><span>{formatPrice(Number(order.cgst_amount || 0))}</span></div>
-                        <div className="flex justify-between text-xs text-muted-foreground"><span>SGST ({Number(order.gst_percentage || 0) / 2}%)</span><span>{formatPrice(Number(order.sgst_amount || 0))}</span></div>
+                        <div className="flex justify-between text-xs text-muted-foreground"><span>CGST ({(Number(order.gst_percentage || 0) / 2).toFixed(2)}%)</span><span>{formatPrice(Number(order.cgst_amount || 0))}</span></div>
+                        <div className="flex justify-between text-xs text-muted-foreground"><span>SGST ({(Number(order.gst_percentage || 0) / 2).toFixed(2)}%)</span><span>{formatPrice(Number(order.sgst_amount || 0))}</span></div>
                       </>
                     ) : (
-                      <div className="flex justify-between text-xs text-muted-foreground"><span>IGST ({Number(order.gst_percentage || 0)}%)</span><span>{formatPrice(Number(order.igst_amount || 0))}</span></div>
+                      <div className="flex justify-between text-xs text-muted-foreground"><span>IGST ({Number(order.gst_percentage || 0).toFixed(2)}%)</span><span>{formatPrice(Number(order.igst_amount || 0))}</span></div>
                     )}
                   </div>
                 )}
@@ -152,14 +144,9 @@ export default function OrderConfirmation() {
         )}
 
         <div className="flex flex-col gap-3">
-          <div className="flex gap-2">
-            <Button variant="outline" className="flex-1 gap-2" onClick={() => handleDownload('receipt')} disabled={!order || !store}>
-              <Download className="h-4 w-4" /> Receipt
-            </Button>
-            <Button variant="outline" className="flex-1 gap-2" onClick={() => handleDownload('invoice')} disabled={!order || !store}>
-              <FileText className="h-4 w-4" /> Invoice
-            </Button>
-          </div>
+          <Button variant="outline" className="w-full gap-2" onClick={() => handleDownload('invoice')} disabled={!order || !store}>
+            <FileText className="h-4 w-4" /> Download Invoice
+          </Button>
           <div className="flex gap-3">
             <Button asChild className="flex-1"><Link to="/dashboard"><Package className="mr-2 h-4 w-4" /> My Orders</Link></Button>
             <Button asChild variant="outline" className="flex-1"><Link to="/products"><ShoppingBag className="mr-2 h-4 w-4" /> Continue Shopping</Link></Button>

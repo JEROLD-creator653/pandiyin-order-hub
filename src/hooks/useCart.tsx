@@ -107,6 +107,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       total,
       loading: isLoading,
       addToCart: (productId, quantity = 1) => {
+        if (!user) {
+          toast({ 
+            title: 'Please sign in', 
+            description: 'You need to sign in to add items to cart',
+            variant: 'destructive' 
+          });
+          window.location.href = '/auth';
+          return;
+        }
         const existing = items.find(i => i.product_id === productId);
         addMutation.mutate({ productId, quantity: existing ? existing.quantity + quantity : quantity });
       },
