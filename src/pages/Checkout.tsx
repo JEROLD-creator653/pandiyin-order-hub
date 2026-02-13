@@ -17,7 +17,7 @@ import { useShippingRegions } from '@/hooks/useShippingRegions';
 import AddressManager, { Address } from '@/components/AddressManager';
 import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import { formatPrice } from '@/lib/formatters';
-import { getPricingInfo } from '@/lib/discountCalculations';
+import { ButtonLoader, Loader } from '@/components/ui/loader';
 
 // Helper function to get GST type based on state
 const getGSTType = (state: string): 'cgst_sgst' | 'igst' => {
@@ -47,15 +47,15 @@ export default function Checkout() {
 
   useEffect(() => {
     // Wait for auth loading to complete before redirecting
-    if (!authLoading && !user) { 
-      navigate('/auth'); 
-      return; 
+    if (!authLoading && !user) {
+      navigate('/auth');
+      return;
     }
-    
+
     // Check cart only after user is confirmed
-    if (user && items.length === 0) { 
-      navigate('/cart'); 
-      return; 
+    if (user && items.length === 0) {
+      navigate('/cart');
+      return;
     }
     supabase.from('store_settings').select('*').limit(1).maybeSingle().then(({ data }) => {
       if (data) {
@@ -69,32 +69,32 @@ export default function Checkout() {
   // Fetch product GST details and calculate total GST
   useEffect(() => {
     if (items.length === 0) return;
-    
+
     const fetchProductGst = async () => {
       const productIds = items.map(item => item.product_id);
       const { data: productsData } = await supabase
         .from('products')
         .select('id, gst_percentage, hsn_code, tax_inclusive')
         .in('id', productIds);
-      
+
       const gstMap = new Map(productsData?.map(p => [p.id, p]) || []);
       setProductGstMap(gstMap);
-      
+
       // Calculate total GST from all products
       let totalGst = 0;
       items.forEach(item => {
         const productGst = gstMap.get(item.product_id) || {};
         const itemGstPercentage = (productGst as any)?.gst_percentage || 5;
-        const itemBasePrice = (productGst as any)?.tax_inclusive ? 
-          item.product.price * 100 / (100 + itemGstPercentage) : 
+        const itemBasePrice = (productGst as any)?.tax_inclusive ?
+          item.product.price * 100 / (100 + itemGstPercentage) :
           item.product.price;
         const itemGstAmount = (itemBasePrice * itemGstPercentage / 100) * item.quantity;
         totalGst += itemGstAmount;
       });
-      
+
       setCalculatedGstAmount(totalGst);
     };
-    
+
     fetchProductGst();
   }, [items]);
 
@@ -138,11 +138,7 @@ export default function Checkout() {
 
   // Show loading state while auth is initializing
   if (authLoading) {
-    return (
-      <div className="container mx-auto px-4 pt-24 pb-8 max-w-3xl">
-        <div className="h-64 bg-muted rounded-lg animate-pulse" />
-      </div>
-    );
+    return <Loader text="Preparing secure checkout..." className="min-h-[60vh]" delay={200} />;
   }
 
   if (!user) return null;
@@ -161,7 +157,7 @@ export default function Checkout() {
       // Determine GST type based on state
       const gstType = getGSTType(selectedAddress.state || '');
       let cgstAmount = 0, sgstAmount = 0, igstAmount = 0;
-      
+
       if (gstType === 'cgst_sgst') {
         cgstAmount = gstAmount / 2;
         sgstAmount = gstAmount / 2;
@@ -196,8 +192,8 @@ export default function Checkout() {
       const orderItems = items.map(item => {
         const productGst = productGstMap.get(item.product_id) || {};
         const itemGstPercentage = (productGst as any)?.gst_percentage || 5;
-        const itemBasePrice = (productGst as any)?.tax_inclusive ? 
-          item.product.price * 100 / (100 + itemGstPercentage) : 
+        const itemBasePrice = (productGst as any)?.tax_inclusive ?
+          item.product.price * 100 / (100 + itemGstPercentage) :
           item.product.price;
         const itemGstAmount = (itemBasePrice * itemGstPercentage / 100) * item.quantity;
 
@@ -386,7 +382,7 @@ export default function Checkout() {
             </div>
 
             <Button className="w-full mt-6 rounded-full" size="lg" onClick={placeOrder} disabled={loading}>
-              {loading ? 'Placing Order...' : `Place Order · ${formatPrice(grandTotal)}`}
+              {loading ? <ButtonLoader text="Placing order..." /> : `Place Order · ${formatPrice(grandTotal)}`}
             </Button>
 
             {/* Trust badges */}

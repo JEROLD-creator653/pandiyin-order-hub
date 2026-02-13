@@ -6,10 +6,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/hooks/useCart";
 import ScrollToTop from "@/components/ScrollToTop";
+import { RouteLoaderProvider } from "@/contexts/RouteLoaderContext";
 
 import CustomerLayout from "@/components/layout/CustomerLayout";
 import AdminLayout from "@/components/layout/AdminLayout";
 import AdminGuard from "@/components/AdminGuard";
+import { GlobalLoader } from "@/components/GlobalLoader";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -57,33 +59,35 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <ScrollToTop />
-            <Routes>
-              <Route element={<CustomerLayout />}>
-                <Route path="/" element={<Index />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/products/:id" element={<ProductDetail />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/order-confirmation/:id" element={<OrderConfirmation />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/orders/:id" element={<OrderDetail />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/about" element={<About />} />
-              </Route>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="categories" element={<AdminCategories />} />
-                <Route path="orders" element={<AdminOrders />} />
-                <Route path="coupons" element={<AdminCoupons />} />
-                <Route path="customers" element={<AdminCustomers />} />
-                <Route path="banners" element={<AdminBanners />} />
-                <Route path="settings" element={<AdminSettings />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <RouteLoaderProvider>
+              <ScrollToTop />
+              <Routes>
+                <Route element={<CustomerLayout />}>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/products/:id" element={<ProductDetail />} />
+                  <Route path="/cart" element={<Cart />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/order-confirmation/:id" element={<OrderConfirmation />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/orders/:id" element={<OrderDetail />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/about" element={<About />} />
+                </Route>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="categories" element={<AdminCategories />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="coupons" element={<AdminCoupons />} />
+                  <Route path="customers" element={<AdminCustomers />} />
+                  <Route path="banners" element={<AdminBanners />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </RouteLoaderProvider>
           </BrowserRouter>
         </TooltipProvider>
       </CartProvider>

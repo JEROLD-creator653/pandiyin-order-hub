@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
+import { Loader } from '@/components/ui/loader';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
@@ -22,14 +23,15 @@ export default function Dashboard() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<any[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
   useEffect(() => {
     // Wait for auth loading to complete before redirecting
-    if (!loading && !user) { 
-      navigate('/auth'); 
-      return; 
+    if (!loading && !user) {
+      navigate('/auth');
+      return;
     }
-    
+
     // Only fetch orders if user exists
     if (user) {
       supabase
@@ -37,17 +39,18 @@ export default function Dashboard() {
         .select('*, order_items(*, products(image_url, name))')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .then(({ data }) => setOrders(data || []));
+        .then(({ data }) => {
+          setOrders(data || []);
+          setLoadingOrders(false);
+        });
+    } else if (!loading) {
+      setLoadingOrders(false);
     }
   }, [user, loading]);
 
   // Show loading state while auth is initializing
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 pt-24 pb-8 max-w-3xl">
-        <div className="h-64 bg-muted rounded-lg animate-pulse" />
-      </div>
-    );
+  if (loading || loadingOrders) {
+    return <Loader text="Loading your data..." className="min-h-[60vh]" delay={200} />;
   }
 
   if (!user) return null;

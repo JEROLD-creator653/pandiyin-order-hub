@@ -11,6 +11,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { TableSkeleton } from '@/components/ui/loader';
 import {
   Dialog,
   DialogContent,
@@ -335,9 +336,7 @@ export default function AdminBanners() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
+            <TableSkeleton rows={5} columns={4} />
           ) : banners.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No banners yet. Create one to get started.

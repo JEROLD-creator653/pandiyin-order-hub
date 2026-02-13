@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { formatPrice } from '@/lib/formatters';
+import { TableSkeleton } from '@/components/ui/loader';
 
 const statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
 const statusColors: Record<string, string> = {
@@ -87,7 +88,7 @@ export default function AdminOrders() {
       <Card>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-6 text-sm text-muted-foreground">Loading...</div>
+            <TableSkeleton rows={5} columns={4} />
           ) : orders.length === 0 ? (
             <div className="p-6 text-sm text-muted-foreground">No order found.</div>
           ) : (
