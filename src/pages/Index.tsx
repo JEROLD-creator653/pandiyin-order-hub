@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Leaf, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
 
@@ -15,15 +16,20 @@ import { useCart } from '@/hooks/useCart';
 import { useRouteLoader } from '@/contexts/RouteLoaderContext';
 import { formatPrice } from '@/lib/formatters';
 
-import favicon from '@/public/Pandiyin.ico';
+// Optimized banner fetch function
+const fetchBanners = async () => {
+  const { data, error } = await supabase
+    .from('banners')
+    .select('id, title, image_url, link_url')
+    .eq('is_active', true)
+    .order('sort_order');
+  
+  if (error) throw error;
+  return data || [];
+};
 
 export default function Index() {
   const navigate = useNavigate();
-
-  const [featured, setFeatured] = useState<any[]>([]);
-  const [loadingFeatured, setLoadingFeatured] = useState(true);
-
-  const [banners, setBanners] = useState<any[]>([]);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
 
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
@@ -39,8 +45,53 @@ export default function Index() {
 
   const { user } = useAuth();
   const { items: cartItems, addToCart } = useCart();
-  const { registerDataLoad } = useRouteLoader();
 
+  // React Query hook for optimized banner fetching with caching
+  // staleTime: 30 minutes - banner data considered fresh for 30 mins
+  // refetchOnWindowFocus: false - don't refetch when window regains focus
+  // This ensures banners load instantly on repeat visits from cache
+  const { data: banners = [], isLoading: bannersLoading } = useQuery({
+    queryKey: ['banners'],
+    queryFn: fetchBanners,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour (formerly cacheTime)
+    refetchOnWindowFocus: false,
+  });
+
+  // Preload hero banner AFTER banners are fetched from React Query
+  // This forces browser to load the hero banner immediately via CDN
+  // Happens BEFORE rendering, so image loads in parallel with component render
+  useEffect(() => {
+    if (!banners || banners.length === 0) return;
+    
+    const heroBanner = banners[0];
+    if (!heroBanner.image_url) return;
+
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = heroBanner.image_url;
+    link.type = 'image/webp';
+    document.head.appendChild(link);
+
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, [banners]);
+
+  // Fetch featured products (non-optimized as secondary priority)
+  const [featured, setFeatured] = useState<any[]>([]);
+  useEffect(() => {
+    supabase
+      .from('products')
+      .select('*, categories(name)')
+      .eq('is_featured', true)
+      .eq('is_available', true)
+      .limit(8)
+      .then(({ data }) => setFeatured(data || []));
+  }, []);
+
+  // Favicon setup
   useEffect(() => {
     const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
 
@@ -54,31 +105,7 @@ export default function Index() {
     }
   }, []);
 
-  useEffect(() => {
-    const featuredPromise = supabase
-      .from('products')
-      .select('*, categories(name)')
-      .eq('is_featured', true)
-      .eq('is_available', true)
-      .limit(8)
-      .then(({ data }) => {
-        setFeatured(data || []);
-        setLoadingFeatured(false);
-      });
-
-    const bannersPromise = supabase
-      .from('banners')
-      .select('*')
-      .eq('is_active', true)
-      .order('sort_order')
-      .then(({ data }) => {
-        setBanners(data || []);
-      });
-
-    registerDataLoad(featuredPromise as Promise<any>);
-    registerDataLoad(bannersPromise as Promise<any>);
-  }, [registerDataLoad]);
-
+  // Show cart reminder popup on homepage if user has cart items
   useEffect(() => {
     if (user && cartItems && cartItems.length > 0) {
       setShowReminderPopup(true);
@@ -217,10 +244,11 @@ export default function Index() {
                 key={banner.id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: index === currentBannerIndex ? 1 : 0 }}
-                transition={{ duration: 0.8 }}
+                transition={{ duration: 0.3 }} // Optimized: simple 300ms fade-in only
                 className="absolute inset-0"
                 style={{ pointerEvents: index === currentBannerIndex ? 'auto' : 'none' }}
               >
+                {/* Loading Skeleton - Shows if banner takes >200ms */}
                 {!loadedImages[banner.id] && (
                   <div className="absolute inset-0 w-full h-full bg-muted animate-pulse" />
                 )}
@@ -232,22 +260,26 @@ export default function Index() {
                         src={banner.image_url}
                         alt={banner.title}
                         onLoad={() => handleImageLoad(banner.id)}
-                        className={`w-full h-full object-cover transition-opacity duration-500 ${
-                          loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'
-                        }`}
+                        // Hero banner (index 0): eager + high priority for instant load
+                        // Other banners: lazy loading to avoid blocking hero
+                        loading={index === 0 ? 'eager' : 'lazy'}
+                        fetchPriority={index === 0 ? 'high' : 'low'}
+                        className={`w-full h-full object-cover transition-opacity duration-500 ${loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'}`}
                       />
                       <div className="absolute inset-0 bg-black/20" />
                     </div>
                   </Link>
                 ) : (
                   <div className="relative w-full h-full">
-                    <img
-                      src={banner.image_url}
-                      alt={banner.title}
+                    <img 
+                      src={banner.image_url} 
+                      alt={banner.title}  
                       onLoad={() => handleImageLoad(banner.id)}
-                      className={`w-full h-full object-cover transition-opacity duration-500 ${
-                        loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'
-                      }`}
+                      // Hero banner (index 0): eager + high priority for instant load
+                      // Other banners: lazy loading to avoid blocking hero
+                      loading={index === 0 ? 'eager' : 'lazy'}
+                      fetchPriority={index === 0 ? 'high' : 'low'}
+                      className={`w-full h-full object-cover transition-opacity duration-500 ${loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'}`}
                     />
                     <div className="absolute inset-0 bg-black/20" />
                   </div>

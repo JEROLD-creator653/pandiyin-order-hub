@@ -202,6 +202,16 @@ export async function generateInvoicePDF(
   doc.text('Total Amount Due', boxX, lineY);
   doc.text(`₹${invoiceData.total.toFixed(2)}`, pageWidth - 18, lineY, { align: 'right' });
 
+  // Tax Inclusion Note
+  lineY += 8;
+  doc.setFont('Helvetica', 'italic');
+  doc.setFontSize(8);
+  doc.setTextColor(80, 80, 80);
+  const taxNoteWidth = pageWidth - 30;
+  const taxNoteText = 'Note: The product prices and amounts shown above include all applicable GST. The tax breakdown is provided for informational and compliance purposes only.';
+  doc.text(taxNoteText, 15, lineY, { maxWidth: taxNoteWidth, align: 'left' });
+  doc.setTextColor(0, 0, 0);
+
   // Footer
   yPosition = pageHeight - 20;
   doc.setFont('Helvetica', 'italic');

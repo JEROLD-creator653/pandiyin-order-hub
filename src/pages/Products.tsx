@@ -15,6 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
+import { getPricingInfo } from '@/lib/discountCalculations';
 import { useCart } from '@/hooks/useCart';
 import { SkeletonCard } from '@/components/ui/loader';
 
@@ -323,10 +324,25 @@ export default function Products() {
                         {p.review_count > 0 && <span className="text-[10px] text-muted-foreground">({p.review_count})</span>}
                       </div>
                     )}
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-lg text-primary">{formatPrice(p.price)}</span>
-                      {p.compare_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
-                    </div>
+                    {/* Flipkart-style Pricing */}
+                    {(() => {
+                      const pricing = getPricingInfo(p.price, p.compare_price);
+                      return (
+                        <div>
+                          <div className="flex items-center gap-3 mb-1">
+                            <span className="font-medium text-lg text-primary">{formatPrice(p.price)}</span>
+                            {pricing.hasDiscount && (
+                              <>
+                                <span className="text-sm text-muted-foreground line-through">{formatPrice(pricing.comparePrice)}</span>
+                                <Badge className="bg-green-100 hover:bg-green-100 text-green-800 text-xs font-bold border-0 px-2 py-0.5">
+                                  {pricing.discountPercent}% OFF
+                                </Badge>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
                     <div className="mt-auto pt-3 flex justify-center">
                       {((cartItems || []).some(i => i.product_id === p.id) || addingItems.has(p.id)) ? (
                         <Button

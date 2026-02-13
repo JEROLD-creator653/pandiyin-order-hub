@@ -92,11 +92,13 @@ export async function uploadImage(
   const storagePath = generateStoragePath(bucketName, userId, file.name);
 
   try {
-    // Upload to Supabase Storage
+    // Upload to Supabase Storage with optimized cache control
+    // For banners: immutable CDN cache (1 year), serves directly from CDN
+    // This ensures instant loading on repeat visits
     const { error: uploadError } = await supabase.storage
       .from(bucketName)
       .upload(storagePath, file, {
-        cacheControl: '3600',
+        cacheControl: '31536000', // 1 year (31536000 seconds)
         upsert: false,
       });
 
@@ -104,11 +106,12 @@ export async function uploadImage(
       throw new Error(`Upload failed: ${uploadError.message}`);
     }
 
-    // Get public URL
+    // Get public CDN URL
+    // Supabase serves public bucket files directly via CDN
     const { data } = supabase.storage.from(bucketName).getPublicUrl(storagePath);
 
     return {
-      imageUrl: data.publicUrl,
+      imageUrl: data.publicUrl, // Returns: https://project.supabase.co/storage/v1/object/public/bucket/path
       imagePath: storagePath,
       fileName: file.name,
     };

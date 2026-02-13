@@ -6,8 +6,9 @@ import { Card } from '@/components/ui/card';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import ProductRecommendations from '@/components/ProductRecommendations';
+import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import { formatPrice } from '@/lib/formatters';
-import { Loader } from '@/components/ui/loader';
+import { getPricingInfo } from '@/lib/discountCalculations';
 
 export default function Cart() {
   const { items, total, loading, updateQuantity, removeItem } = useCart();
@@ -66,7 +67,17 @@ export default function Cart() {
                 <div className="flex-1 min-w-0">
                   <Link to={`/products/${item.product_id}`} className="font-semibold text-sm hover:text-primary line-clamp-1">{item.product.name}</Link>
                   {(item.product as any).weight && <p className="text-xs text-muted-foreground mt-0.5">{(item.product as any).weight}{(item.product as any).unit ? ` ${(item.product as any).unit}` : ''}</p>}
-                  <p className="text-primary font-medium mt-1">{formatPrice(item.product.price)}</p>
+                  {(() => {
+                    const pricing = getPricingInfo(item.product.price, (item.product as any).compare_price);
+                    return (
+                      <div className="mt-1">
+                        <p className="text-primary font-medium">{formatPrice(item.product.price)}</p>
+                        {pricing.hasDiscount && (
+                          <p className="text-xs text-green-700">You saved {formatPrice(pricing.savingsAmount)}</p>
+                        )}
+                      </div>
+                    );
+                  })()}
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex items-center border rounded-md">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity - 1)}><Minus className="h-3 w-3" /></Button>
@@ -84,6 +95,23 @@ export default function Cart() {
         <div>
           <Card className="p-6 sticky top-20">
             <h3 className="font-display font-bold text-lg mb-4">Order Summary</h3>
+            
+            {/* Total Savings Box */}
+            {(() => {
+              const totalSavings = items.reduce((sum, item) => {
+                const pricing = getPricingInfo(item.product.price, (item.product as any).compare_price);
+                return sum + (pricing.savingsAmount * item.quantity);
+              }, 0);
+              
+              return totalSavings > 0 ? (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                  <p className="text-sm font-semibold text-green-900">
+                    Total Savings on this order: <span className="text-green-700">{formatPrice(totalSavings)}</span>
+                  </p>
+                </div>
+              ) : null;
+            })()}
+            
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(total)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span className="text-primary">Calculated at checkout</span></div>
@@ -91,7 +119,10 @@ export default function Cart() {
             <div className="border-t mt-4 pt-4 flex justify-between text-lg">
               <span className="font-bold">Total</span><span className="font-medium text-primary">{formatPrice(total)}</span>
             </div>
-            <Button className="w-full mt-6 rounded-full" size="lg" onClick={() => navigate('/checkout')}>
+            <div className="mt-4 pt-4 border-t">
+              <TaxInclusiveInfo variant="subtitle" />
+            </div>
+            <Button className="w-full mt-4 rounded-full" size="lg" onClick={() => navigate('/checkout')}>
               Proceed to Checkout
             </Button>
           </Card>

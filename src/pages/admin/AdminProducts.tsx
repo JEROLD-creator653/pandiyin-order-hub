@@ -71,11 +71,10 @@ interface Product {
   stock_quantity: number;
   is_available: boolean;
   is_featured: boolean;
-  weight?: string;
+  weight?: number;
   unit?: string;
   gst_percentage?: number;
   hsn_code?: string;
-  tax_inclusive?: boolean;
   categories?: { name: string };
   created_at: string;
 }
@@ -99,10 +98,9 @@ export default function AdminProducts() {
     category_id: '',
     stock_quantity: '',
     weight: '',
-    unit: '',
+    unit: 'g',
     gst_percentage: '5',
     hsn_code: '',
-    tax_inclusive: true,
     is_available: true,
     is_featured: false,
   });
@@ -142,10 +140,9 @@ export default function AdminProducts() {
       category_id: '',
       stock_quantity: '',
       weight: '',
-      unit: '',
+      unit: 'g',
       gst_percentage: '5',
       hsn_code: '',
-      tax_inclusive: true,
       is_available: true,
       is_featured: false,
     });
@@ -163,11 +160,10 @@ export default function AdminProducts() {
       compare_price: p.compare_price ? String(p.compare_price) : '',
       category_id: p.category_id || '',
       stock_quantity: String(p.stock_quantity),
-      weight: p.weight || '',
-      unit: p.unit || '',
+      weight: p.weight ? String(p.weight) : '',
+      unit: p.unit || 'g',
       gst_percentage: String(p.gst_percentage || 5),
       hsn_code: p.hsn_code || '',
-      tax_inclusive: p.tax_inclusive !== undefined ? p.tax_inclusive : true,
       is_available: p.is_available,
       is_featured: p.is_featured,
     });
@@ -209,11 +205,10 @@ export default function AdminProducts() {
           compare_price: form.compare_price ? Number(form.compare_price) : null,
           category_id: form.category_id || null,
           stock_quantity: Number(form.stock_quantity),
-          weight: form.weight,
+          weight: form.weight ? Number(form.weight) : null,
           unit: form.unit,
           gst_percentage: Number(form.gst_percentage),
           hsn_code: form.hsn_code,
-          tax_inclusive: form.tax_inclusive,
           is_available: form.is_available,
           is_featured: form.is_featured,
         };
@@ -243,7 +238,6 @@ export default function AdminProducts() {
             stock_quantity: Number(form.stock_quantity) || 0,
             gst_percentage: Number(form.gst_percentage),
             hsn_code: form.hsn_code,
-            tax_inclusive: form.tax_inclusive,
           },
           user.id
         );
@@ -260,10 +254,9 @@ export default function AdminProducts() {
         category_id: '',
         stock_quantity: '',
         weight: '',
-        unit: '',
+        unit: 'g',
         gst_percentage: '5',
         hsn_code: '',
-        tax_inclusive: true,
         is_available: true,
         is_featured: false,
       });
@@ -449,11 +442,27 @@ export default function AdminProducts() {
                   <label className="text-sm font-medium mb-2 block">
                     Unit
                   </label>
-                  <Input
+                  <Select
                     value={form.unit}
-                    onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                    placeholder="g/kg/ml"
-                  />
+                    onValueChange={(v) => setForm({ ...form, unit: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="g">Gram (g)</SelectItem>
+                      <SelectItem value="kg">Kilogram (kg)</SelectItem>
+                      <SelectItem value="ml">Milliliter (ml)</SelectItem>
+                      <SelectItem value="l">Liter (l)</SelectItem>
+                      <SelectItem value="pcs">Pieces (pcs)</SelectItem>
+                      <SelectItem value="pack">Pack</SelectItem>
+                      <SelectItem value="box">Box</SelectItem>
+                      <SelectItem value="bottle">Bottle</SelectItem>
+                      <SelectItem value="jar">Jar</SelectItem>
+                      <SelectItem value="unit">Unit</SelectItem>
+                      <SelectItem value="combo">Combo</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -491,23 +500,13 @@ export default function AdminProducts() {
                 </div>
               </div>
 
-              {/* Tax Inclusive */}
-              <div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="tax_inclusive"
-                    checked={form.tax_inclusive}
-                    onChange={(e) =>
-                      setForm({ ...form, tax_inclusive: e.target.checked })
-                    }
-                  />
-                  <label htmlFor="tax_inclusive" className="text-sm font-medium">
-                    Tax Included in Price
-                  </label>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Check if price includes GST, uncheck if GST is exclusive
+              {/* Price Note */}
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-900 font-medium">
+                  ℹ️ All prices are GST-inclusive by default
+                </p>
+                <p className="text-xs text-blue-700 mt-1">
+                  The GST percentage selected will be automatically included in the displayed price on your website.
                 </p>
               </div>
 
