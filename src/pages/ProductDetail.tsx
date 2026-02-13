@@ -19,7 +19,9 @@ import ReviewForm, { ReviewFormData } from '@/components/ReviewForm';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import RelatedProducts from '@/components/RelatedProducts';
 import ProductDescriptionCollapsible from '@/components/ProductDescriptionCollapsible';
+import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import { formatPrice } from '@/lib/formatters';
+import { getPricingInfo } from '@/lib/discountCalculations';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -69,7 +71,8 @@ export default function ProductDetail() {
     if (!user) { navigate('/auth'); return; }
     // optimistic UI: mark as adding so button becomes "Go to Cart" instantly
     setAdding(true);
-    addToCart(product.id, qty).finally(() => setTimeout(() => setAdding(false), 400));
+    addToCart(product.id, qty);
+    setTimeout(() => setAdding(false), 400);
   };
 
   const handleWriteReview = async () => {
@@ -182,11 +185,32 @@ export default function ProductDetail() {
             )}
 
             {/* Price Section */}
-            <div className="flex items-baseline gap-3 mb-6 pb-6 border-b">
-              <span className="text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
-              {product.compare_price && (
-                <span className="text-lg text-muted-foreground line-through">{formatPrice(product.compare_price)}</span>
-              )}
+            {(() => {
+              const pricing = getPricingInfo(product.price, product.compare_price);
+              return (
+                <div className="mb-6">
+                  <div className="flex items-baseline gap-3 mb-2">
+                    <span className="text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
+                    {pricing.hasDiscount && (
+                      <>
+                        <span className="text-lg text-muted-foreground line-through">{formatPrice(pricing.comparePrice)}</span>
+                        <Badge className="bg-green-100 hover:bg-green-100 text-green-800 text-sm font-bold border-0 px-2.5 py-1">
+                          {pricing.discountPercent}% OFF
+                        </Badge>
+                      </>
+                    )}
+                  </div>
+                  {pricing.hasDiscount && (
+                    <p className="text-sm text-green-700 font-medium">You save {formatPrice(pricing.savingsAmount)} on this product</p>
+                  )}
+                  <div className="mt-3 pb-4 border-b" />
+                </div>
+              );
+            })()}
+
+            {/* Tax Inclusive Badge */}
+            <div className="mb-6">
+              <TaxInclusiveInfo variant="subtitle" />
             </div>
 
             {/* Weight/Unit Info */}

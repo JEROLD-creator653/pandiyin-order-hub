@@ -214,18 +214,28 @@ export function calculateOrderTotals(
   }
 
   const totalGST = totalItemGST + shippingGSTAmount;
-  const total = Math.round((subtotal + totalGST + shippingCalc.baseCharge) * 100) / 100;
+  
+  // === CRITICAL: GST-Inclusive Pricing Model ===
+  // Original prices already INCLUDE GST (tax_inclusive = true)
+  // We calculate GST breakdown for invoices/compliance, but NOT for customer payment
+  // 
+  // WRONG calculation: subtotal + totalGST + shipping
+  // This would add GST on top of prices that already include it (DOUBLE CHARGING)
+  //
+  // CORRECT: Return GST information for storage/display only
+  // Customer pays: Sum of product prices (already GST-inclusive) + shipping
+  const customerPayableTotal = Math.round(((subtotal + totalGST) + shippingCalc.baseCharge) * 100) / 100;
 
   return {
-    subtotal,
-    itemGST: totalItemGST,
+    subtotal,  // Base amount (GST extracted for compliance)
+    itemGST: totalItemGST,  // GST from items (for invoices only)
     shippingCharge: shippingCalc.baseCharge,
-    shippingGST: shippingGSTAmount,
-    totalGST,
+    shippingGST: shippingGSTAmount,  // GST on shipping (for invoices only)
+    totalGST,  // Total tax (for display/compliance only)
     cgstAmount: totalCGST > 0 ? totalCGST : undefined,
     sgstAmount: totalSGST > 0 ? totalSGST : undefined,
     igstAmount: totalIGST > 0 ? totalIGST : undefined,
-    total,
+    total: customerPayableTotal,  // For reference/storage only - NOT used for customer payment calculation
     gstType,
     isTaxInclusive: true,
   };

@@ -15,7 +15,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useShippingRegions } from '@/hooks/useShippingRegions';
 import AddressManager, { Address } from '@/components/AddressManager';
+import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import { formatPrice } from '@/lib/formatters';
+import { getPricingInfo } from '@/lib/discountCalculations';
 
 // Helper function to get GST type based on state
 const getGSTType = (state: string): 'cgst_sgst' | 'igst' => {
@@ -39,6 +41,9 @@ export default function Checkout() {
   const [gstSettings, setGstSettings] = useState({ gst_enabled: false });
   const [productGstMap, setProductGstMap] = useState<Map<string, any>>(new Map());
   const [calculatedGstAmount, setCalculatedGstAmount] = useState(0);
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [savedAmount, setSavedAmount] = useState(0);
+  const [newOrderId, setNewOrderId] = useState("");
 
   useEffect(() => {
     // Wait for auth loading to complete before redirecting
@@ -103,6 +108,15 @@ export default function Checkout() {
     }
   }, [selectedAddress, regions, total, getDeliveryCharge]);
 
+  // Handle redirect after order placed
+  useEffect(() => {
+    if (orderPlaced && newOrderId) {
+      setTimeout(() => {
+        navigate(`/order-confirmation/${newOrderId}`);
+      }, 2200);
+    }
+  }, [orderPlaced, newOrderId, navigate]);
+
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
     const { data } = await supabase.from('coupons').select('*').eq('code', couponCode.trim().toUpperCase()).eq('is_active', true).maybeSingle();
@@ -117,7 +131,10 @@ export default function Checkout() {
 
   const gstAmount = gstSettings.gst_enabled ? calculatedGstAmount : 0;
 
-  const grandTotal = total - discount + deliveryCharge + gstAmount;
+  // CRITICAL FIX: GST is already included in product prices (tax_inclusive = true)
+  // Do NOT add gstAmount to total - this would double-charge the customer
+  // Final total = product subtotal (GST-inclusive) + delivery - discount
+  const grandTotal = total - discount + deliveryCharge;
 
   // Show loading state while auth is initializing
   if (authLoading) {
@@ -136,26 +153,28 @@ export default function Checkout() {
     }
     setLoading(true);
     try {
+      // Calculate MRP and selling totals
+      const totalMRP = items.reduce((a, i) => a + ((i.product as any).compare_price || i.product.price) * i.quantity, 0);
+      const sellingTotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0);
+      const discount = totalMRP - sellingTotal;
+
       // Determine GST type based on state
       const gstType = getGSTType(selectedAddress.state || '');
       let cgstAmount = 0, sgstAmount = 0, igstAmount = 0;
       
       if (gstType === 'cgst_sgst') {
-        // Split GST 50-50 for same-state delivery
         cgstAmount = gstAmount / 2;
         sgstAmount = gstAmount / 2;
       } else {
-        // Full GST is IGST for inter-state
         igstAmount = gstAmount;
       }
 
-      // Calculate average GST percentage for order (for display purposes)
       const avgGstPercentage = total > 0 ? (gstAmount / total) * 100 : 0;
 
       const { data: order, error } = await supabase.from('orders').insert({
         user_id: user!.id,
         order_number: 'temp',
-        subtotal: total,
+        subtotal: sellingTotal,
         delivery_charge: deliveryCharge,
         discount,
         total: grandTotal,
@@ -198,8 +217,11 @@ export default function Checkout() {
       });
       await supabase.from('order_items').insert(orderItems);
       clearCart();
-      toast({ title: 'Order placed successfully!' });
-      navigate(`/order-confirmation/${order.id}`);
+      
+      // Set popup state - redirect handled by useEffect
+      setSavedAmount(discount);
+      setNewOrderId(order.id);
+      setOrderPlaced(true);
     } catch (err: any) {
       toast({ title: 'Order failed', description: err.message, variant: 'destructive' });
     } finally {
@@ -209,6 +231,26 @@ export default function Checkout() {
 
   return (
     <div className="container mx-auto px-4 pt-24 pb-8 max-w-4xl">
+      {/* Success Modal */}
+      {orderPlaced && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-md" style={{ pointerEvents: 'none' }}>
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-[90%] max-w-md text-center" style={{ pointerEvents: 'auto', animation: 'scaleIn 0.3s ease-out' }}>
+            <div className="text-6xl mb-3">🎉</div>
+            <h2 className="text-2xl font-bold mb-3">Order Confirmed!</h2>
+            {savedAmount > 0 && (
+              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-3 mb-3">
+                <p className="text-green-700 font-bold text-xl">
+                  You saved {formatPrice(Math.round(savedAmount))}
+                </p>
+              </div>
+            )}
+            <p className="text-sm text-muted-foreground">
+              Redirecting to order details in 2 seconds...
+            </p>
+          </div>
+        </div>
+      )}
+
       <h1 className="text-3xl font-display font-bold mb-8">Checkout</h1>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-5 gap-8">
         <div className="md:col-span-3 space-y-6">
@@ -261,35 +303,68 @@ export default function Checkout() {
                 </div>
               ))}
             </div>
-            <Separator className="mb-3" />
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(total)}</span></div>
-              {discount > 0 && <div className="flex justify-between text-primary"><span>Discount</span><span>-{formatPrice(discount)}</span></div>}
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Delivery</span>
-                <span>{deliveryCharge === 0 ? <span className="text-primary font-medium">Free</span> : formatPrice(deliveryCharge)}</span>
-              </div>
-              {gstSettings.gst_enabled && gstAmount > 0 && (
-                <div className="space-y-1">
-                  <div className="flex justify-between"><span className="text-muted-foreground">GST (calculated per product)</span><span>{formatPrice(gstAmount)}</span></div>
-                  <div className="text-xs text-muted-foreground pl-2">
-                    {items.map(item => {
-                      const productGst = productGstMap.get(item.product_id) || {};
-                      const itemGstPercentage = (productGst as any)?.gst_percentage || 5;
-                      return (
-                        <div key={item.id} className="flex justify-between">
-                          <span>{item.product.name}: {itemGstPercentage}%</span>
-                        </div>
-                      );
-                    })}
+            <Separator className="mb-4" />
+            
+            {/* Flipkart-Style Pricing Breakdown */}
+            {(() => {
+              // Calculate MRP total and selling total
+              const totalMRP = items.reduce((a, i) => {
+                const comparePrice = (i.product as any).compare_price;
+                return a + (comparePrice && comparePrice > i.product.price ? comparePrice : i.product.price) * i.quantity;
+              }, 0);
+              const sellingTotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0);
+              const discountAmount = totalMRP - sellingTotal;
+              const hasDiscount = discountAmount > 0;
+              
+              return (
+                <div className="space-y-2 text-sm mb-4">
+                  {hasDiscount && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">MRP Total</span>
+                      <span className="font-medium">{formatPrice(totalMRP)}</span>
+                    </div>
+                  )}
+                  {hasDiscount && (
+                    <div className="flex justify-between text-green-700 font-semibold">
+                      <span>Discount</span>
+                      <span>− {formatPrice(discountAmount)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-semibold">
+                    <span>Subtotal</span>
+                    <span>{formatPrice(sellingTotal)}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Delivery</span>
+                    <span>{deliveryCharge === 0 ? <span className="text-green-600 font-medium">FREE</span> : formatPrice(deliveryCharge)}</span>
+                  </div>
+                  {hasDiscount && (
+                    <div className="bg-green-50 border-2 border-green-200 text-green-800 rounded-lg p-3 mt-2 text-center">
+                      <span className="font-bold text-base">🎉 You saved {formatPrice(discountAmount)} on this order</span>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              );
+            })()}
+
+            {/* Included Taxes - Compact */}
+            {gstSettings.gst_enabled && gstAmount > 0 && (
+              <div className="mb-3 pt-2 text-xs">
+                <p className="text-muted-foreground">Included Taxes: {formatPrice(gstAmount)}</p>
+              </div>
+            )}
+
             <Separator className="my-3" />
-            <div className="flex justify-between text-lg">
-              <span className="font-bold">Total</span><span className="font-bold text-primary">{formatPrice(grandTotal)}</span>
-            </div>
+            {(() => {
+              const sellingTotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0);
+              const finalTotal = sellingTotal + deliveryCharge;
+              return (
+                <div className="flex justify-between text-lg font-bold mt-3">
+                  <span>Total Payable</span>
+                  <span className="text-primary">{formatPrice(finalTotal)}</span>
+                </div>
+              );
+            })()}
 
             {selectedAddress && selectedAddress.full_name && (
               <div className="border-t mt-4 pt-3">
