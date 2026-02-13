@@ -1,37 +1,49 @@
+// src/pages/Index.tsx
+
 import { useEffect, useState, useCallback, useRef } from 'react';
-import type { TouchEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Leaf, Truck, ShieldCheck, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
+import { ArrowRight, Leaf, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { CartReminderPopup } from '@/components/CartReminderPopup';
-import TrustBadges from '@/components/TrustBadges';
+import { SkeletonCard } from '@/components/ui/loader';
+
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
-import { supabase } from '@/integrations/supabase/client';
-import favicon from '@/public/Pandiyin.ico';
+import { useRouteLoader } from '@/contexts/RouteLoaderContext';
 import { formatPrice } from '@/lib/formatters';
+
+import favicon from '@/public/Pandiyin.ico';
 
 export default function Index() {
   const navigate = useNavigate();
+
   const [featured, setFeatured] = useState<any[]>([]);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+
   const [banners, setBanners] = useState<any[]>([]);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
   const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
+
   const isScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const touchStartXRef = useRef<number | null>(null);
   const touchLastXRef = useRef<number | null>(null);
+
   const [showReminderPopup, setShowReminderPopup] = useState(false);
-  
+
   const { user } = useAuth();
   const { items: cartItems, addToCart } = useCart();
+  const { registerDataLoad } = useRouteLoader();
 
   useEffect(() => {
     const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+
     if (link) {
       link.href = favicon;
     } else {
@@ -43,11 +55,30 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
-    supabase.from('products').select('*, categories(name)').eq('is_featured', true).eq('is_available', true).limit(8).then(({ data }) => setFeatured(data || []));
-    supabase.from('banners').select('*').eq('is_active', true).order('sort_order').then(({ data }) => setBanners(data || []));
-  }, []);
+    const featuredPromise = supabase
+      .from('products')
+      .select('*, categories(name)')
+      .eq('is_featured', true)
+      .eq('is_available', true)
+      .limit(8)
+      .then(({ data }) => {
+        setFeatured(data || []);
+        setLoadingFeatured(false);
+      });
 
-  // Show cart reminder popup on homepage if user has cart items
+    const bannersPromise = supabase
+      .from('banners')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order')
+      .then(({ data }) => {
+        setBanners(data || []);
+      });
+
+    registerDataLoad(featuredPromise as Promise<any>);
+    registerDataLoad(bannersPromise as Promise<any>);
+  }, [registerDataLoad]);
+
   useEffect(() => {
     if (user && cartItems && cartItems.length > 0) {
       setShowReminderPopup(true);
@@ -59,10 +90,13 @@ export default function Index() {
       navigate('/auth');
       return;
     }
-    setAddingItems(prev => new Set(prev).add(productId));
+
+    setAddingItems((prev) => new Set(prev).add(productId));
+
     await addToCart(productId, 1);
+
     setTimeout(() => {
-      setAddingItems(prev => {
+      setAddingItems((prev) => {
         const next = new Set(prev);
         next.delete(productId);
         return next;
@@ -71,27 +105,30 @@ export default function Index() {
   };
 
   const handleImageLoad = useCallback((bannerId: string) => {
-    setLoadedImages(prev => ({ ...prev, [bannerId]: true }));
+    setLoadedImages((prev) => ({ ...prev, [bannerId]: true }));
   }, []);
 
-  // Auto-rotate banners every 5 seconds
   useEffect(() => {
     if (banners.length <= 1) return;
+
     const interval = setInterval(() => {
       setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
     }, 5000);
+
     return () => clearInterval(interval);
   }, [banners.length]);
 
   const nextBanner = useCallback(() => {
     if (isScrollingRef.current || !banners.length) return;
+
     isScrollingRef.current = true;
-    
-    setCurrentBannerIndex((prev) => (prev + 1) % (banners.length || 1));
-    
+
+    setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
+
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
+
     scrollTimeoutRef.current = setTimeout(() => {
       isScrollingRef.current = false;
     }, 300);
@@ -99,33 +136,37 @@ export default function Index() {
 
   const prevBanner = useCallback(() => {
     if (isScrollingRef.current || !banners.length) return;
+
     isScrollingRef.current = true;
-    
-    setCurrentBannerIndex((prev) => (prev - 1 + (banners.length || 1)) % (banners.length || 1));
-    
+
+    setCurrentBannerIndex((prev) => (prev - 1 + banners.length) % banners.length);
+
     if (scrollTimeoutRef.current) {
       clearTimeout(scrollTimeoutRef.current);
     }
+
     scrollTimeoutRef.current = setTimeout(() => {
       isScrollingRef.current = false;
     }, 300);
   }, [banners.length]);
 
-  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     if (banners.length <= 1) return;
     touchStartXRef.current = e.touches[0].clientX;
     touchLastXRef.current = e.touches[0].clientX;
   };
 
-  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     if (touchStartXRef.current === null) return;
     touchLastXRef.current = e.touches[0].clientX;
   };
 
   const handleTouchEnd = () => {
     if (touchStartXRef.current === null || touchLastXRef.current === null) return;
+
     const delta = touchLastXRef.current - touchStartXRef.current;
     const threshold = 50;
+
     if (Math.abs(delta) >= threshold) {
       if (delta > 0) {
         prevBanner();
@@ -133,11 +174,11 @@ export default function Index() {
         nextBanner();
       }
     }
+
     touchStartXRef.current = null;
     touchLastXRef.current = null;
   };
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowLeft') {
@@ -150,8 +191,10 @@ export default function Index() {
     };
 
     window.addEventListener('keydown', handleKeyDown);
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+
       if (scrollTimeoutRef.current) {
         clearTimeout(scrollTimeoutRef.current);
       }
@@ -178,38 +221,40 @@ export default function Index() {
                 className="absolute inset-0"
                 style={{ pointerEvents: index === currentBannerIndex ? 'auto' : 'none' }}
               >
-                {/* Loading Skeleton */}
                 {!loadedImages[banner.id] && (
-                  <Skeleton className="absolute inset-0 w-full h-full" />
+                  <div className="absolute inset-0 w-full h-full bg-muted animate-pulse" />
                 )}
-                
+
                 {banner.link_url ? (
                   <Link to={banner.link_url} className="block w-full h-full">
                     <div className="relative w-full h-full">
-                      <img 
-                        src={banner.image_url} 
-                        alt={banner.title} 
+                      <img
+                        src={banner.image_url}
+                        alt={banner.title}
                         onLoad={() => handleImageLoad(banner.id)}
-                        className={`w-full h-full object-cover transition-opacity duration-500 ${loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'}`}
+                        className={`w-full h-full object-cover transition-opacity duration-500 ${
+                          loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'
+                        }`}
                       />
                       <div className="absolute inset-0 bg-black/20" />
                     </div>
                   </Link>
                 ) : (
                   <div className="relative w-full h-full">
-                    <img 
-                      src={banner.image_url} 
-                      alt={banner.title} 
+                    <img
+                      src={banner.image_url}
+                      alt={banner.title}
                       onLoad={() => handleImageLoad(banner.id)}
-                      className={`w-full h-full object-cover transition-opacity duration-500 ${loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'}`}
+                      className={`w-full h-full object-cover transition-opacity duration-500 ${
+                        loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'
+                      }`}
                     />
                     <div className="absolute inset-0 bg-black/20" />
                   </div>
                 )}
               </motion.div>
             ))}
-            
-            {/* Navigation Arrows - Show on Hover */}
+
             {banners.length > 1 && (
               <>
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:block">
@@ -221,6 +266,7 @@ export default function Index() {
                     <ChevronLeft className="h-6 w-6" />
                   </button>
                 </div>
+
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hidden md:block">
                   <button
                     onClick={nextBanner}
@@ -233,17 +279,14 @@ export default function Index() {
               </>
             )}
 
-            {/* Dot Indicators */}
             {banners.length > 1 && (
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
-                {banners.map((_, index) => (
+                {banners.map((_: any, index: number) => (
                   <button
                     key={index}
                     onClick={() => setCurrentBannerIndex(index)}
                     className={`h-2 rounded-full transition-all duration-300 ${
-                      index === currentBannerIndex 
-                        ? 'bg-white w-8' 
-                        : 'bg-white/50 w-2 hover:bg-white/70'
+                      index === currentBannerIndex ? 'bg-white w-8' : 'bg-white/50 w-2 hover:bg-white/70'
                     }`}
                     aria-label={`Go to banner ${index + 1}`}
                   />
@@ -254,103 +297,163 @@ export default function Index() {
         </section>
       ) : null}
 
-      {/* Trust Badges Scrolling Strip - Separated with spacing */}
+      {/* Trust Badges Strip */}
       <div className="py-8 md:py-12 lg:py-16">
-        <TrustBadges />
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <span className="font-medium">100% Organic</span>
+            <span className="text-green-600">•</span>
+            <span className="font-medium">Farm Fresh</span>
+            <span className="text-green-600">•</span>
+            <span className="font-medium">Quality Assured</span>
+          </div>
+        </div>
       </div>
 
       {/* Featured Products */}
-      {featured.length > 0 && (
+      {(loadingFeatured || featured.length > 0) && (
         <section className="py-16 bg-secondary/30">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-10">
               <h2 className="text-3xl font-display font-bold">Bestsellers</h2>
-              <Button asChild variant="ghost"><Link to="/products">View All <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
+              <Button asChild variant="ghost">
+                <Link to="/products">
+                  View All <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featured.map((p, i) => (
-                <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="h-full">
-                  <Link to={`/products/${p.id}`} className="h-full block">
-                    <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col border-0 shadow-sm">
-                      <div className="h-52 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
-                        {p.image_url ? (
-                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover object-center rounded-lg group-hover:scale-105 transition-transform duration-500" />
-                        ) : (
-                          <Leaf className="h-12 w-12 text-muted-foreground/30" />
-                        )}
-                      </div>
-                      <CardContent className="p-4 flex-1 flex flex-col">
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-1">{(p as any).categories?.name}</p>
-                          <h3 className="font-semibold text-base font-sans line-clamp-2 mb-1.5 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
-                          {p.weight && <p className="text-xs text-muted-foreground mb-2">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
-                        </div>
-                        <div className="flex items-center justify-between gap-2 mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-lg text-primary">{formatPrice(p.price)}</span>
-                            {p.compare_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
-                          </div>
-                          {p.average_rating !== null && p.average_rating !== undefined && Number(p.average_rating) > 0 && (
-                            <span className="flex items-center gap-1 text-sm font-medium text-slate-600">
-                              <span className="text-yellow-500">★</span>
-                              {Number(p.average_rating).toFixed(1)}+
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-auto pt-3 flex justify-center">
-                          {((cartItems || []).some(i => i.product_id === p.id) || addingItems.has(p.id)) ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="w-full rounded-full text-sm bg-primary text-primary-foreground group-hover:!bg-transparent group-hover:!text-foreground transition-all"
-                              onClick={(e) => { e.preventDefault(); navigate('/cart'); }}
-                            >
-                              <motion.span initial={{ x: -6, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center justify-center">
-                                <ShoppingCart className="h-4 w-4 mr-2" /> Go to Cart
-                              </motion.span>
-                            </Button>
+
+            {loadingFeatured ? (
+              <SkeletonCard count={4} className="gap-6" />
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {featured.map((p, i) => (
+                  <motion.div
+                    key={p.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.08 }}
+                    className="h-full"
+                  >
+                    <Link to={`/products/${p.id}`} className="h-full block">
+                      <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col border-0 shadow-sm">
+                        <div className="h-52 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
+                          {p.image_url ? (
+                            <img
+                              src={p.image_url}
+                              alt={p.name}
+                              className="w-full h-full object-cover object-center rounded-lg group-hover:scale-105 transition-transform duration-500"
+                            />
                           ) : (
-                            <Button
-                              size="sm"
-                              className="w-full rounded-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
-                              variant={addingItems.has(p.id) ? "secondary" : "outline"}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handleAddToCart(p.id);
-                              }}
-                              disabled={p.stock_quantity === 0 || addingItems.has(p.id)}
-                            >
-                              {addingItems.has(p.id) ? (
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  className="flex items-center gap-1"
-                                >
-                                  <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 0.5, ease: "easeInOut" }}
-                                  >
-                                    ✓
-                                  </motion.div>
-                                  Added
-                                </motion.div>
-                              ) : p.stock_quantity === 0 ? (
-                                'Out of Stock'
-                              ) : (
-                                <>
-                                  <ShoppingCart className="h-4 w-4 mr-2" />
-                                  Add to Cart
-                                </>
-                              )}
-                            </Button>
+                            <Leaf className="h-12 w-12 text-muted-foreground/30" />
                           )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
+
+                        <CardContent className="p-4 flex-1 flex flex-col">
+                          <div>
+                            <p className="text-xs text-muted-foreground mb-1">
+                              {(p as any).categories?.name}
+                            </p>
+
+                            <h3 className="font-semibold text-base font-sans line-clamp-2 mb-1.5 leading-tight group-hover:text-primary transition-colors">
+                              {p.name}
+                            </h3>
+
+                            {p.weight && (
+                              <p className="text-xs text-muted-foreground mb-2">
+                                {p.weight}
+                                {p.unit ? ` ${p.unit}` : ''}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-lg text-primary">
+                                {formatPrice(p.price)}
+                              </span>
+
+                              {p.compare_price && (
+                                <span className="text-sm text-muted-foreground line-through">
+                                  {formatPrice(p.compare_price)}
+                                </span>
+                              )}
+                            </div>
+
+                            {p.average_rating !== null &&
+                              p.average_rating !== undefined &&
+                              Number(p.average_rating) > 0 && (
+                                <span className="flex items-center gap-1 text-sm font-medium text-slate-600">
+                                  <span className="text-yellow-500">★</span>
+                                  {Number(p.average_rating).toFixed(1)}+
+                                </span>
+                              )}
+                          </div>
+
+                          <div className="mt-auto pt-3 flex justify-center">
+                            {(cartItems || []).some((i) => i.product_id === p.id) ||
+                            addingItems.has(p.id) ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full rounded-full text-sm bg-primary text-primary-foreground group-hover:!bg-transparent group-hover:!text-foreground transition-all"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  navigate('/cart');
+                                }}
+                              >
+                                <motion.span
+                                  initial={{ x: -6, opacity: 0 }}
+                                  animate={{ x: 0, opacity: 1 }}
+                                  className="flex items-center justify-center"
+                                >
+                                  <ShoppingCart className="h-4 w-4 mr-2" /> Go to Cart
+                                </motion.span>
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                className="w-full rounded-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                                variant={addingItems.has(p.id) ? 'secondary' : 'outline'}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleAddToCart(p.id);
+                                }}
+                                disabled={p.stock_quantity === 0 || addingItems.has(p.id)}
+                              >
+                                {addingItems.has(p.id) ? (
+                                  <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <motion.div
+                                      animate={{ rotate: 360 }}
+                                      transition={{ duration: 0.5, ease: 'easeInOut' }}
+                                    >
+                                      ✓
+                                    </motion.div>
+                                    Added
+                                  </motion.div>
+                                ) : p.stock_quantity === 0 ? (
+                                  'Out of Stock'
+                                ) : (
+                                  <>
+                                    <ShoppingCart className="h-4 w-4 mr-2" />
+                                    Add to Cart
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       )}
@@ -362,7 +465,9 @@ export default function Index() {
             <Leaf className="h-10 w-10 mx-auto text-primary mb-4" />
             <h2 className="text-3xl font-display font-bold mb-6">From Madurai Kitchens to Your Home</h2>
             <p className="text-muted-foreground leading-relaxed mb-8">
-              At PANDIYIN, we believe food should be pure, honest, and full of love. Every product is handcrafted using traditional recipes passed down through generations, with ingredients sourced directly from local farms.
+              At PANDIYIN, we believe food should be pure, honest, and full of love. Every product is handcrafted
+              using traditional recipes passed down through generations, with ingredients sourced directly from
+              local farms.
             </p>
             <Button asChild variant="outline" className="rounded-full">
               <Link to="/about">Read Our Story</Link>
@@ -374,12 +479,32 @@ export default function Index() {
       {/* Cart Reminder Popup */}
       <AnimatePresence>
         {showReminderPopup && cartItems && cartItems.length > 0 && (
-          <CartReminderPopup
-            cartCount={cartItems.length}
-            userName={user?.email?.split('@')[0] || user?.user_metadata?.full_name}
-            onClose={() => setShowReminderPopup(false)}
-            onCheckout={() => setShowReminderPopup(false)}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 30 }}
+            className="fixed bottom-4 right-4 z-50 bg-white border rounded-lg shadow-lg p-4 max-w-sm"
+          >
+            <p className="text-sm font-medium mb-2">You have items in your cart!</p>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => navigate('/cart')}
+                size="sm"
+                className="rounded-full"
+              >
+                Go to Cart
+              </Button>
+
+              <Button
+                onClick={() => setShowReminderPopup(false)}
+                size="sm"
+                variant="outline"
+                className="rounded-full"
+              >
+                Close
+              </Button>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

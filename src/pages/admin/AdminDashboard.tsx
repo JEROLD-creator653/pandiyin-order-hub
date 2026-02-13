@@ -6,12 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatPrice } from '@/lib/formatters';
+import { Loader, TableSkeleton } from '@/components/ui/loader';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ products: 0, orders: 0, customers: 0, revenue: 0 });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [lowStock, setLowStock] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
@@ -37,6 +40,7 @@ export default function AdminDashboard() {
       setStats({ products: products || 0, orders: orders || 0, customers: customers || 0, revenue });
       setRecentOrders(orderData || []);
       setLowStock(low || []);
+      setLoading(false);
     };
     load();
   }, []);
@@ -51,24 +55,43 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((s, i) => (
-          <Card key={i}>
-            <CardContent className="p-4 flex items-center gap-4">
-              <div className={`p-3 rounded-full bg-muted ${s.color}`}><s.icon className="h-5 w-5" /></div>
-              <div>
-                <p className="text-xs text-muted-foreground">{s.label}</p>
-                <p className="text-xl font-bold">{s.value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {loading ? (
+          // Stat Card Skeletons
+          [...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4 flex items-center gap-4">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          statCards.map((s, i) => (
+            <Card key={i}>
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className={`p-3 rounded-full bg-muted ${s.color}`}><s.icon className="h-5 w-5" /></div>
+                <div>
+                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                  <p className="text-xl font-bold">{s.value}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Revenue Overview</CardTitle></CardHeader>
           <CardContent>
-            {chartData.length > 0 ? (
+            {loading ? (
+              <div className="h-[250px] flex items-center justify-center">
+                <Loader text="Loading chart..." />
+              </div>
+            ) : chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={chartData}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -87,7 +110,13 @@ export default function AdminDashboard() {
         <Card>
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-accent" /> Low Stock Alerts</CardTitle></CardHeader>
           <CardContent>
-            {lowStock.length === 0 ? (
+            {loading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-full" />
+              </div>
+            ) : lowStock.length === 0 ? (
               <p className="text-sm text-muted-foreground">All products are well stocked.</p>
             ) : (
               <div className="space-y-3">
@@ -106,7 +135,9 @@ export default function AdminDashboard() {
       <Card>
         <CardHeader><CardTitle className="text-base">Recent Orders</CardTitle></CardHeader>
         <CardContent>
-          {recentOrders.length === 0 ? (
+          {loading ? (
+            <TableSkeleton rows={5} columns={2} />
+          ) : recentOrders.length === 0 ? (
             <p className="text-sm text-muted-foreground">No orders yet.</p>
           ) : (
             <div className="space-y-3">

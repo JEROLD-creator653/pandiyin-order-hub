@@ -57,6 +57,7 @@ import {
   updateProductImage,
 } from '@/lib/imageUpload';
 import { formatPrice } from '@/lib/formatters';
+import { TableSkeleton } from '@/components/ui/loader';
 
 interface Product {
   id: string;
@@ -572,9 +573,7 @@ export default function AdminProducts() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            </div>
+            <TableSkeleton rows={10} columns={9} />
           ) : products.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No products yet. Create one to get started.

@@ -9,6 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import AddressManager from '@/components/AddressManager';
+import { Loader } from '@/components/ui/loader';
 
 export default function Profile() {
   const { user, loading } = useAuth();
@@ -20,11 +21,11 @@ export default function Profile() {
 
   useEffect(() => {
     // Wait for auth loading to complete before redirecting
-    if (!loading && !user) { 
-      navigate('/auth'); 
-      return; 
+    if (!loading && !user) {
+      navigate('/auth');
+      return;
     }
-    
+
     // Only load profile if user exists
     if (user) {
       setEmail(user.email || '');
@@ -51,11 +52,7 @@ export default function Profile() {
 
   // Show loading state while auth is initializing
   if (loading) {
-    return (
-      <div className="container mx-auto px-4 pt-24 pb-8 max-w-2xl">
-        <div className="h-64 bg-muted rounded-lg animate-pulse" />
-      </div>
-    );
+    return <Loader text="Loading your data..." className="min-h-[60vh]" delay={200} />;
   }
 
   if (!user) return null;

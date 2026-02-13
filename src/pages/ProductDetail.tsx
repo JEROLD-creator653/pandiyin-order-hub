@@ -20,6 +20,7 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import RelatedProducts from '@/components/RelatedProducts';
 import ProductDescriptionCollapsible from '@/components/ProductDescriptionCollapsible';
 import { formatPrice } from '@/lib/formatters';
+import { Loader } from '@/components/ui/loader';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -69,7 +70,11 @@ export default function ProductDetail() {
     if (!user) { navigate('/auth'); return; }
     // optimistic UI: mark as adding so button becomes "Go to Cart" instantly
     setAdding(true);
-    addToCart(product.id, qty).finally(() => setTimeout(() => setAdding(false), 400));
+    addToCart(product.id, qty).then(() => {
+      setTimeout(() => setAdding(false), 400);
+    }).catch(() => {
+      setTimeout(() => setAdding(false), 400);
+    });
   };
 
   const handleWriteReview = async () => {
@@ -115,16 +120,7 @@ export default function ProductDetail() {
   };
 
   if (loading) return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="grid md:grid-cols-2 gap-8">
-        <Skeleton className="aspect-square rounded-lg" />
-        <div className="space-y-4">
-          <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-6 w-1/4" />
-          <Skeleton className="h-20 w-full" />
-        </div>
-      </div>
-    </div>
+    <Loader text="Loading product details..." className="min-h-[60vh]" delay={200} />
   );
 
   if (!product) return (

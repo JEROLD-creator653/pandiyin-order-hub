@@ -7,6 +7,7 @@ import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import ProductRecommendations from '@/components/ProductRecommendations';
 import { formatPrice } from '@/lib/formatters';
+import { Loader } from '@/components/ui/loader';
 
 export default function Cart() {
   const { items, total, loading, updateQuantity, removeItem } = useCart();
@@ -23,6 +24,10 @@ export default function Cart() {
     );
   }
 
+  if (loading && items.length === 0) {
+    return <Loader text="Loading your cart..." delay={200} />;
+  }
+
   if (!loading && items.length === 0) {
     return (
       <div className="container mx-auto px-4 pt-24 pb-20">
@@ -32,10 +37,10 @@ export default function Cart() {
           <p className="text-muted-foreground mb-6">Add some delicious products to get started!</p>
           <Button asChild><Link to="/products">Browse Products</Link></Button>
         </div>
-        
+
         {/* Show featured recommendations even when cart is empty */}
-        <ProductRecommendations 
-          cartItems={[]} 
+        <ProductRecommendations
+          cartItems={[]}
           maxItems={6}
           title="Featured Products"
         />
@@ -94,8 +99,8 @@ export default function Cart() {
       </div>
 
       {/* Intelligent Product Recommendations */}
-      <ProductRecommendations 
-        cartItems={items} 
+      <ProductRecommendations
+        cartItems={items}
         maxItems={6}
         title="You may also like"
       />

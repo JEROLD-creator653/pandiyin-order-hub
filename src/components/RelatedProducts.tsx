@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { formatPrice } from '@/lib/formatters';
+import { SkeletonCard } from '@/components/ui/loader';
 
 interface RelatedProductsProps {
   currentProductId: string;
@@ -17,10 +18,10 @@ interface RelatedProductsProps {
   maxItems?: number;
 }
 
-export default function RelatedProducts({ 
-  currentProductId, 
+export default function RelatedProducts({
+  currentProductId,
   categoryId,
-  maxItems = 4 
+  maxItems = 4
 }: RelatedProductsProps) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +33,7 @@ export default function RelatedProducts({
   useEffect(() => {
     const fetchRelatedProducts = async () => {
       setLoading(true);
-      
+
       try {
         let query = supabase
           .from('products')
@@ -107,18 +108,7 @@ export default function RelatedProducts({
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <Skeleton className="aspect-square w-full" />
-              <CardContent className="p-4 space-y-2">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-                <Skeleton className="h-8 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <SkeletonCard count={4} className="gap-4" />
       ) : (
         <>
           {/* Desktop Grid */}
@@ -146,10 +136,10 @@ export default function RelatedProducts({
                           <Leaf className="h-12 w-12 text-muted-foreground/30" />
                         </div>
                       )}
-                      
+
                       {product.stock_quantity > 0 && product.stock_quantity < 10 && (
-                        <Badge 
-                          variant="secondary" 
+                        <Badge
+                          variant="secondary"
                           className="absolute top-2 right-2 text-xs bg-white/90 backdrop-blur-sm"
                         >
                           Only {product.stock_quantity} left
@@ -165,7 +155,7 @@ export default function RelatedProducts({
                           {product.categories.name}
                         </Badge>
                       )}
-                      
+
                       <h3 className="font-semibold text-sm line-clamp-2 mb-2 group-hover:text-primary transition-colors min-h-[2.5rem]">
                         {product.name}
                       </h3>
@@ -234,7 +224,7 @@ export default function RelatedProducts({
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex-shrink-0" 
+                  className="flex-shrink-0"
                   style={{ width: 'calc(50% - 6px)' }}
                 >
                   <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col">
@@ -252,10 +242,10 @@ export default function RelatedProducts({
                             <Leaf className="h-8 w-8 text-muted-foreground/30" />
                           </div>
                         )}
-                        
+
                         {product.stock_quantity > 0 && product.stock_quantity < 10 && (
-                          <Badge 
-                            variant="secondary" 
+                          <Badge
+                            variant="secondary"
                             className="absolute top-1 right-1 text-[10px] bg-white/90"
                           >
                             {product.stock_quantity} left
@@ -271,7 +261,7 @@ export default function RelatedProducts({
                             {product.categories.name}
                           </Badge>
                         )}
-                        
+
                         <h3 className="font-semibold text-xs line-clamp-2 mb-1 group-hover:text-primary transition-colors">
                           {product.name}
                         </h3>

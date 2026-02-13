@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
 import { useCart } from '@/hooks/useCart';
+import { SkeletonCard } from '@/components/ui/loader';
 
 type SortOption = 'newest' | 'price_low' | 'price_high' | 'popularity';
 
@@ -282,18 +283,7 @@ export default function Products() {
 
       {/* Products Grid */}
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-          {[...Array(8)].map((_, i) => (
-            <Card key={i} className="overflow-hidden animate-pulse h-full flex flex-col">
-              <div className="h-52 md:h-56 lg:h-64 bg-muted w-full" />
-              <CardContent className="p-4 space-y-2 flex-1 flex flex-col">
-                <div className="h-3 bg-muted rounded w-1/2" />
-                <div className="h-4 bg-muted rounded w-3/4" />
-                <div className="mt-auto h-4 bg-muted rounded w-1/4" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <SkeletonCard count={8} />
       ) : filtered.length === 0 ? (
         <div className="text-center py-20">
           <Leaf className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />

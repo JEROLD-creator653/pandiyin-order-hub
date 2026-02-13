@@ -44,11 +44,11 @@ export function CartReminderPopup({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
+      exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className="fixed top-20 right-6 z-50 max-w-md"
+      className="fixed top-4 right-4 z-[9999] max-w-md"
     >
       <div className="bg-white rounded-lg shadow-2xl border border-gray-100 overflow-hidden">
         {/* Header with close button */}

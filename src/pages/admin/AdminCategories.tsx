@@ -8,16 +8,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { TableSkeleton } from '@/components/ui/loader';
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ name: '', description: '', sort_order: '0' });
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
+    setLoading(true);
     const { data } = await supabase.from('categories').select('*').order('sort_order');
     setCategories(data || []);
+    setLoading(false);
   };
   useEffect(() => { load(); }, []);
 
@@ -62,24 +66,28 @@ export default function AdminCategories() {
       </div>
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Description</TableHead><TableHead>Order</TableHead><TableHead></TableHead></TableRow></TableHeader>
-            <TableBody>
-              {categories.map(c => (
-                <TableRow key={c.id}>
-                  <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{c.description}</TableCell>
-                  <TableCell>{c.sort_order}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => { setEditing(c); setForm({ name: c.name, description: c.description || '', sort_order: String(c.sort_order) }); setDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" className="text-destructive" onClick={() => remove(c.id)}><Trash2 className="h-4 w-4" /></Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          {loading ? (
+            <TableSkeleton rows={5} columns={4} />
+          ) : (
+            <Table>
+              <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Description</TableHead><TableHead>Order</TableHead><TableHead></TableHead></TableRow></TableHeader>
+              <TableBody>
+                {categories.map(c => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{c.description}</TableCell>
+                    <TableCell>{c.sort_order}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => { setEditing(c); setForm({ name: c.name, description: c.description || '', sort_order: String(c.sort_order) }); setDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => remove(c.id)}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
