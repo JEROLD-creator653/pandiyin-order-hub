@@ -15,7 +15,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { useRouteLoader } from '@/contexts/RouteLoaderContext';
 import { formatPrice } from '@/lib/formatters';
-import favicon from '/favicon.ico';
 
 // Optimized banner fetch function
 const fetchBanners = async () => {
@@ -82,22 +81,14 @@ export default function Index() {
 
   // Fetch featured products (non-optimized as secondary priority)
   const [featured, setFeatured] = useState<any[]>([]);
-  const [loadingFeatured, setLoadingFeatured] = useState(true);
   useEffect(() => {
-    setLoadingFeatured(true);
     supabase
       .from('products')
       .select('*, categories(name)')
       .eq('is_featured', true)
       .eq('is_available', true)
       .limit(8)
-      .then(({ data }) => {
-        setFeatured(data || []);
-        setLoadingFeatured(false);
-      })
-      .catch(() => {
-        setLoadingFeatured(false);
-      });
+      .then(({ data }) => setFeatured(data || []));
   }, []);
 
   // Favicon setup
@@ -269,9 +260,10 @@ export default function Index() {
                         src={banner.image_url}
                         alt={banner.title}
                         onLoad={() => handleImageLoad(banner.id)}
-                        // Hero banner (index 0): eager loading for instant display
+                        // Hero banner (index 0): eager + high priority for instant load
                         // Other banners: lazy loading to avoid blocking hero
                         loading={index === 0 ? 'eager' : 'lazy'}
+                        fetchPriority={index === 0 ? 'high' : 'low'}
                         className={`w-full h-full object-cover transition-opacity duration-500 ${loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'}`}
                       />
                       <div className="absolute inset-0 bg-black/20" />
@@ -283,9 +275,10 @@ export default function Index() {
                       src={banner.image_url} 
                       alt={banner.title}  
                       onLoad={() => handleImageLoad(banner.id)}
-                      // Hero banner (index 0): eager loading for instant display
+                      // Hero banner (index 0): eager + high priority for instant load
                       // Other banners: lazy loading to avoid blocking hero
                       loading={index === 0 ? 'eager' : 'lazy'}
+                      fetchPriority={index === 0 ? 'high' : 'low'}
                       className={`w-full h-full object-cover transition-opacity duration-500 ${loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'}`}
                     />
                     <div className="absolute inset-0 bg-black/20" />
