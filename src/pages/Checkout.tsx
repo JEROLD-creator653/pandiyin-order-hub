@@ -16,6 +16,7 @@ import { toast } from '@/hooks/use-toast';
 import { useShippingRegions } from '@/hooks/useShippingRegions';
 import AddressManager, { Address } from '@/components/AddressManager';
 import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
+import { ButtonLoader, Loader } from '@/components/loaders';
 import { formatPrice } from '@/lib/formatters';
 import { getPricingInfo } from '@/lib/discountCalculations';
 
