@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
-import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
+
 import { formatPrice } from '@/lib/formatters';
 import { generateInvoicePdf } from '@/lib/invoicePdf';
 
@@ -113,18 +113,11 @@ export default function OrderConfirmation() {
                 <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{Number(order.delivery_charge) === 0 ? 'Free' : formatPrice(order.delivery_charge)}</span></div>
               </div>
 
-              {/* Tax Breakdown - Compact */}
+              {/* GST Line - Single */}
               {Number(order.gst_amount) > 0 && (
-                <div className="bg-green-50 border border-green-200 rounded p-2.5 space-y-1.5">
-                  <p className="text-xs font-semibold text-green-900">✓ GST Included in Price</p>
-                  {order.gst_type === 'cgst_sgst' ? (
-                    <>
-                      <div className="flex justify-between text-xs text-green-800"><span>CGST:</span><span>{formatPrice(Number(order.cgst_amount || 0))}</span></div>
-                      <div className="flex justify-between text-xs text-green-800"><span>SGST:</span><span>{formatPrice(Number(order.sgst_amount || 0))}</span></div>
-                    </>
-                  ) : (
-                    <div className="flex justify-between text-xs text-green-800"><span>IGST:</span><span>{formatPrice(Number(order.igst_amount || 0))}</span></div>
-                  )}
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Including 5% in taxes</span>
+                  <span>{formatPrice(Number(order.gst_amount))}</span>
                 </div>
               )}
 
@@ -138,10 +131,6 @@ export default function OrderConfirmation() {
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Payment: {order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'}</span>
                 <span className="capitalize">Status: {order.status}</span>
-              </div>
-
-              <div className="mt-4">
-                <TaxInclusiveInfo variant="badge" />
               </div>
 
               <div className="text-center pt-2">

@@ -165,26 +165,11 @@ export async function generateInvoicePDF(
     ['Shipping', `₹${invoiceData.shippingCharge.toFixed(2)}`],
   ];
 
-  if (invoiceData.gstType === 'CGST+SGST') {
-    if (invoiceData.cgstAmount) {
-      summaryLines.push([
-        'CGST (Central GST)',
-        `₹${invoiceData.cgstAmount.toFixed(2)}`,
-      ]);
-    }
-    if (invoiceData.sgstAmount) {
-      summaryLines.push([
-        'SGST (State GST)',
-        `₹${invoiceData.sgstAmount.toFixed(2)}`,
-      ]);
-    }
-  } else {
-    if (invoiceData.igstAmount) {
-      summaryLines.push([
-        'IGST (Integrated GST)',
-        `₹${invoiceData.igstAmount.toFixed(2)}`,
-      ]);
-    }
+  if (invoiceData.totalTax > 0) {
+    summaryLines.push([
+      'Including 5% in taxes',
+      `₹${invoiceData.totalTax.toFixed(2)}`,
+    ]);
   }
 
   let lineY = yPosition;
@@ -202,15 +187,6 @@ export async function generateInvoicePDF(
   doc.text('Total Amount Due', boxX, lineY);
   doc.text(`₹${invoiceData.total.toFixed(2)}`, pageWidth - 18, lineY, { align: 'right' });
 
-  // Tax Inclusion Note
-  lineY += 8;
-  doc.setFont('Helvetica', 'italic');
-  doc.setFontSize(8);
-  doc.setTextColor(80, 80, 80);
-  const taxNoteWidth = pageWidth - 30;
-  const taxNoteText = 'Note: The product prices and amounts shown above include all applicable GST. The tax breakdown is provided for informational and compliance purposes only.';
-  doc.text(taxNoteText, 15, lineY, { maxWidth: taxNoteWidth, align: 'left' });
-  doc.setTextColor(0, 0, 0);
 
   // Footer
   yPosition = pageHeight - 20;
@@ -257,102 +233,5 @@ export function generateInvoiceNumber(): string {
   return `INV${year}${month}${day}${random}`;
 }
 
-/**
- * Save invoice to database
- * @param orderID - Order ID
- * @param invoiceData - Invoice information
- * @returns Created invoice record
- */
-export async function saveInvoiceToDB(orderID: string, invoiceData: InvoiceData) {
-  const { data, error } = await supabase.from('invoices').insert({
-    order_id: orderID,
-    invoice_number: invoiceData.invoiceNumber,
-    invoice_date: invoiceData.invoiceDate,
-    business_name: invoiceData.businessName,
-    business_address: invoiceData.businessAddress,
-    gst_number: invoiceData.gstNumber,
-    customer_name: invoiceData.customerName,
-    customer_address: invoiceData.customerAddress,
-    customer_gst_number: invoiceData.customerGSTNumber || '',
-    items: invoiceData.items,
-    subtotal: invoiceData.subtotal,
-    cgst_amount: invoiceData.cgstAmount || 0,
-    sgst_amount: invoiceData.sgstAmount || 0,
-    igst_amount: invoiceData.igstAmount || 0,
-    total_tax: invoiceData.totalTax,
-    gst_type: invoiceData.gstType,
-    delivery_charge: invoiceData.shippingCharge,
-    total_amount: invoiceData.total,
-  });
-
-  if (error) {
-    throw new Error(`Failed to save invoice: ${error.message}`);
-  }
-
-  return data;
-}
-
-/**
- * Fetch invoice for order
- * @param orderID - Order ID
- * @returns Invoice data or null
- */
-export async function fetchInvoiceForOrder(orderID: string) {
-  const { data, error } = await supabase
-    .from('invoices')
-    .select('*')
-    .eq('order_id', orderID)
-    .single();
-
-  if (error && error.code !== 'PGRST116') {
-    throw error;
-  }
-
-  return data || null;
-}
-
-/**
- * Download invoice PDF by order ID
- * @param orderID - Order ID
- */
-export async function downloadInvoicePDF(orderID: string) {
-  const invoice = await fetchInvoiceForOrder(orderID);
-
-  if (!invoice) {
-    throw new Error('Invoice not found for this order');
-  }
-
-  const invoiceData: InvoiceData = {
-    invoiceNumber: invoice.invoice_number,
-    invoiceDate: new Date(invoice.invoice_date),
-    businessName: invoice.business_name,
-    businessAddress: invoice.business_address,
-    gstNumber: invoice.gst_number,
-    customerName: invoice.customer_name,
-    customerAddress: invoice.customer_address,
-    customerGSTNumber: invoice.customer_gst_number,
-    items: invoice.items,
-    subtotal: invoice.subtotal,
-    cgstAmount: invoice.cgst_amount,
-    sgstAmount: invoice.sgst_amount,
-    igstAmount: invoice.igst_amount,
-    totalTax: invoice.total_tax,
-    shippingCharge: invoice.delivery_charge,
-    total: invoice.total_amount,
-    gstType: invoice.gst_type,
-    paymentMethod: 'N/A',
-    orderNumber: orderID,
-  };
-
-  const blob = await generateInvoicePDF(invoiceData);
-
-  // Create download link
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `Invoice-${invoice.invoice_number}.pdf`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
+// Note: Invoice storage to database removed as 'invoices' table does not exist in schema
+// Use invoicePdf.ts (generateInvoicePdf) for direct PDF generation from order data

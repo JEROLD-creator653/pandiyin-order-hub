@@ -5,7 +5,7 @@ import { ShoppingCart, User, Menu, Search, LogOut, Package, Shield, UserCog, Arr
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
@@ -134,6 +134,7 @@ export default function Navbar() {
   ];
 
   const isActive = isHomePage ? (isScrolled || isHovered || mobileOpen) : true;
+  const isProductsPage = location.pathname === '/products';
 
   // Reusable suggestions dropdown
   const SuggestionsDropdown = ({ isMobile = false }: { isMobile?: boolean }) => (
@@ -219,6 +220,9 @@ export default function Navbar() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-72 p-0 flex flex-col">
+              <SheetHeader className="sr-only">
+                <SheetTitle>Mobile navigation</SheetTitle>
+              </SheetHeader>
               <div className="flex-1 overflow-y-auto">
                 {/* Account Section */}
                 <div className="border-b p-4">
@@ -299,14 +303,16 @@ export default function Navbar() {
 
           {/* Right: Search + Cart */}
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-foreground hover:bg-secondary"
-              onClick={() => setMobileSearchOpen(true)}
-            >
-              <Search className="h-5 w-5" />
-            </Button>
+            {!isProductsPage && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-foreground hover:bg-secondary"
+                onClick={() => setMobileSearchOpen(true)}
+              >
+                <Search className="h-5 w-5" />
+              </Button>
+            )}
             <Link to="/cart" className="relative">
               <Button variant="ghost" size="icon" className="text-foreground hover:bg-secondary">
                 <ShoppingCart className="h-5 w-5" />

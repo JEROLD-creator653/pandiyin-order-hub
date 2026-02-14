@@ -105,34 +105,13 @@ export function generateInvoicePdf(data: InvoiceData) {
 
   y = (doc as any).lastAutoTable.finalY + 8;
 
-  // Tax Details Section (Informational - included in prices)
-  if ((data.gstAmount && data.gstAmount > 0) || (data.cgstAmount && data.cgstAmount > 0) || (data.igstAmount && data.igstAmount > 0)) {
+  // GST Line - Single (already included in total)
+  if (data.gstAmount && data.gstAmount > 0) {
     doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(50, 100, 50);
-    doc.text('Tax Details (Included in Price)', 14, y);
-    y += 5;
-    
-    doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(60, 120, 60);
-    
-    if (data.gstType === 'cgst_sgst') {
-      if (data.cgstAmount && data.cgstAmount > 0) {
-        doc.text(`CGST (${((data.gstPercentage || 0) / 2).toFixed(2)}%): ${formatPrice(data.cgstAmount)}`, 14, y);
-        y += 3.5;
-      }
-      if (data.sgstAmount && data.sgstAmount > 0) {
-        doc.text(`SGST (${((data.gstPercentage || 0) / 2).toFixed(2)}%): ${formatPrice(data.sgstAmount)}`, 14, y);
-        y += 3.5;
-      }
-    } else if (data.gstType === 'igst') {
-      if (data.igstAmount && data.igstAmount > 0) {
-        doc.text(`IGST (${(data.gstPercentage || 0).toFixed(2)}%): ${formatPrice(data.igstAmount)}`, 14, y);
-        y += 3.5;
-      }
-    }
-    y += 3;
+    doc.setTextColor(80, 80, 80);
+    doc.text(`Including 5% in taxes: ${formatPrice(data.gstAmount)}`, 14, y);
+    y += 5;
   }
 
   // Summary

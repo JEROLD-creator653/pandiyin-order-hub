@@ -25,6 +25,8 @@ export interface ReviewFormData {
   description: string;
 }
 
+const countCharacters = (value: string) => Array.from(value).length;
+
 export default function ReviewForm({
   productId,
   productName,
@@ -40,15 +42,17 @@ export default function ReviewForm({
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
+    const trimmedDescription = description.trim();
+    const descriptionLength = countCharacters(trimmedDescription);
 
     if (rating === 0) {
       newErrors.rating = 'Please select a rating';
     }
-    if (!description.trim()) {
+    if (!trimmedDescription) {
       newErrors.description = 'Please enter your review';
-    } else if (description.trim().length < 20) {
+    } else if (descriptionLength < 20) {
       newErrors.description = 'Review must be at least 20 characters';
-    } else if (description.length > 2000) {
+    } else if (descriptionLength > 2000) {
       newErrors.description = 'Review must be less than 2000 characters';
     }
 
@@ -139,7 +143,7 @@ export default function ReviewForm({
           />
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{errors.description || 'Minimum 20 characters'}</span>
-            <span>{description.length}/2000</span>
+            <span>{countCharacters(description)}/2000</span>
           </div>
         </div>
 

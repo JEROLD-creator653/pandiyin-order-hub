@@ -31,6 +31,8 @@ interface UseProductReviewsOptions {
   filterByRating?: number | null;
 }
 
+const countCharacters = (value: string) => Array.from(value).length;
+
 export function useProductReviews({
   productId,
   userId,
@@ -51,7 +53,7 @@ export function useProductReviews({
         .from('product_review_stats')
         .select('*')
         .eq('product_id', productId)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching review stats:', error);
@@ -180,7 +182,8 @@ export function useProductReviews({
       return;
     }
 
-    if (!reviewData.description.trim() || reviewData.description.trim().length < 20) {
+    const trimmedDescription = reviewData.description.trim();
+    if (!trimmedDescription || countCharacters(trimmedDescription) < 20) {
       toast({
         title: 'Error',
         description: 'Review must be at least 20 characters',
@@ -194,7 +197,7 @@ export function useProductReviews({
         user_id: userId,
         product_id: productId,
         rating: reviewData.rating,
-        description: reviewData.description.trim()
+        description: trimmedDescription
         // Note: user_name will be added once the database column is created
       };
 
@@ -288,7 +291,7 @@ export function useProductReviews({
         .select('*')
         .eq('product_id', productId)
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching user review:', error);

@@ -22,6 +22,7 @@ import ProductDescriptionCollapsible from '@/components/ProductDescriptionCollap
 import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import { formatPrice } from '@/lib/formatters';
 import { Loader } from '@/components/ui/loader';
+import { getPricingInfo } from '@/lib/discountCalculations';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -71,11 +72,11 @@ export default function ProductDetail() {
     if (!user) { navigate('/auth'); return; }
     // optimistic UI: mark as adding so button becomes "Go to Cart" instantly
     setAdding(true);
-    addToCart(product.id, qty).then(() => {
+    try {
+      addToCart(product.id, qty);
+    } finally {
       setTimeout(() => setAdding(false), 400);
-    }).catch(() => {
-      setTimeout(() => setAdding(false), 400);
-    });
+    }
   };
 
   const handleWriteReview = async () => {

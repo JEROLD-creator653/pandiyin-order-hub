@@ -177,7 +177,7 @@ export default function Index() {
   const handleTouchEnd = () => {
     if (touchStartXRef.current === null || touchLastXRef.current === null) return;
     const delta = touchLastXRef.current - touchStartXRef.current;
-    const threshold = 50;
+    const threshold = 30; // Reduced threshold for better responsiveness
     if (Math.abs(delta) >= threshold) {
       if (delta > 0) {
         prevBanner();
@@ -216,10 +216,11 @@ export default function Index() {
       {banners.length > 0 ? (
         <section className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden group pt-16 md:pt-0">
           <div
-            className="relative w-full h-full"
+            className="relative w-full h-full touch-pan-y select-none cursor-grab active:cursor-grabbing"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            style={{ touchAction: 'pan-y' }}
           >
             {banners.map((banner, index) => (
               <motion.div
@@ -245,7 +246,8 @@ export default function Index() {
                         // Hero banner (index 0): eager + high priority for instant load
                         // Other banners: lazy loading to avoid blocking hero
                         loading={index === 0 ? 'eager' : 'lazy'}
-                        fetchPriority={index === 0 ? 'high' : 'low'}
+                        // @ts-expect-error - fetchpriority is valid HTML5 attribute, React types not updated yet
+                        fetchpriority={index === 0 ? 'high' : 'low'}
                         className={`w-full h-full object-cover transition-opacity duration-500 ${loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'}`}
                       />
                       <div className="absolute inset-0 bg-black/20" />
@@ -260,7 +262,8 @@ export default function Index() {
                       // Hero banner (index 0): eager + high priority for instant load
                       // Other banners: lazy loading to avoid blocking hero
                       loading={index === 0 ? 'eager' : 'lazy'}
-                      fetchPriority={index === 0 ? 'high' : 'low'}
+                      // @ts-expect-error - fetchpriority is valid HTML5 attribute, React types not updated yet
+                      fetchpriority={index === 0 ? 'high' : 'low'}
                       className={`w-full h-full object-cover transition-opacity duration-500 ${loadedImages[banner.id] ? 'opacity-100' : 'opacity-0'}`}
                     />
                     <div className="absolute inset-0 bg-black/20" />

@@ -1,4 +1,4 @@
-import ReactQuill from 'react-quill';
+import ReactQuill from 'react-quill-new';
 import 'quill/dist/quill.snow.css';
 import { Label } from '@/components/ui/label';
 

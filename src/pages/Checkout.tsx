@@ -41,9 +41,6 @@ export default function Checkout() {
   const [gstSettings, setGstSettings] = useState({ gst_enabled: false });
   const [productGstMap, setProductGstMap] = useState<Map<string, any>>(new Map());
   const [calculatedGstAmount, setCalculatedGstAmount] = useState(0);
-  const [orderPlaced, setOrderPlaced] = useState(false);
-  const [savedAmount, setSavedAmount] = useState(0);
-  const [newOrderId, setNewOrderId] = useState("");
 
   useEffect(() => {
     // Wait for auth loading to complete before redirecting
@@ -108,14 +105,7 @@ export default function Checkout() {
     }
   }, [selectedAddress, regions, total, getDeliveryCharge]);
 
-  // Handle redirect after order placed
-  useEffect(() => {
-    if (orderPlaced && newOrderId) {
-      setTimeout(() => {
-        navigate(`/order-confirmation/${newOrderId}`);
-      }, 2200);
-    }
-  }, [orderPlaced, newOrderId, navigate]);
+
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -214,10 +204,8 @@ export default function Checkout() {
       await supabase.from('order_items').insert(orderItems);
       clearCart();
       
-      // Set popup state - redirect handled by useEffect
-      setSavedAmount(discount);
-      setNewOrderId(order.id);
-      setOrderPlaced(true);
+      // Navigate directly to order confirmation
+      navigate(`/order-confirmation/${order.id}`);
     } catch (err: any) {
       toast({ title: 'Order failed', description: err.message, variant: 'destructive' });
     } finally {
@@ -227,26 +215,6 @@ export default function Checkout() {
 
   return (
     <div className="container mx-auto px-4 pt-24 pb-8 max-w-4xl">
-      {/* Success Modal */}
-      {orderPlaced && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-md" style={{ pointerEvents: 'none' }}>
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-[90%] max-w-md text-center" style={{ pointerEvents: 'auto', animation: 'scaleIn 0.3s ease-out' }}>
-            <div className="text-6xl mb-3">🎉</div>
-            <h2 className="text-2xl font-bold mb-3">Order Confirmed!</h2>
-            {savedAmount > 0 && (
-              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-3 mb-3">
-                <p className="text-green-700 font-bold text-xl">
-                  You saved {formatPrice(Math.round(savedAmount))}
-                </p>
-              </div>
-            )}
-            <p className="text-sm text-muted-foreground">
-              Redirecting to order details in 2 seconds...
-            </p>
-          </div>
-        </div>
-      )}
-
       <h1 className="text-3xl font-display font-bold mb-8">Checkout</h1>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-5 gap-8">
         <div className="md:col-span-3 space-y-6">
