@@ -10,6 +10,12 @@ import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import { formatPrice } from '@/lib/formatters';
 import { Loader } from '@/components/ui/loader';
 
+function getPricingInfo(price: number, comparePrice?: number) {
+  const hasDiscount = comparePrice && comparePrice > price;
+  const savingsAmount = hasDiscount ? comparePrice - price : 0;
+  return { hasDiscount, savingsAmount };
+}
+
 export default function Cart() {
   const { items, total, loading, updateQuantity, removeItem } = useCart();
   const { user } = useAuth();
