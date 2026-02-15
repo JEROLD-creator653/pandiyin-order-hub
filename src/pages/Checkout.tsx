@@ -109,14 +109,46 @@ export default function Checkout() {
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
-    const { data } = await supabase.from('coupons').select('*').eq('code', couponCode.trim().toUpperCase()).eq('is_active', true).maybeSingle();
-    if (!data) { toast({ title: 'Invalid coupon', variant: 'destructive' }); return; }
-    if (data.min_order_value && total < Number(data.min_order_value)) {
-      toast({ title: `Minimum order ${formatPrice(data.min_order_value)}`, variant: 'destructive' }); return;
+    if (!user) {
+      toast({ title: 'Please login to apply coupon', variant: 'destructive' });
+      return;
     }
-    const disc = data.discount_type === 'percentage' ? (total * Number(data.discount_value)) / 100 : Number(data.discount_value);
-    setDiscount(disc);
-    toast({ title: `Coupon applied! You save ${formatPrice(disc)}` });
+
+    try {
+      // Call server-side validation function
+      const { data, error } = await supabase.rpc('validate_coupon' as any, {
+        _coupon_code: couponCode.trim().toUpperCase(),
+        _user_id: user.id,
+        _order_total: total
+      });
+
+      if (error) throw error;
+
+      const validation = data?.[0];
+      if (!validation || !validation.is_valid) {
+        toast({ 
+          title: 'Invalid coupon', 
+          description: validation?.error_message || 'Could not apply coupon',
+          variant: 'destructive' 
+        });
+        return;
+      }
+
+      // Calculate discount based on validated coupon
+      const disc = validation.discount_type === 'percentage' 
+        ? (total * Number(validation.discount_value)) / 100 
+        : Number(validation.discount_value);
+      
+      setDiscount(disc);
+      toast({ title: `Coupon applied! You save ${formatPrice(disc)}` });
+    } catch (err: any) {
+      console.error('Coupon validation error:', err);
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to validate coupon',
+        variant: 'destructive' 
+      });
+    }
   };
 
   const gstAmount = gstSettings.gst_enabled ? calculatedGstAmount : 0;
@@ -202,6 +234,21 @@ export default function Checkout() {
         };
       });
       await supabase.from('order_items').insert(orderItems);
+      
+      // Redeem coupon if one was used
+      if (couponCode && discount > 0) {
+        const { error: redeemError } = await supabase.rpc('redeem_coupon' as any, {
+          _coupon_code: couponCode.trim().toUpperCase(),
+          _user_id: user!.id,
+          _order_id: order.id
+        });
+        
+        if (redeemError) {
+          console.error('Coupon redemption error:', redeemError);
+          // Don't fail the order, just log the error
+        }
+      }
+      
       clearCart();
       
       // Navigate directly to order confirmation

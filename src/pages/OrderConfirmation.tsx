@@ -1,29 +1,100 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CheckCircle, Package, ShoppingBag, FileText } from 'lucide-react';
+import { CheckCircle, Package, ShoppingBag, FileText, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 import { formatPrice } from '@/lib/formatters';
 import { generateInvoicePdf } from '@/lib/invoicePdf';
 
 export default function OrderConfirmation() {
   const { id } = useParams();
+  const { user, isAdmin, loading: authLoading } = useAuth();
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [store, setStore] = useState<any>(null);
+  const [unauthorized, setUnauthorized] = useState(false);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
-    supabase.from('orders').select('*').eq('id', id).maybeSingle().then(({ data }) => setOrder(data));
-    supabase.from('order_items').select('*').eq('order_id', id).then(({ data }) => setItems(data || []));
-    supabase.from('store_settings').select('*').limit(1).maybeSingle().then(({ data }) => setStore(data));
-  }, [id]);
+    if (!id || !user || authLoading) return;
+
+    const fetchOrder = async () => {
+      // Fetch order with authorization check
+      const { data: orderData, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+
+      // If no data returned, could be unauthorized or not found
+      // Don't reveal which to prevent enumeration
+      if (!orderData || error) {
+        setUnauthorized(true);
+        return;
+      }
+
+      // Server-side authorization: Check if user owns this order or is admin
+      if (orderData.user_id !== user.id && !isAdmin) {
+        setUnauthorized(true);
+        return;
+      }
+
+      setOrder(orderData);
+
+      // Fetch related data
+      const { data: itemsData } = await supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', id);
+      setItems(itemsData || []);
+
+      const { data: storeData } = await supabase
+        .from('store_settings')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+      setStore(storeData);
+    };
+
+    fetchOrder();
+  }, [id, user, isAdmin, authLoading]);
 
   const address = order?.delivery_address as any;
+
+  // Show loading state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  // Show error if unauthorized (prevents order ID enumeration)
+  if (unauthorized) {
+    return (
+      <div className="container mx-auto px-4 pt-24 pb-16 max-w-lg">
+        <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+          <div className="text-center mb-8">
+            <AlertCircle className="h-20 w-20 text-destructive mx-auto mb-6" />
+            <h1 className="text-3xl font-display font-bold mb-2">Access Denied</h1>
+            <p className="text-muted-foreground mb-6">You don't have permission to view this page.</p>
+            <Button asChild><Link to="/">Go Home</Link></Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   const handleDownload = (type: 'receipt' | 'invoice') => {
     if (!order || !store) return;
