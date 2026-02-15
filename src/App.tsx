@@ -15,6 +15,7 @@ import { GlobalLoader } from "@/components/GlobalLoader";
 
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import Products from "./pages/Products";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
@@ -75,6 +76,7 @@ const App = () => (
                   <Route path="/about" element={<About />} />
                 </Route>
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="products" element={<AdminProducts />} />
