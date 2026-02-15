@@ -99,11 +99,12 @@ END;
 $$;
 
 -- ===== 2. FIX STOCK DECREMENT FUNCTION =====
--- Remove SECURITY DEFINER and ensure proper search_path
+-- Keep SECURITY DEFINER for this function because it needs to decrement stock
+-- regardless of who placed the order (system operation)
 CREATE OR REPLACE FUNCTION public.decrement_stock_on_order()
 RETURNS TRIGGER 
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
@@ -123,138 +124,82 @@ $$;
 -- Ensure users can only view their own orders (or admin can view all)
 -- This prevents order ID enumeration attacks
 
--- Drop any overly permissive policies
+-- Drop existing policies to make migration idempotent
 DROP POLICY IF EXISTS "Users can view all orders" ON public.orders;
+DROP POLICY IF EXISTS "Users can view own orders" ON public.orders;
+DROP POLICY IF EXISTS "Admins can view all orders" ON public.orders;
 
--- Ensure restrictive policies exist
-DO $$
-BEGIN
-  -- Check if the policy exists, create if not
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'orders' 
-    AND policyname = 'Users can view own orders'
-  ) THEN
-    CREATE POLICY "Users can view own orders"
-      ON public.orders FOR SELECT
-      TO authenticated
-      USING (auth.uid() = user_id);
-  END IF;
+-- Create restrictive policies
+CREATE POLICY "Users can view own orders"
+  ON public.orders FOR SELECT
+  TO authenticated
+  USING (auth.uid() = user_id);
 
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'orders' 
-    AND policyname = 'Admins can view all orders'
-  ) THEN
-    CREATE POLICY "Admins can view all orders"
-      ON public.orders FOR SELECT
-      TO authenticated
-      USING (public.has_role(auth.uid(), 'admin'));
-  END IF;
-END $$;
+CREATE POLICY "Admins can view all orders"
+  ON public.orders FOR SELECT
+  TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
 
 -- ===== 4. ADD RLS POLICY FOR ORDER ITEMS =====
 -- Users should only see order items for their own orders
 DROP POLICY IF EXISTS "Users can view all order items" ON public.order_items;
+DROP POLICY IF EXISTS "Users can view own order items" ON public.order_items;
+DROP POLICY IF EXISTS "Admins can view all order items" ON public.order_items;
 
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'order_items' 
-    AND policyname = 'Users can view own order items'
-  ) THEN
-    CREATE POLICY "Users can view own order items"
-      ON public.order_items FOR SELECT
-      TO authenticated
-      USING (
-        EXISTS (
-          SELECT 1 FROM public.orders
-          WHERE orders.id = order_items.order_id
-          AND orders.user_id = auth.uid()
-        )
-      );
-  END IF;
+CREATE POLICY "Users can view own order items"
+  ON public.order_items FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.orders
+      WHERE orders.id = order_items.order_id
+      AND orders.user_id = auth.uid()
+    )
+  );
 
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'order_items' 
-    AND policyname = 'Admins can view all order items'
-  ) THEN
-    CREATE POLICY "Admins can view all order items"
-      ON public.order_items FOR SELECT
-      TO authenticated
-      USING (public.has_role(auth.uid(), 'admin'));
-  END IF;
-END $$;
+CREATE POLICY "Admins can view all order items"
+  ON public.order_items FOR SELECT
+  TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'));
 
 -- ===== 5. HARDEN ADMIN AUTHORIZATION =====
 -- Ensure all admin mutations have proper RLS checks
 
 -- Orders table - ensure only admins can update order status
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'orders' 
-    AND policyname = 'Only admins can update order status'
-  ) THEN
-    CREATE POLICY "Only admins can update order status"
-      ON public.orders FOR UPDATE
-      TO authenticated
-      USING (public.has_role(auth.uid(), 'admin'))
-      WITH CHECK (public.has_role(auth.uid(), 'admin'));
-  END IF;
-END $$;
+DROP POLICY IF EXISTS "Only admins can update order status" ON public.orders;
+CREATE POLICY "Only admins can update order status"
+  ON public.orders FOR UPDATE
+  TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'))
+  WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
 -- Products table - ensure admins can insert/update/delete
 -- These policies should already exist from initial migration,
 -- but we verify they're properly using has_role checks
 
 -- Categories table - admin-only mutations
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'categories' 
-    AND policyname = 'Admins can manage categories'
-  ) THEN
-    CREATE POLICY "Admins can manage categories"
-      ON public.categories FOR ALL
-      TO authenticated
-      USING (public.has_role(auth.uid(), 'admin'))
-      WITH CHECK (public.has_role(auth.uid(), 'admin'));
-  END IF;
-END $$;
+DROP POLICY IF EXISTS "Admins can manage categories" ON public.categories;
+CREATE POLICY "Admins can manage categories"
+  ON public.categories FOR ALL
+  TO authenticated
+  USING (public.has_role(auth.uid(), 'admin'))
+  WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
 -- ===== 6. ADD ADDITIONAL SECURITY CHECKS =====
 
 -- Prevent users from modifying other users' addresses
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'addresses' 
-    AND policyname = 'Users can only modify own addresses'
-  ) THEN
-    CREATE POLICY "Users can only modify own addresses"
-      ON public.addresses FOR UPDATE
-      TO authenticated
-      USING (auth.uid() = user_id)
-      WITH CHECK (auth.uid() = user_id);
-  END IF;
+DROP POLICY IF EXISTS "Users can only modify own addresses" ON public.addresses;
+CREATE POLICY "Users can only modify own addresses"
+  ON public.addresses FOR UPDATE
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies 
-    WHERE tablename = 'addresses' 
-    AND policyname = 'Users can only delete own addresses'
-  ) THEN
-    CREATE POLICY "Users can only delete own addresses"
-      ON public.addresses FOR DELETE
-      TO authenticated
-      USING (auth.uid() = user_id);
-  END IF;
-END $$;
+DROP POLICY IF EXISTS "Users can only delete own addresses" ON public.addresses;
+CREATE POLICY "Users can only delete own addresses"
+  ON public.addresses FOR DELETE
+  TO authenticated
+  USING (auth.uid() = user_id);
 
 -- ===== 7. AUDIT LOG FOR SENSITIVE OPERATIONS =====
 -- Create audit log table for tracking admin actions
@@ -275,12 +220,14 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- Only admins can view audit logs
+DROP POLICY IF EXISTS "Admins can view audit logs" ON public.audit_logs;
 CREATE POLICY "Admins can view audit logs"
   ON public.audit_logs FOR SELECT
   TO authenticated
   USING (public.has_role(auth.uid(), 'admin'));
 
 -- System can insert audit logs
+DROP POLICY IF EXISTS "System can insert audit logs" ON public.audit_logs;
 CREATE POLICY "System can insert audit logs"
   ON public.audit_logs FOR INSERT
   TO authenticated

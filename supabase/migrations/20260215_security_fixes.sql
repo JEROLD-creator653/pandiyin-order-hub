@@ -31,22 +31,26 @@ CREATE TABLE IF NOT EXISTS public.coupon_redemptions (
 
 ALTER TABLE public.coupon_redemptions ENABLE ROW LEVEL SECURITY;
 
--- RLS for coupon_redemptions
+-- RLS for coupon_redemptions (drop existing first to make migration idempotent)
+DROP POLICY IF EXISTS "Users can view own redemptions" ON public.coupon_redemptions;
 CREATE POLICY "Users can view own redemptions" 
   ON public.coupon_redemptions FOR SELECT 
   TO authenticated 
   USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins can view all redemptions" ON public.coupon_redemptions;
 CREATE POLICY "Admins can view all redemptions" 
   ON public.coupon_redemptions FOR SELECT 
   TO authenticated 
   USING (public.has_role(auth.uid(), 'admin'));
 
+DROP POLICY IF EXISTS "System can insert redemptions" ON public.coupon_redemptions;
 CREATE POLICY "System can insert redemptions" 
   ON public.coupon_redemptions FOR INSERT 
   TO authenticated 
   WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Admins can manage redemptions" ON public.coupon_redemptions;
 CREATE POLICY "Admins can manage redemptions" 
   ON public.coupon_redemptions FOR ALL 
   TO authenticated 
@@ -159,8 +163,8 @@ BEGIN
   -- Check per-user usage limit
   IF v_coupon.max_uses_per_user IS NOT NULL THEN
     SELECT COUNT(*) INTO v_user_redemptions
-    FROM public.coupon_redemptions
-    WHERE coupon_id = v_coupon.id AND user_id = _user_id;
+    FROM public.coupon_redemptions cr
+    WHERE cr.coupon_id = v_coupon.id AND cr.user_id = _user_id;
     
     IF v_user_redemptions >= v_coupon.max_uses_per_user THEN
       RETURN QUERY SELECT false, 'You have already used this coupon'::TEXT, 0::NUMERIC, ''::TEXT, NULL::UUID;
@@ -235,6 +239,7 @@ DROP POLICY IF EXISTS "Anyone can view profiles" ON public.profiles;
 -- ===== 7. FIX COUPONS TABLE PRIVACY =====
 -- Remove public read for inactive or expired coupons
 DROP POLICY IF EXISTS "Anyone can view active coupons" ON public.coupons;
+DROP POLICY IF EXISTS "Authenticated users can view valid coupons" ON public.coupons;
 
 -- Create more restrictive coupon policy
 CREATE POLICY "Authenticated users can view valid coupons" 
@@ -281,9 +286,9 @@ CREATE TRIGGER trigger_check_coupon_usage
   FOR EACH ROW
   EXECUTE FUNCTION public.check_coupon_usage();
 
--- ===== 10. REMOVE SECURITY DEFINER FROM handle_new_user =====
--- This function inserts into tables that should use RLS properly
--- Replace the function (preserves any dependencies)
+-- ===== 10. FIX handle_new_user TRIGGER =====
+-- This function MUST use SECURITY DEFINER because it runs during user creation
+-- when auth.uid() doesn't exist yet. It's safe because it only inserts initial data.
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -297,7 +302,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY INVOKER SET search_path = public;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Recreate trigger if it doesn't exist
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;

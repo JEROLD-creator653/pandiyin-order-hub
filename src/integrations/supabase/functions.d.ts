@@ -31,6 +31,12 @@ declare module '@supabase/supabase-js' {
           }
           Returns: boolean
         }
+        check_email_exists: {
+          Args: {
+            _email: string
+          }
+          Returns: boolean
+        }
       }
     }
   }

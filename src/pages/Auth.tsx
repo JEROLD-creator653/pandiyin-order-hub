@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -22,6 +23,32 @@ export default function Auth() {
 
     try {
       if (isSignUp) {
+        // Check if email already exists before attempting signup
+        const { data: emailExists, error: checkError } = await supabase
+          .rpc('check_email_exists' as any, { _email: email });
+
+        if (checkError) {
+          console.error('Error checking email:', checkError);
+          // Continue with signup even if check fails
+        } else if (emailExists) {
+          // Email already registered
+          toast({
+            title: "Account already exists",
+            description: "This email is already registered. Redirecting to sign in...",
+            variant: "destructive",
+          });
+          
+          // Wait a moment for user to see the message
+          setTimeout(() => {
+            setIsSignUp(false);
+            setPassword(""); // Clear password for security
+          }, 1500);
+          
+          setLoading(false);
+          return;
+        }
+
+        // Proceed with signup if email doesn't exist
         const { error } = await signUp(email, password, fullName);
         if (error) throw error;
 

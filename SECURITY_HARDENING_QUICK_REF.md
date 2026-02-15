@@ -41,15 +41,18 @@ All SQL functions now have `SET search_path = public` to prevent search path man
 
 ---
 
-### ✅ 4. SECURITY DEFINER Removed
+### ✅ 4. SECURITY DEFINER Removed (Where Safe)
 **Status:** FIXED  
 **Migrations:** Both `20260215_security_fixes.sql` and `20260215_security_hardening.sql`
 
-All functions changed from `SECURITY DEFINER` to `SECURITY INVOKER`:
-- `has_role()`
-- `handle_new_user()`
-- `decrement_stock_on_order()`
-- All review functions
+Most functions changed from `SECURITY DEFINER` to `SECURITY INVOKER`:
+- `has_role()` ✅ INVOKER
+- All review functions ✅ INVOKER
+- Coupon functions ✅ INVOKER
+
+**Exceptions (MUST use DEFINER):**
+- `handle_new_user()` - Required for user signup
+- `decrement_stock_on_order()` - Required for inventory management
 
 ---
 

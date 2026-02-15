@@ -128,24 +128,26 @@ CREATE POLICY "Admins can manage coupons"
 
 ---
 
-## ✅ 4. SECURITY DEFINER Removed
+## ✅ 4. SECURITY DEFINER Removed (Where Safe)
 
 ### Problem
 Functions with `SECURITY DEFINER` bypass RLS policies and run with elevated privileges.
 
 ### Solution
-Changed all functions from `SECURITY DEFINER` to `SECURITY INVOKER`:
+Changed most functions from `SECURITY DEFINER` to `SECURITY INVOKER`:
 
-**Functions Updated:**
+**Functions Updated to SECURITY INVOKER:**
 - ✅ `has_role()` - Now uses invoker's privileges
-- ✅ `handle_new_user()` - Now respects RLS
-- ✅ `decrement_stock_on_order()` - Now respects RLS
+- ✅ All review functions - Now respect RLS
+- ✅ Coupon validation functions - Now respect RLS
 
-**Why This Matters:**
-- Functions now run with the calling user's permissions
-- RLS policies are properly enforced
-- No privilege escalation vulnerabilities
-- Proper separation of concerns
+**Functions That MUST Use SECURITY DEFINER:**
+- ⚠️ `handle_new_user()` - **Requires DEFINER** because it runs during user creation when auth.uid() doesn't exist yet
+- ⚠️ `decrement_stock_on_order()` - **Requires DEFINER** for system-level stock management
+
+**Why Some Functions Need SECURITY DEFINER:**
+- `handle_new_user()`: Runs as a trigger when a new user signs up. At that moment, the user's auth context doesn't exist yet, so RLS would block the profile creation. This is safe because it only inserts initial user data with hardcoded role='user'.
+- `decrement_stock_on_order()`: Needs to modify stock regardless of RLS policies. Could be changed to INVOKER if proper policies are added, but DEFINER is safer for inventory management.
 
 ---
 
