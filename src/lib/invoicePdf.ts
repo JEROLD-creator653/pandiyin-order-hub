@@ -17,6 +17,7 @@ interface InvoiceData {
   subtotal: number;
   deliveryCharge: number;
   discount: number;
+  couponCode?: string;
   gstAmount?: number;
   gstPercentage?: number;
   gstType?: 'cgst_sgst' | 'igst';
@@ -127,8 +128,11 @@ export function generateInvoicePdf(data: InvoiceData) {
   };
 
   addLine('Subtotal', formatPrice(data.subtotal));
-  if (data.discount > 0) addLine('Discount', `-${formatPrice(data.discount)}`);
   addLine('Delivery', data.deliveryCharge === 0 ? 'Free' : formatPrice(data.deliveryCharge));
+  if (data.discount > 0) {
+    const discountLabel = data.couponCode ? `Coupon Discount (${data.couponCode})` : 'Discount';
+    addLine(discountLabel, `-${formatPrice(data.discount)}`);
+  }
   
   y += 2;
   doc.line(summaryX, y, pageWidth - 14, y);
@@ -139,7 +143,7 @@ export function generateInvoicePdf(data: InvoiceData) {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(100);
-  doc.text(`Payment: ${data.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online'} | Status: ${data.paymentStatus}`, 14, y);
+  doc.text(`Payment: ${data.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online'}`, 14, y);
   y += 12;
 
   doc.setTextColor(150);

@@ -144,8 +144,20 @@ export default function OrderDetail() {
             <CardHeader><CardTitle className="text-lg">Payment Summary</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(order.subtotal)}</span></div>
-              {order.discount > 0 && <div className="flex justify-between text-primary"><span>Discount</span><span>-{formatPrice(order.discount)}</span></div>}
               <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{order.delivery_charge == 0 ? 'Free' : formatPrice(order.delivery_charge)}</span></div>
+              {order.discount > 0 && (
+                <div className="flex justify-between text-green-700 font-semibold">
+                  <span>Coupon Discount {order.coupon_code && `(${order.coupon_code})`}</span>
+                  <span>-{formatPrice(order.discount)}</span>
+                </div>
+              )}
+              {order.discount > 0 && (
+                <div className="bg-green-50 border border-green-200 text-green-800 rounded-lg p-2 text-center -mx-1">
+                  <span className="font-bold text-xs">
+                    🎉 Saved {formatPrice(order.discount)}
+                  </span>
+                </div>
+              )}
               <Separator />
               <div className="flex justify-between text-base"><span className="font-bold">Total</span><span className="font-medium text-primary">{formatPrice(order.total)}</span></div>
               <div className="flex justify-between text-muted-foreground"><span>Payment</span><span className="capitalize">{order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'}</span></div>
@@ -172,6 +184,7 @@ export default function OrderDetail() {
                     subtotal: Number(order.subtotal),
                     deliveryCharge: Number(order.delivery_charge),
                     discount: Number(order.discount),
+                    couponCode: order.coupon_code || undefined,
                     total: Number(order.total),
                     paymentMethod: order.payment_method,
                     paymentStatus: order.payment_status,

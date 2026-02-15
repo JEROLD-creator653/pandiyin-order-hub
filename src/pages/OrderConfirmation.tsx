@@ -43,6 +43,7 @@ export default function OrderConfirmation() {
       subtotal: Number(order.subtotal),
       deliveryCharge: Number(order.delivery_charge),
       discount: Number(order.discount),
+      couponCode: order.coupon_code || undefined,
       gstAmount: Number(order.gst_amount || 0),
       gstPercentage: Number(order.gst_percentage || 0),
       gstType: order.gst_type,
@@ -109,9 +110,23 @@ export default function OrderConfirmation() {
               {/* Totals */}
               <div className="space-y-1.5 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(order.subtotal)}</span></div>
-                {Number(order.discount) > 0 && <div className="flex justify-between text-primary"><span>Discount</span><span>-{formatPrice(order.discount)}</span></div>}
                 <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{Number(order.delivery_charge) === 0 ? 'Free' : formatPrice(order.delivery_charge)}</span></div>
+                {Number(order.discount) > 0 && (
+                  <div className="flex justify-between text-green-700 font-semibold">
+                    <span>Coupon Discount {order.coupon_code && `(${order.coupon_code})`}</span>
+                    <span>-{formatPrice(order.discount)}</span>
+                  </div>
+                )}
               </div>
+
+              {/* Savings Banner */}
+              {Number(order.discount) > 0 && (
+                <div className="bg-green-50 border-2 border-green-200 text-green-800 rounded-lg p-2.5 text-center">
+                  <span className="font-bold text-xs">
+                    🎉 You saved {formatPrice(order.discount)} on this order
+                  </span>
+                </div>
+              )}
 
               {/* GST Line - Single */}
               {Number(order.gst_amount) > 0 && (

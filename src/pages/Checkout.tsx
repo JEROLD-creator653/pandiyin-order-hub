@@ -139,10 +139,10 @@ export default function Checkout() {
     }
     setLoading(true);
     try {
-      // Calculate MRP and selling totals
+      // Calculate MRP and selling totals  
       const totalMRP = items.reduce((a, i) => a + ((i.product as any).compare_price || i.product.price) * i.quantity, 0);
       const sellingTotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0);
-      const discount = totalMRP - sellingTotal;
+      const productDiscount = totalMRP - sellingTotal;
 
       // Determine GST type based on state
       const gstType = getGSTType(selectedAddress.state || '');
@@ -162,7 +162,7 @@ export default function Checkout() {
         order_number: 'temp',
         subtotal: sellingTotal,
         delivery_charge: deliveryCharge,
-        discount,
+        discount: discount, // Use the coupon discount from state
         total: grandTotal,
         gst_amount: gstAmount,
         gst_percentage: avgGstPercentage,
@@ -302,9 +302,17 @@ export default function Checkout() {
                     <span className="text-muted-foreground">Delivery</span>
                     <span>{deliveryCharge === 0 ? <span className="text-green-600 font-medium">FREE</span> : formatPrice(deliveryCharge)}</span>
                   </div>
-                  {hasDiscount && (
+                  {discount > 0 && (
+                    <div className="flex justify-between text-xs text-green-700 font-semibold">
+                      <span>Coupon Discount {couponCode && `(${couponCode})`}</span>
+                      <span>− {formatPrice(discount)}</span>
+                    </div>
+                  )}
+                  {(hasDiscount || discount > 0) && (
                     <div className="bg-green-50 border-2 border-green-200 text-green-800 rounded-lg p-3 mt-2 text-center">
-                      <span className="font-bold text-base">🎉 You saved {formatPrice(discountAmount)} on this order</span>
+                      <span className="font-bold text-base">
+                        🎉 You saved {formatPrice(discountAmount + discount)} on this order
+                      </span>
                     </div>
                   )}
                 </div>
@@ -321,7 +329,7 @@ export default function Checkout() {
             <Separator className="my-3" />
             {(() => {
               const sellingTotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0);
-              const finalTotal = sellingTotal + deliveryCharge;
+              const finalTotal = sellingTotal + deliveryCharge - discount;
               return (
                 <div className="flex justify-between text-lg font-bold mt-3">
                   <span>Total Payable</span>

@@ -138,6 +138,11 @@ export default function AdminOrders() {
                           </SelectContent>
                         </Select>
                         <span className="font-bold text-sm">{formatPrice(o.total)}</span>
+                        {Number(o.discount) > 0 && (
+                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 text-xs">
+                            💰 {o.coupon_code || 'Discount'}
+                          </Badge>
+                        )}
                       </div>
                     </div>
 
@@ -161,8 +166,17 @@ export default function AdminOrders() {
                 <div><span className="text-muted-foreground">Payment:</span> {detail.payment_method.toUpperCase()}</div>
                 <div><span className="text-muted-foreground">Subtotal:</span> {formatPrice(detail.subtotal)}</div>
                 <div><span className="text-muted-foreground">Delivery:</span> {formatPrice(detail.delivery_charge)}</div>
-                <div><span className="text-muted-foreground">Discount:</span> {formatPrice(detail.discount)}</div>
-                <div className="font-bold"><span className="text-muted-foreground">Total:</span> {formatPrice(detail.total)}</div>
+                {Number(detail.discount) > 0 && (
+                  <div className="col-span-2 bg-green-50 border border-green-200 rounded p-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-green-800 font-medium">
+                        💰 Discount {detail.coupon_code && `(${detail.coupon_code})`}
+                      </span>
+                      <span className="text-green-700 font-bold">-{formatPrice(detail.discount)}</span>
+                    </div>
+                  </div>
+                )}
+                <div className="font-bold col-span-2 pt-1 border-t"><div className="flex justify-between"><span className="text-muted-foreground">Total:</span><span>{formatPrice(detail.total)}</span></div></div>
               </div>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-sm text-muted-foreground">Update status</span>
@@ -180,6 +194,12 @@ export default function AdminOrders() {
                   <p className="font-medium mb-1">Delivery Address</p>
                   <p>{(detail.delivery_address as any).full_name}, {(detail.delivery_address as any).phone}</p>
                   <p>{(detail.delivery_address as any).address_line1}, {(detail.delivery_address as any).city} - {(detail.delivery_address as any).pincode}</p>
+                </div>
+              )}
+              {detail.notes && (
+                <div className="text-sm p-3 bg-primary/10 border border-primary/30 rounded-lg">
+                  <p className="font-medium mb-1 text-primary">Customer Instructions</p>
+                  <p className="text-foreground whitespace-pre-wrap">{detail.notes}</p>
                 </div>
               )}
               <div>
