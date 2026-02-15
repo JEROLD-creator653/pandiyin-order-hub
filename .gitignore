@@ -22,3 +22,44 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Build output
+build
+out
+coverage
+.cache
+.vite
+.eslintcache
+*.tsbuildinfo
+
+# Tooling
+.npm
+.pnpm-store
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+# Testing
+cypress/videos
+cypress/screenshots
+playwright-report
+
+# Deploy
+.vercel
+.netlify
+
+# Supabase local
+supabase/.temp
+supabase/.branches
+
+# OS/editor extras
+.history
+Thumbs.db

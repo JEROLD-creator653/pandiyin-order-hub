@@ -361,6 +361,8 @@ export type Database = {
           compare_price: number | null
           created_at: string
           description: string | null
+          gst_percentage: number | null
+          hsn_code: string | null
           id: string
           image_path: string | null
           image_url: string | null
@@ -371,6 +373,7 @@ export type Database = {
           price: number
           review_count: number | null
           stock_quantity: number
+          tax_inclusive: boolean | null
           unit: string | null
           updated_at: string
           user_id: string | null
@@ -382,6 +385,8 @@ export type Database = {
           compare_price?: number | null
           created_at?: string
           description?: string | null
+          gst_percentage?: number | null
+          hsn_code?: string | null
           id?: string
           image_path?: string | null
           image_url?: string | null
@@ -392,6 +397,7 @@ export type Database = {
           price?: number
           review_count?: number | null
           stock_quantity?: number
+          tax_inclusive?: boolean | null
           unit?: string | null
           updated_at?: string
           user_id?: string | null
@@ -403,6 +409,8 @@ export type Database = {
           compare_price?: number | null
           created_at?: string
           description?: string | null
+          gst_percentage?: number | null
+          hsn_code?: string | null
           id?: string
           image_path?: string | null
           image_url?: string | null
@@ -413,6 +421,7 @@ export type Database = {
           price?: number
           review_count?: number | null
           stock_quantity?: number
+          tax_inclusive?: boolean | null
           unit?: string | null
           updated_at?: string
           user_id?: string | null
