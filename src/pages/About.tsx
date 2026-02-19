@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, cubicBezier } from 'framer-motion';
 import {
   Leaf,
   Heart,
@@ -16,7 +16,7 @@ const fadeUp = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, amount: 0.2 },
-  transition: { duration: 0.5, ease: [0.22, 0.61, 0.36, 1] },
+  transition: { duration: 0.5, ease: cubicBezier(0.22, 0.61, 0.36, 1) },
 };
 
 const timeline = [
@@ -141,7 +141,7 @@ export default function About() {
               initial={{ opacity: 0, x: i % 2 === 0 ? -24 : 24 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.3 }}
-              transition={{ delay: i * 0.08, duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
+              transition={{ delay: i * 0.08, duration: 0.5, ease: cubicBezier(0.22, 0.61, 0.36, 1) }}
               className={`relative flex items-start mb-12 last:mb-0 ${
                 i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'
               }`}
@@ -181,7 +181,7 @@ export default function About() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.3 }}
-              transition={{ delay: i * 0.08, duration: 0.5, ease: [0.22, 0.61, 0.36, 1] }}
+              transition={{ delay: i * 0.08, duration: 0.5, ease: cubicBezier(0.22, 0.61, 0.36, 1) }}
               className="p-6 md:p-8 rounded-xl bg-secondary/30 border border-border/60 hover:border-primary/30 transition-colors duration-300"
             >
               <item.icon className="h-9 w-9 text-primary mb-4" aria-hidden="true" />
@@ -207,7 +207,7 @@ export default function About() {
               initial={{ opacity: 0, x: -16 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.3 }}
-              transition={{ delay: i * 0.05, duration: 0.4, ease: [0.22, 0.61, 0.36, 1] }}
+              transition={{ delay: i * 0.05, duration: 0.4, ease: cubicBezier(0.22, 0.61, 0.36, 1) }}
               className="flex items-start gap-3 p-5 rounded-lg bg-muted/30 border border-border/50"
             >
               <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />

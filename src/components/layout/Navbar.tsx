@@ -36,7 +36,7 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const searchRef = useRef<HTMLDivElement>(null);
-  const mobileSearchRef = useRef<HTMLDivElement>(null);
+  const mobileSearchRef = useRef<HTMLFormElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
   
@@ -209,20 +209,34 @@ export default function Navbar() {
       onMouseEnter={() => isHomePage && setIsHovered(true)}
       onMouseLeave={() => isHomePage && setIsHovered(false)}
     >
-      <div className="container mx-auto px-4 h-16 transition-colors duration-300">
+      <div className="container mx-auto px-3 sm:px-4 h-16 transition-colors duration-300">
         {/* ===== MOBILE HEADER (4-element layout) ===== */}
-        <div className="md:hidden flex items-center justify-between h-full gap-2">
+        <div className="md:hidden flex items-center justify-between h-full gap-1 sm:gap-2">
           {/* Left: Hamburger */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-foreground hover:bg-secondary">
+              <Button variant="ghost" size="icon" className="h-9 w-9 flex-shrink-0 text-foreground hover:bg-secondary">
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0 flex flex-col">
+            <SheetContent side="left" className="w-72 p-0 flex flex-col [&>button]:hidden">
+              {/* Sidebar Header with Close Button */}
+              <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-3 border-b border-gray-200">
+                <h2 className="text-lg font-bold text-foreground flex-shrink">Menu</h2>
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="flex-shrink-0 h-10 w-10 rounded-md hover:bg-secondary flex items-center justify-center transition-colors"
+                  aria-label="Close menu"
+                >
+                  <X className="h-5 w-5 text-foreground" />
+                </button>
+              </div>
+
               <SheetHeader className="sr-only">
                 <SheetTitle>Mobile navigation</SheetTitle>
               </SheetHeader>
+
+              {/* Scrollable Content */}
               <div className="flex-1 overflow-y-auto">
                 {/* Account Section */}
                 <div className="border-b p-4">
@@ -250,7 +264,7 @@ export default function Navbar() {
                       )}
                     </div>
                   ) : (
-                    <Button className="w-full rounded-full h-10" onClick={() => { navigate('/auth'); setMobileOpen(false); }}>
+                    <Button className="w-full rounded-full h-10 text-sm" onClick={() => { navigate('/auth'); setMobileOpen(false); }}>
                       <User className="mr-2 h-4 w-4" /> Sign In
                     </Button>
                   )}
@@ -297,24 +311,24 @@ export default function Navbar() {
           </Sheet>
 
           {/* Center: Logo */}
-          <Link to="/" className="flex-1 flex justify-center mx-2">
-            <span className="text-lg font-display font-bold text-primary">PANDIYIN</span>
+          <Link to="/" className="flex-1 flex justify-center mx-1 min-w-0">
+            <span className="text-base sm:text-lg font-display font-bold text-primary truncate">PANDIYIN</span>
           </Link>
 
           {/* Right: Search + Cart */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
             {!isProductsPage && (
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-foreground hover:bg-secondary"
+                className="h-9 w-9 text-foreground hover:bg-secondary"
                 onClick={() => setMobileSearchOpen(true)}
               >
                 <Search className="h-5 w-5" />
               </Button>
             )}
             <Link to="/cart" className="relative">
-              <Button variant="ghost" size="icon" className="text-foreground hover:bg-secondary">
+              <Button variant="ghost" size="icon" className="h-9 w-9 text-foreground hover:bg-secondary">
                 <ShoppingCart className="h-5 w-5" />
                 {itemCount > 0 && (
                   <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-accent text-accent-foreground">
@@ -462,13 +476,13 @@ export default function Navbar() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="absolute top-0 left-0 right-0 bg-white pt-4 pb-6 shadow-lg"
+              className="absolute top-0 left-0 right-0 bg-white pt-3 pb-4 shadow-lg"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="container mx-auto px-4">
+              <div className="mx-auto px-3 sm:px-4">
                 <form onSubmit={e => { handleSearch(e); setMobileSearchOpen(false); }} ref={mobileSearchRef} className="relative space-y-2">
                   <div className="relative flex items-center gap-2">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <Input
                       ref={mobileSearchInputRef}
                       placeholder="Search products..."
@@ -477,16 +491,16 @@ export default function Navbar() {
                       onFocus={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
                       onClick={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
                       onKeyDown={(e) => e.key === 'Escape' && setMobileSearchOpen(false)}
-                      className="pl-9"
+                      className="pl-9 h-10"
                       autoComplete="off"
                     />
                     {searchQuery && (
                       <button
                         type="button"
-                        className="text-muted-foreground hover:text-foreground transition-colors"
+                        className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
                         onClick={() => setSearchQuery('')}
                       >
-                        <X className="h-4 w-4" />
+                        <X className="h-5 w-5" />
                       </button>
                     )}
                   </div>
