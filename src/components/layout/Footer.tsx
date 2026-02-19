@@ -8,7 +8,7 @@ export default function Footer() {
       <div className="container mx-auto px-4">
 
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-y-10 md:gap-x-20 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-y-10 md:gap-x-16 mb-10">
 
           {/* Brand Section */}
           <div className="space-y-4">
@@ -102,6 +102,48 @@ export default function Footer() {
                 className="inline-block w-fit hover:opacity-100 transition-opacity"
               >
                 Sweets
+              </Link>
+            </div>
+          </div>
+
+          {/* Policies */}
+          <div className="space-y-4">
+            <h4 className="font-display font-semibold">Policies</h4>
+
+            <div className="flex flex-col gap-2 text-sm opacity-80">
+              <Link
+                to="/privacy-policy"
+                className="inline-block w-fit hover:opacity-100 transition-opacity"
+              >
+                Privacy Policy
+              </Link>
+
+              <Link
+                to="/terms"
+                className="inline-block w-fit hover:opacity-100 transition-opacity"
+              >
+                Terms of Service
+              </Link>
+
+              <Link
+                to="/return-refund"
+                className="inline-block w-fit hover:opacity-100 transition-opacity"
+              >
+                Return & Refund
+              </Link>
+
+              <Link
+                to="/shipping-policy"
+                className="inline-block w-fit hover:opacity-100 transition-opacity"
+              >
+                Shipping Policy
+              </Link>
+
+              <Link
+                to="/cancellation-policy"
+                className="inline-block w-fit hover:opacity-100 transition-opacity"
+              >
+                Cancellation Policy
               </Link>
             </div>
           </div>

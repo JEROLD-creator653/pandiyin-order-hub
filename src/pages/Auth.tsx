@@ -376,6 +376,20 @@ export default function Auth() {
                   </button>
                 </p>
               </div>
+
+              {/* Legal Text */}
+              <div className="text-center mt-6 pt-5 border-t border-gray-300/50">
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  By continuing, you agree to our{" "}
+                  <a href="/terms" className="font-semibold hover:underline" style={{ color: '#00834f' }}>
+                    Terms of Service
+                  </a>
+                  {" "}and{" "}
+                  <a href="/privacy-policy" className="font-semibold hover:underline" style={{ color: '#00834f' }}>
+                    Privacy Policy
+                  </a>
+                </p>
+              </div>
             </div>
           </motion.div>
         </AnimatePresence>

@@ -234,6 +234,33 @@ export default function OrderConfirmation() {
             <Button asChild className="flex-1"><Link to="/dashboard"><Package className="mr-2 h-4 w-4" /> My Orders</Link></Button>
             <Button asChild variant="outline" className="flex-1"><Link to="/products"><ShoppingBag className="mr-2 h-4 w-4" /> Continue Shopping</Link></Button>
           </div>
+
+          {/* Legal Section */}
+          <div className="border-t pt-4 mt-4">
+            <p className="text-xs text-muted-foreground mb-3">
+              <strong className="text-foreground">Need help?</strong>
+            </p>
+            <div className="space-y-2 text-xs">
+              <p className="text-muted-foreground">
+                <a href="/return-refund" className="text-primary hover:underline font-semibold">
+                  Return & Refund Policy
+                </a>{" "}
+                •{" "}
+                <a href="/shipping-policy" className="text-primary hover:underline font-semibold">
+                  Shipping Policy
+                </a>
+              </p>
+              <p className="text-muted-foreground">
+                Email: pandiyinnatureinpack@gmail.com | Phone: 6383709933
+              </p>
+              <p className="text-muted-foreground">
+                Review our complete{" "}
+                <a href="/terms" className="text-primary hover:underline font-semibold">
+                  Terms of Service
+                </a>
+              </p>
+            </div>
+          </div>
         </div>
       </motion.div>
     </div>

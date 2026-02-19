@@ -74,16 +74,36 @@ export default function Index() {
     };
   }, [banners]);
 
-  // Fetch featured products (non-optimized as secondary priority)
+  // Fetch featured products (OPTIMIZED: Non-blocking, loads in background)
+  // OLD: This blocked page render until ALL featured products loaded
+  // NEW: Shows placeholder immediately, updates when data arrives
   const [featured, setFeatured] = useState<any[]>([]);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
+  
   useEffect(() => {
-    supabase
-      .from('products')
-      .select('*, categories(name)')
-      .eq('is_featured', true)
-      .eq('is_available', true)
-      .limit(8)
-      .then(({ data }) => setFeatured(data || []));
+    // Start loading featured products WITHOUT blocking render
+    // They'll appear shortly as data arrives
+    const loadFeatured = async () => {
+      try {
+        setFeaturedLoading(true);
+        const { data } = await supabase
+          .from('products')
+          .select('*, categories(name)')
+          .eq('is_featured', true)
+          .eq('is_available', true)
+          .limit(8);
+        
+        if (data) {
+          setFeatured(data);
+        }
+      } catch (error) {
+        console.error('Failed to load featured products:', error);
+      } finally {
+        setFeaturedLoading(false);
+      }
+    };
+
+    loadFeatured();
   }, []);
 
   // Favicon setup

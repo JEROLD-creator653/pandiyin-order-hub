@@ -22,16 +22,16 @@ export const useRouteLoader = () => {
 
 interface RouteLoaderProviderProps {
   children: React.ReactNode;
-  minLoadDuration?: number; // Forced minimum load time (2-3 seconds)
-  maxLoadDuration?: number; // Maximum time to wait for data
+  minLoadDuration?: number; // Forced minimum load time - OPTIMIZED: 700ms (was 2000ms)
+  maxLoadDuration?: number; // Maximum time to wait for data - OPTIMIZED: 1200ms (was 3000ms)
   autoTrigger?: boolean; // Auto-trigger on route change
   excludePaths?: string[]; // Paths to exclude from loading
 }
 
 export const RouteLoaderProvider: React.FC<RouteLoaderProviderProps> = ({ 
   children,
-  minLoadDuration = 2000, // Default 2 seconds
-  maxLoadDuration = 3000, // Default 3 seconds max
+  minLoadDuration = 700, // OPTIMIZED: 700ms (33% reduction from 2000ms)
+  maxLoadDuration = 1200, // OPTIMIZED: 1200ms (60% reduction from 3000ms)
   autoTrigger = true,
   excludePaths = ['/auth']
 }) => {

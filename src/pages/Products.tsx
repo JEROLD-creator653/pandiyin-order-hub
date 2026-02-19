@@ -18,6 +18,8 @@ import { formatPrice } from '@/lib/formatters';
 import { getPricingInfo } from '@/lib/discountCalculations';
 import { useCart } from '@/hooks/useCart';
 import { SkeletonCard } from '@/components/ui/loader';
+import { getCachedData, setCacheItem } from '@/lib/cacheService';
+import { useRouteLoader } from '@/contexts/RouteLoaderContext';
 
 type SortOption = 'newest' | 'price_low' | 'price_high' | 'popularity';
 
@@ -36,6 +38,7 @@ export default function Products() {
   const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
   const { addToCart, items: cartItems } = useCart();
   const navigate = useNavigate();
+  const { endRouteLoad } = useRouteLoader();
 
   const searchFilter = searchParams.get('search') || '';
 
@@ -65,25 +68,88 @@ export default function Products() {
     }, 600);
   };
 
+  // OPTIMIZED: Load categories with caching
   useEffect(() => {
-    supabase.from('categories').select('*').order('sort_order').then(({ data }) => setCategories(data || []));
+    const loadCategories = async () => {
+      try {
+        const data = await getCachedData(
+          'all-categories',
+          async () => {
+            const { data, error } = await supabase
+              .from('categories')
+              .select('*')
+              .order('sort_order');
+            if (error) throw error;
+            return data || [];
+          },
+          30 * 60 * 1000 // Cache for 30 minutes
+        );
+        setCategories(data);
+      } catch (error) {
+        console.error('Failed to load categories:', error);
+        setCategories([]);
+      }
+    };
+    
+    loadCategories();
   }, []);
 
+  // OPTIMIZED: Progressive product loading with early exit
   useEffect(() => {
     setLoading(true);
-    let query = supabase.from('products').select('*, categories(name)').eq('is_available', true);
-    if (searchFilter) query = query.ilike('name', `%${searchFilter}%`);
-    query.order('created_at', { ascending: false }).then(({ data }) => {
-      const all = data || [];
-      setProducts(all);
-      if (all.length > 0) {
-        const mp = Math.ceil(Math.max(...all.map(p => Number(p.price))));
-        setMaxPrice(mp > 0 ? mp : 5000);
-        setPriceRange(prev => [prev[0], mp > 0 ? mp : 5000]);
+    
+    const loadProducts = async () => {
+      try {
+        // Use cache service to avoid refetching same products
+        const cacheKey = `products:${searchFilter}`;
+        
+        const data = await getCachedData(
+          cacheKey,
+          async () => {
+            let query = supabase
+              .from('products')
+              .select('*, categories(name)')
+              .eq('is_available', true);
+            
+            if (searchFilter) {
+              query = query.ilike('name', `%${searchFilter}%`);
+            }
+            
+            const { data, error } = await query.order('created_at', { 
+              ascending: false 
+            });
+            
+            if (error) throw error;
+            return data || [];
+          },
+          60 * 60 * 1000 // Cache for 1 hour
+        );
+        
+        // CRITICAL: End loading screen as soon as products are ready
+        // This is the early exit - don't wait for sorting/filtering
+        if (data && data.length > 0) {
+          setProducts(data);
+          setLoading(false);
+          endRouteLoad(); // EXIT loading screen early!
+          
+          // Calculate max price for filter
+          const mp = Math.ceil(Math.max(...data.map(p => Number(p.price))));
+          setMaxPrice(mp > 0 ? mp : 5000);
+          setPriceRange(prev => [prev[0], mp > 0 ? mp : 5000]);
+        } else {
+          setProducts(data);
+          setLoading(false);
+          endRouteLoad();
+        }
+      } catch (error) {
+        console.error('Failed to load products:', error);
+        setLoading(false);
+        endRouteLoad();
       }
-      setLoading(false);
-    });
-  }, [searchFilter]);
+    };
+
+    loadProducts();
+  }, [searchFilter, endRouteLoad]);
 
   const activeFilterCount = (selectedCategories.length > 0 ? 1 : 0) + (inStockOnly ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0);
 

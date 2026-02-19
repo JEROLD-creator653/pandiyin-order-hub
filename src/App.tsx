@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider } from "@/hooks/useCart";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -26,6 +27,13 @@ import OrderDetail from "./pages/OrderDetail";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+
+// Lazy load policy pages for better performance
+const PrivacyPolicy = lazy(() => import("./pages/policies/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./pages/policies/TermsOfService"));
+const ReturnRefundPolicy = lazy(() => import("./pages/policies/ReturnRefundPolicy"));
+const ShippingPolicy = lazy(() => import("./pages/policies/ShippingPolicy"));
+const CancellationPolicy = lazy(() => import("./pages/policies/CancellationPolicy"));
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
@@ -74,6 +82,11 @@ const App = () => (
                   <Route path="/orders/:id" element={<OrderDetail />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/about" element={<About />} />
+                  <Route path="/privacy-policy" element={<Suspense fallback={<GlobalLoader />}><PrivacyPolicy /></Suspense>} />
+                  <Route path="/terms" element={<Suspense fallback={<GlobalLoader />}><TermsOfService /></Suspense>} />
+                  <Route path="/return-refund" element={<Suspense fallback={<GlobalLoader />}><ReturnRefundPolicy /></Suspense>} />
+                  <Route path="/shipping-policy" element={<Suspense fallback={<GlobalLoader />}><ShippingPolicy /></Suspense>} />
+                  <Route path="/cancellation-policy" element={<Suspense fallback={<GlobalLoader />}><CancellationPolicy /></Suspense>} />
                 </Route>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />

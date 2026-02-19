@@ -31,6 +31,7 @@ export default function Checkout() {
   const { items, total, clearCart } = useCart();
   const { regions, getDeliveryCharge } = useShippingRegions();
   const [loading, setLoading] = useState(false);
+  const [agreementChecked, setAgreementChecked] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('cod');
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
@@ -169,6 +170,12 @@ export default function Checkout() {
     if (!selectedAddress || !selectedAddress.full_name || !selectedAddress.phone || !selectedAddress.address_line1 || !selectedAddress.pincode) {
       toast({ title: 'Please select or add a delivery address', variant: 'destructive' }); return;
     }
+    
+    if (!agreementChecked) {
+      toast({ title: 'Please agree to our policies', description: 'You must accept our Terms of Service, Return Policy and Shipping Policy to proceed', variant: 'destructive' });
+      return;
+    }
+    
     setLoading(true);
     try {
       // Calculate MRP and selling totals  
@@ -404,7 +411,32 @@ export default function Checkout() {
               <Button variant="outline" onClick={applyCoupon} size="sm">Apply</Button>
             </div>
 
-            <Button className="w-full mt-6 rounded-full" size="lg" onClick={placeOrder} disabled={loading}>
+            {/* Legal Agreement Checkbox */}
+            <div className="mt-4 flex gap-3 items-start p-3 bg-muted rounded-lg border">
+              <input
+                type="checkbox"
+                id="agreement"
+                checked={agreementChecked}
+                onChange={(e) => setAgreementChecked(e.target.checked)}
+                className="mt-1 cursor-pointer w-4 h-4"
+              />
+              <label htmlFor="agreement" className="text-xs text-muted-foreground cursor-pointer leading-relaxed">
+                I agree to the{" "}
+                <a href="/terms" className="text-primary hover:underline font-semibold">
+                  Terms of Service
+                </a>
+                ,{" "}
+                <a href="/return-refund" className="text-primary hover:underline font-semibold">
+                  Return & Refund Policy
+                </a>
+                {" "}and{" "}
+                <a href="/shipping-policy" className="text-primary hover:underline font-semibold">
+                  Shipping Policy
+                </a>
+              </label>
+            </div>
+
+            <Button className="w-full mt-6 rounded-full" size="lg" onClick={placeOrder} disabled={loading || !agreementChecked}>
               {loading ? <ButtonLoader text="Placing order..." /> : `Place Order · ${formatPrice(grandTotal)}`}
             </Button>
 
