@@ -26,7 +26,8 @@ export const DescriptionRenderer = ({
 
   return (
     <div 
-      className={`product-description max-w-3xl mx-auto ${className}`}
+      className={`product-description max-w-none ${className}`}
+      style={{ lineHeight: 1.7, wordBreak: 'normal', overflowWrap: 'break-word' }}
       dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
     />
   );

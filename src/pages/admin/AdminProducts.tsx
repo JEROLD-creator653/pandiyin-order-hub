@@ -305,41 +305,39 @@ export default function AdminProducts() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              {/* Image Upload */}
-              {!editing && (
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Product Image *
-                  </label>
-                  <ImageUpload
-                    key={uploadKey}
-                    onImageSelect={(file) => setSelectedFile(file)}
-                    disabled={isUploadingImage}
-                    label="Upload Product Image"
-                  />
-                </div>
-              )}
+              {/* Image Upload — inline for both new and edit */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">
+                  Product Image {!editing && '*'}
+                </label>
 
-              {editing && (
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="w-full">
-                      Update Product Image
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 hover:scrollbar-thumb-slate-400">
-                    <DialogHeader>
-                      <DialogTitle>Update Product Image</DialogTitle>
-                    </DialogHeader>
-                    <ImageUpload
-                      key={uploadKey}
-                      onImageSelect={(file) => setSelectedFile(file)}
-                      disabled={isUploadingImage}
-                      label="Upload New Product Image"
+                {/* Current image preview (edit mode, no new file selected) */}
+                {editing && !selectedFile && editing.image_url && (
+                  <div className="mb-3 relative rounded-lg overflow-hidden border border-muted bg-muted">
+                    <img
+                      src={editing.image_url}
+                      alt={editing.name}
+                      className="w-full h-48 object-contain"
                     />
-                  </DialogContent>
-                </Dialog>
-              )}
+                    <Badge className="absolute top-2 left-2 bg-background/80 text-foreground text-xs">
+                      Current Image
+                    </Badge>
+                  </div>
+                )}
+
+                <ImageUpload
+                  key={uploadKey}
+                  onImageSelect={(file) => setSelectedFile(file)}
+                  disabled={isUploadingImage}
+                  label={editing ? 'Upload New Product Image' : 'Upload Product Image'}
+                />
+
+                {editing && selectedFile && (
+                  <p className="text-xs text-green-600 mt-1 font-medium">
+                    ✓ New image selected — will be updated on save
+                  </p>
+                )}
+              </div>
 
               {/* Product Name */}
               <div>
