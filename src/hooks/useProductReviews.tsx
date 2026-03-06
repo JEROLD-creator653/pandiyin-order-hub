@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from './use-toast';
+import { clearAllCache } from '@/lib/cacheService';
 
 interface Review {
   id: string;
@@ -247,6 +248,27 @@ export function useProductReviews({
         description: reviewData.reviewId ? 'Review updated successfully' : 'Review submitted successfully'
       });
 
+      // Manually update product's average_rating and review_count
+      // (in case DB trigger is missing or not firing)
+      const { data: reviewAgg } = await (supabase as any)
+        .from('product_reviews')
+        .select('rating')
+        .eq('product_id', productId);
+
+      if (reviewAgg && reviewAgg.length > 0) {
+        const avg = reviewAgg.reduce((sum: number, r: any) => sum + r.rating, 0) / reviewAgg.length;
+        await (supabase as any)
+          .from('products')
+          .update({
+            average_rating: Math.round(avg * 100) / 100,
+            review_count: reviewAgg.length
+          })
+          .eq('id', productId);
+      }
+
+      // Invalidate product cache so rating badges update on product cards
+      await clearAllCache();
+
       // Refresh reviews and stats
       await fetchStats();
       await fetchReviews(0, false);
@@ -286,6 +308,28 @@ export function useProductReviews({
         title: 'Success',
         description: 'Review deleted successfully'
       });
+
+      // Manually update product's average_rating and review_count
+      const { data: reviewAgg } = await (supabase as any)
+        .from('product_reviews')
+        .select('rating')
+        .eq('product_id', productId);
+
+      if (reviewAgg) {
+        const avg = reviewAgg.length > 0
+          ? reviewAgg.reduce((sum: number, r: any) => sum + r.rating, 0) / reviewAgg.length
+          : 0;
+        await (supabase as any)
+          .from('products')
+          .update({
+            average_rating: Math.round(avg * 100) / 100,
+            review_count: reviewAgg.length
+          })
+          .eq('id', productId);
+      }
+
+      // Invalidate product cache so rating badges update on product cards
+      await clearAllCache();
 
       // Refresh reviews and stats
       await fetchStats();
