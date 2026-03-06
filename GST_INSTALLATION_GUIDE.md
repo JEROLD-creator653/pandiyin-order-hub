@@ -17,7 +17,7 @@ supabase migrations deploy
 - ✅ Extended products, order_items, orders tables
 
 ### Step 3: Configure GST Settings
-1. Login as admin
+1. Login as admi
 2. Navigate to `/admin/gst-settings` (**route needs to be added to navigation**)
 3. Fill in:
    - Business Name: "Pandiyin Organic"
