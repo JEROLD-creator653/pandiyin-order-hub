@@ -126,7 +126,7 @@ export default function ProductDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-8">
+    <div className="min-h-screen bg-background pt-24 pb-[100px] md:pb-8">
       {/* Back Button */}
       <div className="container mx-auto px-4 mb-8">
         <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
@@ -207,7 +207,7 @@ export default function ProductDetail() {
             )}
 
             {/* Quantity & Add to Cart Section */}
-            <div className="space-y-4 mb-8">
+            <div className="hidden md:block space-y-4 mb-8">
               {product.stock_quantity > 0 ? (
                 <>
                   <div className="flex items-center gap-4">
@@ -370,6 +370,42 @@ export default function ProductDetail() {
         description="Are you sure you want to delete this review? This action cannot be undone."
         onConfirm={confirmDeleteReview}
       />
+
+      {/* ===== MOBILE STICKY PURCHASE BAR ===== */}
+      {product.stock_quantity > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-[0_-2px_10px_rgba(0,0,0,0.08)] px-4 py-3 md:hidden">
+          <div className="flex items-center gap-3">
+            {/* Add to Cart / Go to Cart */}
+            {((cartItems || []).some(i => i.product_id === product.id) || adding) ? (
+              <Button
+                className="flex-1 h-11 rounded-full font-semibold text-sm bg-primary text-primary-foreground"
+                onClick={() => navigate('/cart')}
+              >
+                <ShoppingCart className="mr-1.5 h-4 w-4" /> Go to Cart
+              </Button>
+            ) : (
+              <Button
+                className="flex-1 h-11 rounded-full font-semibold text-sm"
+                onClick={handleAddToCart}
+              >
+                <ShoppingCart className="mr-1.5 h-4 w-4" /> Add to Cart
+              </Button>
+            )}
+
+            {/* Buy Now */}
+            <Button
+              variant="outline"
+              className="flex-1 h-11 rounded-full font-semibold text-sm"
+              onClick={() => {
+                handleAddToCart();
+                navigate('/cart');
+              }}
+            >
+              Buy Now
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
