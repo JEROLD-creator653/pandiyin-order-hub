@@ -87,18 +87,16 @@ export default function Auth() {
     try {
       const { error } = await signInWithGoogle();
       if (error) throw error;
-      
-      // If successful, user will be redirected to Google OAuth consent screen
-      // Then redirected back to /auth/callback
+      // Popup closed — session picked up by onAuthStateChange → user state updates → auto-redirect
     } catch (err: any) {
       toast({
         title: "Error",
         description: err.message || "Failed to sign in with Google",
         variant: "destructive",
       });
+    } finally {
       setGoogleLoading(false);
     }
-    // Don't set googleLoading to false on success - user is being redirected
   };
 
   const toggleMode = () => {
@@ -344,7 +342,7 @@ export default function Auth() {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
                       </svg>
-                      Redirecting...
+                      Signing in...
                     </span>
                   ) : (
                     <span className="flex items-center justify-center gap-3">

@@ -19,10 +19,11 @@ export function setupPerformanceOptimizations() {
     document.head.appendChild(link);
   });
 
-  // Preconnect to Supabase
+  // Preconnect to Supabase (actual project URL for storage/API)
   const preconnect = document.createElement('link');
   preconnect.rel = 'preconnect';
-  preconnect.href = 'https://supabase.co';
+  preconnect.href = 'https://adgihdeigquuoozmvfai.supabase.co';
+  preconnect.crossOrigin = 'anonymous';
   document.head.appendChild(preconnect);
 
   // Prefetch probable next routes

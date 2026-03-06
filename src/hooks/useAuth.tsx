@@ -151,13 +151,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    return { error };
+    // Open popup SYNCHRONOUSLY to preserve the user-click gesture (avoids popup blocker)
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+    const popup = window.open(
+      'about:blank',
+      'google-auth-popup',
+      `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,scrollbars=yes,resizable=yes`
+    );
+
+    if (!popup) {
+      // Fallback to redirect if popup still blocked
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      return { error };
+    }
+
+    try {
+      // Now fetch OAuth URL (async is fine — popup is already open)
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error || !data?.url) {
+        popup.close();
+        return { error: error || new Error('Failed to get Google sign-in URL') };
+      }
+
+      // Navigate the already-open popup to Google
+      popup.location.href = data.url;
+
+      // Wait for popup to close (session is picked up by onAuthStateChange)
+      return new Promise<{ error: any }>((resolve) => {
+        const timer = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(timer);
+            resolve({ error: null });
+          }
+        }, 500);
+      });
+    } catch (err) {
+      popup.close();
+      return { error: err };
+    }
   };
 
   const signUpWithPhone = async (phone: string, fullName: string) => {

@@ -53,26 +53,53 @@ export default function Index() {
     refetchOnWindowFocus: false,
   });
 
-  // Preload hero banner AFTER banners are fetched from React Query
-  // This forces browser to load the hero banner immediately via CDN
-  // Happens BEFORE rendering, so image loads in parallel with component render
+  const handleImageLoad = useCallback((bannerId: string) => {
+    setLoadedImages(prev => ({ ...prev, [bannerId]: true }));
+  }, []);
+
+  // Cache hero banner URL in localStorage for instant preloading on next visit
+  // Also injects a <link rel="preload"> for the current session
   useEffect(() => {
     if (!banners || banners.length === 0) return;
     
     const heroBanner = banners[0];
     if (!heroBanner.image_url) return;
 
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'image';
-    link.href = heroBanner.image_url;
-    link.type = 'image/webp';
-    document.head.appendChild(link);
+    // Cache URL so index.html inline script can preload it on next visit
+    try {
+      const cachedUrl = localStorage.getItem('hero_banner_url');
+      if (cachedUrl !== heroBanner.image_url) {
+        localStorage.setItem('hero_banner_url', heroBanner.image_url);
+      }
+    } catch (e) {
+      // localStorage may not be available
+    }
 
-    return () => {
-      document.head.removeChild(link);
-    };
+    // For current session: inject preload link if not already preloaded via cache
+    const existingPreload = document.querySelector(`link[rel="preload"][href="${heroBanner.image_url}"]`);
+    if (!existingPreload) {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = heroBanner.image_url;
+      link.type = 'image/webp';
+      document.head.appendChild(link);
+
+      return () => {
+        document.head.removeChild(link);
+      };
+    }
   }, [banners]);
+
+  // Check if hero banner was pre-loaded via main.tsx cache strategy
+  // If so, mark it as loaded immediately to skip skeleton
+  useEffect(() => {
+    if (!banners || banners.length === 0) return;
+    const preloadedImg = (window as any).__heroBannerPreloaded as HTMLImageElement | undefined;
+    if (preloadedImg && preloadedImg.complete && preloadedImg.src === banners[0].image_url) {
+      handleImageLoad(banners[0].id);
+    }
+  }, [banners, handleImageLoad]);
 
   // Fetch featured products (OPTIMIZED: Non-blocking, loads in background)
   // OLD: This blocked page render until ALL featured products loaded
@@ -81,8 +108,8 @@ export default function Index() {
   const [featuredLoading, setFeaturedLoading] = useState(true);
   
   useEffect(() => {
-    // Start loading featured products WITHOUT blocking render
-    // They'll appear shortly as data arrives
+    // Defer featured products loading to prioritize hero banner
+    // Uses requestIdleCallback (or 150ms fallback) so banner gets network priority
     const loadFeatured = async () => {
       try {
         setFeaturedLoading(true);
@@ -103,7 +130,12 @@ export default function Index() {
       }
     };
 
-    loadFeatured();
+    // Defer: let hero banner load first
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(() => loadFeatured(), { timeout: 300 });
+    } else {
+      setTimeout(loadFeatured, 150);
+    }
   }, []);
 
   // Favicon setup
@@ -141,10 +173,6 @@ export default function Index() {
       });
     }, 600);
   };
-
-  const handleImageLoad = useCallback((bannerId: string) => {
-    setLoadedImages(prev => ({ ...prev, [bannerId]: true }));
-  }, []);
 
   // Auto-rotate banners every 5 seconds
   useEffect(() => {
@@ -234,7 +262,7 @@ export default function Index() {
     <>
       {/* Professional Banner Carousel - Hero Banner */}
       {banners.length > 0 ? (
-        <section className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden group pt-16 md:pt-0">
+        <section className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden group pt-16 lg:pt-0" style={{ containIntrinsicSize: '100vw 500px', contentVisibility: 'visible' }}>
           <div
             className="relative w-full h-full touch-pan-y select-none cursor-grab active:cursor-grabbing"
             onTouchStart={handleTouchStart}
@@ -334,6 +362,11 @@ export default function Index() {
               </div>
             )}
           </div>
+        </section>
+      ) : bannersLoading ? (
+        /* Fixed-height skeleton placeholder prevents layout shift while banners load */
+        <section className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden pt-16 lg:pt-0">
+          <Skeleton className="absolute inset-0 w-full h-full" />
         </section>
       ) : null}
 
