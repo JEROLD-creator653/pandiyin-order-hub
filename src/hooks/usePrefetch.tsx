@@ -66,6 +66,9 @@ export function usePrefetchCategories() {
           .from('categories')
           .select('*')
           .eq('is_active', true)
+  const { data, error } = await (supabase as any)
+          .from('categories')
+          .select('*')
           .order('name', { ascending: true });
 
         if (error) throw error;

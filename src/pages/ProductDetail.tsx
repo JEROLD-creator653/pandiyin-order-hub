@@ -125,13 +125,6 @@ export default function ProductDetail() {
     <Loader text="Loading product details..." className="min-h-[60vh]" delay={200} />
   );
 
-  if (!product) return (
-    <div className="container mx-auto px-4 py-20 text-center">
-      <p className="text-muted-foreground">Product not found.</p>
-      <Button variant="outline" className="mt-4" onClick={() => navigate('/products')}>Back to Products</Button>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-background pt-24 pb-8">
       {/* Back Button */}

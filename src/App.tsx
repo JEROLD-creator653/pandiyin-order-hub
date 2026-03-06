@@ -44,15 +44,16 @@ import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminSettings from "./pages/admin/AdminSettings";
 
-// Optimized React Query client configuration
+// React Query client — ensures fresh data on navigation
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes - data stays fresh for 5 minutes
-      gcTime: 1000 * 60 * 10, // 10 minutes - cached data removed after 10 minutes
-      retry: 1, // Retry failed queries once
-      refetchOnWindowFocus: false, // Don't refetch when window regains focus
-      refetchOnMount: false, // Don't refetch when component mounts if data exists
+      staleTime: 1000 * 60 * 2, // 2 minutes — data considered fresh
+      gcTime: 1000 * 60 * 10, // 10 minutes — cached data removed after 10 minutes
+      retry: 2, // Retry failed queries twice
+      refetchOnWindowFocus: true, // Refetch stale queries when window regains focus
+      refetchOnMount: true, // Always refetch when component mounts if data is stale
+      refetchOnReconnect: true, // Refetch when network reconnects
     },
     mutations: {
       retry: 1,
