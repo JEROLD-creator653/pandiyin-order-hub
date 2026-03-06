@@ -384,8 +384,8 @@ export default function Products() {
                     {p.weight && <p className="text-xs text-muted-foreground mb-1">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
                     {Number(p.average_rating) > 0 && (
                       <div className="flex items-center gap-1.5 mb-2">
-                        <span className="inline-flex items-center gap-0.5 bg-primary/10 text-primary text-xs font-semibold px-1.5 py-0.5 rounded">
-                          {Number(p.average_rating).toFixed(1)} <Star className="h-2.5 w-2.5 fill-current" />
+                        <span className="inline-flex items-center gap-0.5 bg-primary/10 text-primary text-sm sm:text-xs font-semibold px-2 sm:px-1.5 py-0.5 rounded">
+                          {Number(p.average_rating).toFixed(1)} <Star className="h-3 w-3 sm:h-2.5 sm:w-2.5 fill-current" />
                         </span>
                         {p.review_count > 0 && <span className="text-[10px] text-muted-foreground">({p.review_count})</span>}
                       </div>
@@ -396,15 +396,15 @@ export default function Products() {
                       return (
                         <div className="space-y-1">
                           <div className="flex items-baseline justify-between gap-1.5">
-                            <span className="font-semibold text-base sm:text-lg text-primary leading-none">{formatPrice(p.price)}</span>
+                            <span className="font-semibold text-lg sm:text-lg text-primary leading-none">{formatPrice(p.price)}</span>
                             {pricing.hasDiscount && (
-                              <Badge className="bg-green-100 hover:bg-green-100 text-green-800 text-[10px] sm:text-xs font-bold border-0 px-1.5 sm:px-2 py-0.5 flex-shrink-0 whitespace-nowrap">
+                              <Badge className="bg-green-100 hover:bg-green-100 text-green-800 text-xs sm:text-xs font-bold border-0 px-2 sm:px-2 py-0.5 flex-shrink-0 whitespace-nowrap">
                                 {pricing.discountPercent}% OFF
                               </Badge>
                             )}
                           </div>
                           {pricing.hasDiscount && (
-                            <span className="text-xs sm:text-sm text-muted-foreground line-through leading-none">{formatPrice(pricing.comparePrice)}</span>
+                            <span className="text-sm sm:text-sm text-muted-foreground line-through leading-none">{formatPrice(pricing.comparePrice)}</span>
                           )}
                         </div>
                       );

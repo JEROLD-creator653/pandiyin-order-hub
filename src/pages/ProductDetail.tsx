@@ -206,17 +206,8 @@ export default function ProductDetail() {
               <p className="text-sm text-muted-foreground mb-6">{product.weight} {product.unit}</p>
             )}
 
-            {/* Product Description - With Smooth Read More */}
-            <div className="mb-8 flex-grow">
-              <ProductDescriptionCollapsible
-                key={product.id}
-                content={product.description}
-                imageHeight={400}
-              />
-            </div>
-
             {/* Quantity & Add to Cart Section */}
-            <div className="space-y-4">
+            <div className="space-y-4 mb-8">
               {product.stock_quantity > 0 ? (
                 <>
                   <div className="flex items-center gap-4">
@@ -280,6 +271,15 @@ export default function ProductDetail() {
               ) : (
                 <Badge variant="destructive" className="text-base px-4 py-2 w-fit">Out of Stock</Badge>
               )}
+            </div>
+
+            {/* Product Description - With Smooth Read More */}
+            <div className="flex-grow">
+              <ProductDescriptionCollapsible
+                key={product.id}
+                content={product.description}
+                imageHeight={400}
+              />
             </div>
           </div>
         </div>
