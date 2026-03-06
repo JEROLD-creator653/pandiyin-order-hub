@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -55,6 +55,50 @@ export default function Products() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [maxPrice, setMaxPrice] = useState(5000);
   const [searchInput, setSearchInput] = useState('');
+  const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [isLoadingSearchSuggestions, setIsLoadingSearchSuggestions] = useState(false);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Live search suggestions for mobile search bar
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+
+    if (searchInput.trim().length >= 2) {
+      setIsLoadingSearchSuggestions(true);
+      searchDebounceRef.current = setTimeout(async () => {
+        const { data } = await supabase
+          .from('products')
+          .select('id, name, price, compare_price, image_url, categories(name)')
+          .eq('is_available', true)
+          .ilike('name', `%${searchInput.trim()}%`)
+          .limit(6);
+        setSearchSuggestions(data || []);
+        setIsLoadingSearchSuggestions(false);
+        setShowSearchSuggestions(true);
+      }, 200);
+    } else {
+      setSearchSuggestions([]);
+      setShowSearchSuggestions(false);
+      setIsLoadingSearchSuggestions(false);
+    }
+
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchInput]);
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setShowSearchSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleAddToCart = async (productId: string) => {
     setAddingItems(prev => new Set(prev).add(productId));
@@ -208,10 +252,82 @@ export default function Products() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <h1 className="text-3xl font-display font-bold">All Products</h1>
-        <form onSubmit={e => { e.preventDefault(); setSearchParams(s => { if (searchInput) s.set('search', searchInput); else s.delete('search'); return s; }); }} className="relative max-w-sm w-full md:hidden">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search products..." value={searchInput} onChange={e => setSearchInput(e.target.value)} className="pl-9" />
-        </form>
+        <div ref={searchContainerRef} className="relative max-w-sm w-full md:hidden">
+          <form onSubmit={e => { e.preventDefault(); setShowSearchSuggestions(false); setSearchParams(s => { if (searchInput) s.set('search', searchInput); else s.delete('search'); return s; }); }}>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+            <Input
+              placeholder="Search products..."
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              onFocus={() => searchInput.trim().length >= 2 && setShowSearchSuggestions(true)}
+              className="pl-9 pr-9 h-10 rounded-full bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/30"
+              autoComplete="off"
+            />
+            {searchInput && (
+              <button
+                type="button"
+                onClick={() => { setSearchInput(''); setShowSearchSuggestions(false); setSearchParams(s => { s.delete('search'); return s; }); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-10"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </form>
+
+          {/* Suggestions dropdown */}
+          <AnimatePresence>
+            {showSearchSuggestions && searchInput.trim().length >= 2 && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15 }}
+                className="absolute top-full mt-2 left-0 right-0 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden z-50 max-h-[320px] overflow-y-auto"
+              >
+                {isLoadingSearchSuggestions ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">Searching...</div>
+                ) : searchSuggestions.length > 0 ? (
+                  <>
+                    {searchSuggestions.map((product) => (
+                      <button
+                        key={product.id}
+                        type="button"
+                        onClick={() => { setShowSearchSuggestions(false); navigate(`/products/${product.id}`); }}
+                        className="w-full p-3 flex items-center gap-3 hover:bg-slate-50 transition-colors text-left border-b border-gray-100 last:border-0"
+                      >
+                        <div className="w-10 h-10 rounded-md bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
+                          {product.image_url ? (
+                            <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <Leaf className="h-4 w-4 text-muted-foreground/30" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-foreground truncate">{product.name}</p>
+                          {product.categories?.name && (
+                            <p className="text-[10px] text-muted-foreground truncate">{product.categories.name}</p>
+                          )}
+                        </div>
+                        <span className="text-xs font-semibold text-foreground flex-shrink-0">
+                          {formatPrice(product.price)}
+                        </span>
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => { setShowSearchSuggestions(false); setSearchParams(s => { if (searchInput) s.set('search', searchInput); else s.delete('search'); return s; }); }}
+                      className="w-full p-3 flex items-center justify-center gap-2 bg-slate-50 hover:bg-slate-100 transition-colors text-primary border-t border-gray-200 font-medium text-xs"
+                    >
+                      View all results
+                    </button>
+                  </>
+                ) : (
+                  <div className="p-4 text-center text-sm text-muted-foreground">No products found</div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Toolbar: Sort + Filter */}

@@ -48,70 +48,48 @@ export function CartReminderPopup({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.3 }}
-      className="fixed top-20 right-6 z-50 max-w-md"
+      className="fixed z-50 md:top-20 md:right-6 md:max-w-md md:left-auto md:bottom-auto md:translate-x-0 bottom-20 left-3 right-3"
     >
-      <div className="bg-white rounded-lg shadow-2xl border border-gray-100 overflow-hidden">
-        {/* Header with close button */}
-        <div className="bg-gradient-to-r from-primary/5 to-secondary/5 px-6 py-4 flex items-start justify-between">
-          <div className="flex items-center gap-3 flex-1">
-            <div className="bg-primary/10 rounded-full p-2">
-              <ShoppingCart className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-foreground text-sm">
-                Cart Reminder
-              </h3>
-            </div>
+      <div className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden">
+        {/* Compact layout */}
+        <div className="px-4 py-3 md:px-6 md:py-4 flex items-center gap-3">
+          <div className="bg-primary/10 rounded-full p-2 flex-shrink-0">
+            <ShoppingCart className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">Cart Reminder</p>
+            <p className="text-xs text-muted-foreground truncate mt-0.5">{message}</p>
           </div>
           <button
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors p-1"
+            className="text-muted-foreground hover:text-foreground transition-colors p-1 flex-shrink-0"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Message content */}
-        <div className="px-6 py-4">
-          <p className="text-foreground text-base leading-relaxed font-medium mb-4">
-            {message}
-          </p>
-
-          {/* Action buttons */}
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onClose}
-              className="flex-1"
-            >
-              Later
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleCheckout}
-              className="flex-1 bg-primary hover:bg-primary/90 text-white"
-            >
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Checkout
-              <ArrowRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
+        {/* Action buttons */}
+        <div className="flex gap-2 px-4 pb-3 md:px-6 md:pb-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+            className="flex-1 h-8 text-xs md:text-sm rounded-full"
+          >
+            Later
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleCheckout}
+            className="flex-1 h-8 text-xs md:text-sm bg-primary hover:bg-primary/90 text-white rounded-full"
+          >
+            <ShoppingCart className="h-3.5 w-3.5 mr-1.5" />
+            Checkout
+            <ArrowRight className="h-3.5 w-3.5 ml-1" />
+          </Button>
         </div>
-
-        {/* Progress indicator */}
-        <div className="h-1 bg-gradient-to-r from-primary to-secondary opacity-20" />
       </div>
-
-      {/* Optional backdrop */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 -z-10 bg-black/5"
-      />
     </motion.div>
   );
 }
