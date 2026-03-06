@@ -19,12 +19,16 @@
     <link rel="preconnect" href="https://adgihdeigquuoozmvfai.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://adgihdeigquuoozmvfai.supabase.co" />
 
+    <!-- Preload login background for instant render -->
+    <link rel="preload" as="image" href="/auth-bg.webp" type="image/webp" />
+
     <!-- Inline script: preload cached hero banner before React loads -->
     <script>
       (function() {
         try {
           var cached = localStorage.getItem('hero_banner_url');
           if (cached) {
+            // 1. Create <link rel="preload"> for maximum browser priority
             var link = document.createElement('link');
             link.rel = 'preload';
             link.as = 'image';
@@ -32,6 +36,27 @@
             link.type = 'image/webp';
             link.fetchPriority = 'high';
             document.head.appendChild(link);
+            
+            // 2. Start actual download via Image object (belt + suspenders)
+            var img = new window.Image();
+            img.src = cached;
+            window.__earlyHeroBanner = img;
+            
+            // 3. If we have cached banner data, render the image into the placeholder
+            var bannerData = localStorage.getItem('hero_banners_data');
+            if (bannerData) {
+              var banners = JSON.parse(bannerData);
+              if (banners && banners.length > 0 && banners[0].image_url) {
+                var placeholder = document.getElementById('static-hero-placeholder');
+                if (placeholder) {
+                  // Replace shimmer with actual cached banner image
+                  placeholder.style.backgroundImage = 'url(' + banners[0].image_url + ')';
+                  placeholder.style.backgroundSize = 'cover';
+                  placeholder.style.backgroundPosition = 'center';
+                  placeholder.style.animation = 'none';
+                }
+              }
+            }
           }
         } catch(e) {}
       })();

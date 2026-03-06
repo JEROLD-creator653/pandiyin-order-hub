@@ -1,3 +1,8 @@
+// Contact info placeholders — replaced at render time by PolicyLayout using store_settings
+const EMAIL = '{{EMAIL}}';
+const PHONE = '{{PHONE}}';
+const ADDRESS = '{{ADDRESS}}';
+
 export const privacyPolicy = {
   title: "Privacy Policy",
   lastUpdated: "February 15, 2026",
@@ -10,9 +15,9 @@ By using our Website, you agree to the terms of this Privacy Policy.
 
 1. Business Information
 Business Name: Pandiyin Nature In Pack
-Email: pandiyinnatureinpack@gmail.com
-Phone: 6383709933
-Address: 802, VPM House, Mandhaikaliamman Kovil Street, Krishnapuram Road, M. Kallupatti, Madurai District, 625535, Tamil Nadu, India
+Email: ${EMAIL}
+Phone: ${PHONE}
+Address: ${ADDRESS}
 
 2. Information We Collect
 We collect personal information when you create an account, place an order, contact us, or browse our Website.
@@ -108,7 +113,7 @@ You have the right to:
 • Withdraw consent for marketing communication (if applicable)
 
 To request any of these, contact us at:
-pandiyinnatureinpack@gmail.com
+${EMAIL}
 
 10. Marketing Messages
 Currently, we do not send promotional marketing messages.
@@ -126,9 +131,9 @@ We may update this Privacy Policy at any time. Updates will be posted on this pa
 14. Contact Us
 If you have any questions regarding this Privacy Policy, contact us:
 
-Email: pandiyinnatureinpack@gmail.com
-Phone: 6383709933
-Address: 802, VPM House, Mandhaikaliamman Kovil Street, Krishnapuram Road, M. Kallupatti, Madurai District, 625535, Tamil Nadu, India`,
+Email: ${EMAIL}
+Phone: ${PHONE}
+Address: ${ADDRESS}`,
 };
 
 export const termsOfService = {
@@ -230,10 +235,10 @@ Continued use of the Site after changes means you accept the revised Terms.
 14. Contact Information
 For any questions about these Terms of Service, you may contact us:
 
-Email: pandiyinnatureinpack@gmail.com
-Phone: 6383709933
+Email: ${EMAIL}
+Phone: ${PHONE}
 Instagram: @pandiyin_nature_in_pack
-Address: 802, VPM House, Mandhaikaliamman Kovil Street, Krishnapuram Road, M. Kallupatti, Madurai District, 625535, Tamil Nadu, India`,
+Address: ${ADDRESS}`,
 };
 
 export const returnRefundPolicy = {
@@ -297,19 +302,14 @@ To request a return, replacement, or refund, contact us with:
 • Unboxing video or clear photos
 
 Contact Details:
-Email: pandiyinnatureinpack@gmail.com
-Phone: 6383709933
+Email: ${EMAIL}
+Phone: ${PHONE}
 Instagram: @pandiyin_nature_in_pack
 
 8. Return Address
 If your return is approved, the product must be returned to:
 
-802, VPM House,
-Mandhaikaliamman Kovil Street,
-Krishnapuram Road,
-M. Kallupatti,
-Madurai District - 625535,
-Tamil Nadu, India
+${ADDRESS}
 
 9. Policy Updates
 Pandiyin Nature In Pack reserves the right to update this Return & Refund Policy at any time without prior notice. Updated policies will be posted on this page.
@@ -401,10 +401,10 @@ Customers are responsible for providing correct delivery information during chec
 10. Contact Us
 For shipping, cancellation, refund, or delivery support, contact us:
 
-Email: pandiyinnatureinpack@gmail.com
-Phone: 6383709933
+Email: ${EMAIL}
+Phone: ${PHONE}
 Instagram: @pandiyin_nature_in_pack
-Address: 802, VPM House, Mandhaikaliamman Kovil Street, Krishnapuram Road, M. Kallupatti, Madurai District, 625535, Tamil Nadu, India`,
+Address: ${ADDRESS}`,
 };
 
 export const cancellationPolicy = {
@@ -422,10 +422,10 @@ Orders may take longer during peak seasons, festivals, or due to unexpected circ
 Orders can be cancelled only before shipping.
 
 To cancel an order, customers must contact us as soon as possible through:
-• Email: pandiyinnatureinpack@gmail.com
+• Email: ${EMAIL}
 • WhatsApp
 • Instagram
-• Phone: 6383709933
+• Phone: ${PHONE}
 
 3. Cancellation Process
 Once you've submitted a cancellation request:
@@ -452,17 +452,12 @@ If your payment fails during the order process, the order will be automatically 
 8. Contact Support
 For cancellation requests or inquiries, contact us:
 
-Email: pandiyinnatureinpack@gmail.com
-Phone: 6383709933
+Email: ${EMAIL}
+Phone: ${PHONE}
 Instagram: @pandiyin_nature_in_pack
 
 We will respond to your cancellation request within 24 hours.
 
 Our Address:
-802, VPM House,
-Mandhaikaliamman Kovil Street,
-Krishnapuram Road,
-M. Kallupatti,
-Madurai District - 625535,
-Tamil Nadu, India`,
+${ADDRESS}`,
 };

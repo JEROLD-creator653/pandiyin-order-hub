@@ -251,7 +251,7 @@ export default function OrderConfirmation() {
                 </a>
               </p>
               <p className="text-muted-foreground">
-                Email: pandiyinnatureinpack@gmail.com | Phone: 6383709933
+                Email: {store?.email || '—'} | Phone: {store?.phone || '—'}
               </p>
               <p className="text-muted-foreground">
                 Review our complete{" "}

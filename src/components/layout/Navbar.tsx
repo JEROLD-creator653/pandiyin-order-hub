@@ -510,13 +510,6 @@ export default function Navbar() {
                 ref={mobileSearchRef}
                 className="relative flex items-center gap-2 w-full"
               >
-                <button
-                  type="button"
-                  onClick={() => setMobileSearchOpen(false)}
-                  className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-secondary transition-colors flex-shrink-0"
-                >
-                  <X className="h-5 w-5 text-foreground" />
-                </button>
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -527,19 +520,23 @@ export default function Navbar() {
                     onFocus={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
                     onClick={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
                     onKeyDown={(e) => e.key === 'Escape' && setMobileSearchOpen(false)}
-                    className="pl-9 h-10 rounded-full bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/30"
+                    className="pl-9 pr-9 h-10 rounded-full bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/30"
                     autoComplete="off"
                   />
-                </div>
-                {searchQuery && (
                   <button
                     type="button"
-                    className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 p-1"
-                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    onClick={() => {
+                      if (searchQuery) {
+                        setSearchQuery('');
+                      } else {
+                        setMobileSearchOpen(false);
+                      }
+                    }}
                   >
                     <X className="h-4 w-4" />
                   </button>
-                )}
+                </div>
               </form>
               {/* Suggestions below the search bar */}
               <div className="absolute top-full left-0 right-0 px-3">

@@ -8,12 +8,14 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function AdminSettings() {
   const [store, setStore] = useState({ store_name: '', phone: '', whatsapp: '', email: '', address: '', gst_enabled: false, gst_number: '' });
   const [storeId, setStoreId] = useState('');
   const [regions, setRegions] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     supabase.from('store_settings').select('*').limit(1).maybeSingle().then(({ data }) => {
@@ -40,8 +42,7 @@ export default function AdminSettings() {
 
   const saveStore = async () => {
     setSaving(true);
-    await supabase.from('store_settings').update({
-      store_name: store.store_name,
+    const { error } = await supabase.from('store_settings').update({
       phone: store.phone,
       whatsapp: store.whatsapp,
       email: store.email,
@@ -49,7 +50,15 @@ export default function AdminSettings() {
       gst_enabled: store.gst_enabled,
       gst_number: store.gst_number,
     } as any).eq('id', storeId);
-    toast({ title: 'Store settings saved' });
+
+    if (error) {
+      toast({ title: 'Failed to save settings', description: error.message, variant: 'destructive' });
+    } else {
+      // Invalidate the shared store_settings cache so Footer, WhatsApp button,
+      // PolicyLayout, etc. pick up the new values immediately
+      await queryClient.invalidateQueries({ queryKey: ['store_settings'] });
+      toast({ title: 'Store settings saved' });
+    }
     setSaving(false);
   };
 
@@ -82,7 +91,7 @@ export default function AdminSettings() {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>Store Name</Label>
-            <Input value={store.store_name} onChange={e => setStore(s => ({ ...s, store_name: e.target.value }))} />
+            <Input value={store.store_name} disabled className="bg-muted cursor-not-allowed" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2"><Label>Phone</Label><Input value={store.phone} onChange={e => setStore(s => ({ ...s, phone: e.target.value }))} /></div>

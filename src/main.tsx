@@ -5,14 +5,21 @@ import "./global-animations.css";
 import { setupPerformanceOptimizations, trackWebVitals } from "./lib/performance";
 
 // Preload hero banner from cache BEFORE React renders
-// This starts the image download as early as possible
+// If the index.html inline script already started the download, reuse that.
+// Otherwise, start a new download from localStorage cache.
 (function preloadHeroBanner() {
   try {
+    // Check if index.html already started the download
+    const earlyImg = (window as any).__earlyHeroBanner as HTMLImageElement | undefined;
+    if (earlyImg) {
+      (window as any).__heroBannerPreloaded = earlyImg;
+      return;
+    }
+    
     const cachedUrl = localStorage.getItem('hero_banner_url');
     if (cachedUrl) {
       const img = new Image();
       img.src = cachedUrl;
-      // Store on window so React can check if it's already loaded
       (window as any).__heroBannerPreloaded = img;
     }
   } catch (e) {

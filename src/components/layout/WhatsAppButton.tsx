@@ -1,9 +1,18 @@
 import { FaWhatsapp } from "react-icons/fa";
+import { useStoreSettings } from "@/hooks/useStoreSettings";
 
 export default function WhatsAppButton() {
+  const { data: store } = useStoreSettings();
+
+  // Strip non-digit chars from the stored number; fall back to empty so the
+  // button simply opens wa.me if the setting hasn't loaded yet.
+  const phone = store?.whatsapp?.replace(/\D/g, '') || '';
+
+  if (!phone) return null; // Don't render until we know the number
+
   return (
     <a
-      href="https://wa.me/916383709933?text=Hi%20PANDIYIN!%20I%20have%20a%20query."
+      href={`https://wa.me/${phone}?text=Hi%20PANDIYIN!%20I%20have%20a%20query.`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat on WhatsApp"

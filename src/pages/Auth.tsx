@@ -107,16 +107,17 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-[#C9E3A8]">
-      {/* Background Image */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-white/20 z-10" />
-        <img 
-          src="/auth-bg.png" 
-          alt="Background" 
-          className="w-full h-full object-cover opacity-11"
-        />
-      </div>
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+      style={{
+        backgroundImage: 'url(/auth-bg.webp)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      {/* Semi-transparent overlay */}
+      <div className="absolute inset-0 bg-white/20 z-0" />
 
       {/* Animated Blur Orbs */}
       <div className="absolute inset-0 overflow-hidden">
