@@ -144,30 +144,20 @@ export default function Products() {
     
     const loadProducts = async () => {
       try {
-        // Use cache service to avoid refetching same products
-        const cacheKey = `products:${searchFilter}`;
+        let query = supabase
+          .from('products')
+          .select('*, categories(name)')
+          .eq('is_available', true);
         
-        const data = await getCachedData(
-          cacheKey,
-          async () => {
-            let query = supabase
-              .from('products')
-              .select('*, categories(name)')
-              .eq('is_available', true);
-            
-            if (searchFilter) {
-              query = query.ilike('name', `%${searchFilter}%`);
-            }
-            
-            const { data, error } = await query.order('created_at', { 
-              ascending: false 
-            });
-            
-            if (error) throw error;
-            return data || [];
-          },
-          60 * 60 * 1000 // Cache for 1 hour
-        );
+        if (searchFilter) {
+          query = query.ilike('name', `%${searchFilter}%`);
+        }
+        
+        const { data, error } = await query.order('created_at', { 
+          ascending: false 
+        });
+        
+        if (error) throw error;
         
         // CRITICAL: End loading screen as soon as products are ready
         // This is the early exit - don't wait for sorting/filtering

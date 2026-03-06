@@ -29,9 +29,10 @@ export default function Navbar() {
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [profileExpanded, setProfileExpanded] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [profileName, setProfileName] = useState<string | null>(null);
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const { user, isAdmin, signOut } = useAuth();
   const { itemCount } = useCart();
   const navigate = useNavigate();
@@ -42,6 +43,19 @@ export default function Navbar() {
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>();
   
   const isHomePage = location.pathname === '/';
+
+  // Fetch profile name for mobile menu
+  useEffect(() => {
+    if (!user) { setProfileName(null); return; }
+    supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.full_name) setProfileName(data.full_name);
+      });
+  }, [user]);
 
   useEffect(() => {
     const urlSearchQuery = searchParams.get('search') || '';
@@ -242,30 +256,30 @@ export default function Navbar() {
                 {/* Account Section */}
                 <div className="border-b p-4">
                   {user ? (
-                    <div className="space-y-0">
+                    <div className="space-y-3">
                       <button
-                        onClick={() => setProfileExpanded(!profileExpanded)}
-                        className="flex items-center gap-3 w-full text-left py-1 rounded-lg hover:bg-secondary/50 transition-colors"
+                        className="flex items-center gap-3 w-full"
+                        onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
                       >
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                           <User className="h-5 w-5 text-primary" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold truncate">{user.email?.split('@')[0] || 'Profile'}</p>
+                        <div className="flex-1 min-w-0 text-left">
+                          <p className="text-sm font-semibold truncate">{profileName || user.email?.split('@')[0] || 'Profile'}</p>
                           <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                         </div>
-                        <ChevronDown className={`h-4 w-4 text-muted-foreground flex-shrink-0 transition-transform duration-200 ${profileExpanded ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${accountDropdownOpen ? 'rotate-180' : ''}`} />
                       </button>
-                      <AnimatePresence initial={false}>
-                        {profileExpanded && (
+                      <AnimatePresence>
+                        {accountDropdownOpen && (
                           <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2, ease: 'easeInOut' }}
+                            transition={{ duration: 0.2 }}
                             className="overflow-hidden"
                           >
-                            <div className="pt-3 space-y-2">
+                            <div className="space-y-2 pt-2">
                               <Button variant="outline" className="w-full rounded-full h-9 text-sm" onClick={() => { navigate('/profile'); setMobileOpen(false); }}>
                                 <UserCog className="mr-2 h-4 w-4" /> Profile
                               </Button>
@@ -332,8 +346,8 @@ export default function Navbar() {
           {/* Center: Logo */}
           <Link to="/" className="flex-1 flex justify-center mx-1 min-w-0">
             <div className="flex flex-col items-center leading-none">
-              <span className="text-base sm:text-lg font-display font-bold text-primary">PANDIYIN</span>
-              <span className="text-[9px] sm:text-[10px] tracking-[0.15em] text-muted-foreground font-medium -mt-0.5">Nature In Pack</span>
+              <span className="text-base sm:text-lg font-display font-bold text-primary truncate">PANDIYIN</span>
+              <span className="text-[8px] sm:text-[9px] text-muted-foreground tracking-wider">Nature In Pack</span>
             </div>
           </Link>
 
@@ -489,60 +503,53 @@ export default function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-40 md:hidden"
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-black/40 md:hidden"
             onClick={() => setMobileSearchOpen(false)}
           >
-            {/* Backdrop below header */}
-            <div className="absolute inset-0 top-16 bg-black/30" />
-
-            {/* Search bar sits inside the header area */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.97 }}
-              transition={{ duration: 0.2 }}
-              className="absolute top-0 left-0 right-0 h-16 bg-white flex items-center px-3 shadow-md"
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute top-0 left-0 right-0 bg-white pt-4 pb-5 shadow-xl rounded-b-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <form
-                onSubmit={e => { handleSearch(e); setMobileSearchOpen(false); }}
-                ref={mobileSearchRef}
-                className="relative flex items-center gap-2 w-full"
-              >
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    ref={mobileSearchInputRef}
-                    placeholder="Search products..."
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    onFocus={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
-                    onClick={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
-                    onKeyDown={(e) => e.key === 'Escape' && setMobileSearchOpen(false)}
-                    className="pl-9 pr-9 h-10 rounded-full bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/30"
-                    autoComplete="off"
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => {
-                      if (searchQuery) {
-                        setSearchQuery('');
-                      } else {
-                        setMobileSearchOpen(false);
-                      }
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              </form>
-              {/* Suggestions below the search bar */}
-              <div className="absolute top-full left-0 right-0 px-3">
-                <div className="relative">
+              <div className="mx-auto px-4">
+                <form onSubmit={e => { handleSearch(e); setMobileSearchOpen(false); }} ref={mobileSearchRef} className="relative space-y-2">
+                  <div className="relative flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2 ring-1 ring-gray-200 focus-within:ring-2 focus-within:ring-primary/40 transition-all">
+                    <Search className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <input
+                      ref={mobileSearchInputRef}
+                      placeholder="Search for products..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      onFocus={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
+                      onClick={() => searchQuery.trim().length >= 2 && setShowSuggestions(true)}
+                      onKeyDown={(e) => e.key === 'Escape' && setMobileSearchOpen(false)}
+                      className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none"
+                      autoComplete="off"
+                    />
+                    {searchQuery ? (
+                      <button
+                        type="button"
+                        className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                        onClick={() => setSearchQuery('')}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                        onClick={() => setMobileSearchOpen(false)}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                   <SuggestionsDropdown isMobile={true} />
-                </div>
+                </form>
               </div>
             </motion.div>
           </motion.div>

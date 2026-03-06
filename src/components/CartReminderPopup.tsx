@@ -48,10 +48,9 @@ export function CartReminderPopup({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 20 }}
       transition={{ duration: 0.3 }}
-      className="fixed z-50 md:top-20 md:right-6 md:max-w-md md:w-auto top-[72px] right-3 left-auto w-[280px]"
+      className="fixed top-20 right-4 z-50 w-[calc(100vw-2rem)] md:w-auto md:right-6 max-w-md"
     >
-      {/* ===== DESKTOP LAYOUT (original) ===== */}
-      <div className="hidden md:block bg-white rounded-lg shadow-2xl border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-2xl border border-gray-100 overflow-hidden">
         {/* Header with close button */}
         <div className="bg-gradient-to-r from-primary/5 to-secondary/5 px-6 py-4 flex items-start justify-between">
           <div className="flex items-center gap-3 flex-1">
@@ -59,7 +58,9 @@ export function CartReminderPopup({
               <ShoppingCart className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-foreground text-sm">Cart Reminder</h3>
+              <h3 className="font-semibold text-foreground text-sm">
+                Cart Reminder
+              </h3>
             </div>
           </div>
           <button
@@ -73,9 +74,18 @@ export function CartReminderPopup({
 
         {/* Message content */}
         <div className="px-6 py-4">
-          <p className="text-foreground text-base leading-relaxed font-medium mb-4">{message}</p>
+          <p className="text-foreground text-base leading-relaxed font-medium mb-4">
+            {message}
+          </p>
+
+          {/* Action buttons */}
           <div className="flex gap-3">
-            <Button variant="outline" size="sm" onClick={onClose} className="flex-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              className="flex-1"
+            >
               Later
             </Button>
             <Button
@@ -94,39 +104,14 @@ export function CartReminderPopup({
         <div className="h-1 bg-gradient-to-r from-primary to-secondary opacity-20" />
       </div>
 
-      {/* ===== MOBILE LAYOUT (compact, top-right) ===== */}
-      <div className="md:hidden bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden">
-        <div className="px-3 py-2.5 flex items-start gap-2.5">
-          <div className="bg-primary/10 rounded-full p-1.5 flex-shrink-0 mt-0.5">
-            <ShoppingCart className="h-3.5 w-3.5 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-foreground">Cart Reminder</p>
-            <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">{message}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors p-0.5 flex-shrink-0"
-            aria-label="Close"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        </div>
-        <div className="flex gap-2 px-3 pb-2.5">
-          <Button variant="outline" size="sm" onClick={onClose} className="flex-1 h-7 text-[11px] rounded-full">
-            Later
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleCheckout}
-            className="flex-1 h-7 text-[11px] bg-primary hover:bg-primary/90 text-white rounded-full"
-          >
-            <ShoppingCart className="h-3 w-3 mr-1" />
-            Checkout
-            <ArrowRight className="h-3 w-3 ml-0.5" />
-          </Button>
-        </div>
-      </div>
+      {/* Optional backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 -z-10 bg-black/5"
+      />
     </motion.div>
   );
 }
