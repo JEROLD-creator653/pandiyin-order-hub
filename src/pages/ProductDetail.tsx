@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Leaf, ShoppingCart, Minus, Plus, ArrowLeft, Star, MessageSquare } from 'lucide-react';
@@ -38,6 +38,8 @@ export default function ProductDetail() {
   const [deleteReviewId, setDeleteReviewId] = useState<string | null>(null);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<'recent' | 'rating_high' | 'rating_low'>('recent');
+  const purchaseSectionRef = useRef<HTMLDivElement>(null);
+  const [purchaseVisible, setPurchaseVisible] = useState(true);
   
   const {
     reviews,
@@ -67,6 +69,18 @@ export default function ProductDetail() {
         setLoading(false);
       });
   }, [id]);
+
+  // Track when the inline purchase section scrolls out of view
+  useEffect(() => {
+    const el = purchaseSectionRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setPurchaseVisible(entry.isIntersecting),
+      { threshold: 0 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [product]);
 
   const handleAddToCart = () => {
     if (!user) { navigate('/auth'); return; }
@@ -207,7 +221,7 @@ export default function ProductDetail() {
             )}
 
             {/* Quantity & Add to Cart Section */}
-            <div className="hidden md:block space-y-4 mb-8">
+            <div ref={purchaseSectionRef} className="space-y-4 mb-8">
               {product.stock_quantity > 0 ? (
                 <>
                   <div className="flex items-center gap-4">
@@ -231,7 +245,7 @@ export default function ProductDetail() {
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <span className="text-xs text-muted-foreground ml-2">{product.stock_quantity} available</span>
+                    <span className="text-xs text-muted-foreground ml-2 hidden md:inline">{product.stock_quantity} available</span>
                   </div>
                   
                   <div className="flex gap-3 pt-2">
@@ -371,8 +385,8 @@ export default function ProductDetail() {
         onConfirm={confirmDeleteReview}
       />
 
-      {/* ===== MOBILE STICKY PURCHASE BAR ===== */}
-      {product.stock_quantity > 0 && (
+      {/* ===== MOBILE STICKY PURCHASE BAR (only when inline section is scrolled away) ===== */}
+      {product.stock_quantity > 0 && !purchaseVisible && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-[0_-2px_10px_rgba(0,0,0,0.08)] px-4 py-3 md:hidden">
           <div className="flex items-center gap-3">
             {/* Add to Cart / Go to Cart */}
