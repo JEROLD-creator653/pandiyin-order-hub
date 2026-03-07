@@ -77,7 +77,7 @@ export default function ProductDetail() {
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => setShowStickyBar(entry.isIntersecting),
-      { threshold: 0.1 }
+      { threshold: 0.2 }
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -391,25 +391,26 @@ export default function ProductDetail() {
         onConfirm={confirmDeleteReview}
       />
 
-      {/* ===== MOBILE STICKY PURCHASE BAR (slides up when inline section scrolls away) ===== */}
+      {/* ===== MOBILE STICKY PURCHASE BAR ===== */}
       {product.stock_quantity > 0 && (
         <div
-          className={`fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-[0_-2px_10px_rgba(0,0,0,0.08)] px-4 py-3 md:hidden transition-transform duration-300 ease-in-out ${
+          className={`fixed bottom-0 left-0 right-0 z-[999] bg-white border-t shadow-[0_-4px_12px_rgba(0,0,0,0.08)] md:hidden transition-transform duration-300 ease-in-out ${
             showStickyBar ? 'translate-y-0' : 'translate-y-full'
           }`}
+          style={{ padding: '12px 16px calc(12px + env(safe-area-inset-bottom))' }}
         >
           <div className="flex items-center gap-3">
             {/* Add to Cart / Go to Cart */}
             {((cartItems || []).some(i => i.product_id === product.id)) ? (
               <Button
-                className="flex-1 h-11 rounded-full font-semibold text-sm bg-primary text-primary-foreground"
+                className="flex-1 h-12 rounded-xl font-semibold text-[15px] bg-primary text-primary-foreground"
                 onClick={() => navigate('/cart')}
               >
                 <ShoppingCart className="mr-1.5 h-4 w-4" /> Go to Cart
               </Button>
             ) : (
               <Button
-                className="flex-1 h-11 rounded-full font-semibold text-sm"
+                className="flex-1 h-12 rounded-xl font-semibold text-[15px]"
                 onClick={handleAddToCart}
                 disabled={adding}
               >
@@ -424,7 +425,7 @@ export default function ProductDetail() {
             {/* Buy Now */}
             <Button
               variant="outline"
-              className="flex-1 h-11 rounded-full font-semibold text-sm"
+              className="flex-1 h-12 rounded-xl font-semibold text-[15px]"
               onClick={() => {
                 handleAddToCart();
                 navigate('/cart');
