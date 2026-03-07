@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Leaf, ShoppingCart, Minus, Plus, ArrowLeft, Star, MessageSquare } from 'lucide-react';
+import { Leaf, ShoppingCart, Minus, Plus, ArrowLeft, Star, MessageSquare, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -39,7 +39,8 @@ export default function ProductDetail() {
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<'recent' | 'rating_high' | 'rating_low'>('recent');
   const purchaseSectionRef = useRef<HTMLDivElement>(null);
-  const [purchaseVisible, setPurchaseVisible] = useState(true);
+  const descriptionRef = useRef<HTMLDivElement>(null);
+  const [showStickyBar, setShowStickyBar] = useState(false);
   
   const {
     reviews,
@@ -70,13 +71,13 @@ export default function ProductDetail() {
       });
   }, [id]);
 
-  // Track when the inline purchase section scrolls out of view
+  // Show sticky bar when the description section scrolls into view
   useEffect(() => {
-    const el = purchaseSectionRef.current;
+    const el = descriptionRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
-      ([entry]) => setPurchaseVisible(entry.isIntersecting),
-      { threshold: 0 }
+      ([entry]) => setShowStickyBar(entry.isIntersecting),
+      { rootMargin: '-80px 0px 0px 0px', threshold: 0 }
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -84,12 +85,12 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     if (!user) { navigate('/auth'); return; }
-    // optimistic UI: mark as adding so button becomes "Go to Cart" instantly
+    if (adding) return; // prevent double-click
     setAdding(true);
     try {
       addToCart(product.id, qty);
     } finally {
-      setTimeout(() => setAdding(false), 400);
+      setTimeout(() => setAdding(false), 600);
     }
   };
 
@@ -249,7 +250,7 @@ export default function ProductDetail() {
                   </div>
                   
                   <div className="flex gap-3 pt-2">
-                    {((cartItems || []).some(i => i.product_id === product.id) || adding) ? (
+                    {((cartItems || []).some(i => i.product_id === product.id)) ? (
                       <Button
                         size="lg"
                         variant="outline"
@@ -265,8 +266,13 @@ export default function ProductDetail() {
                         size="lg" 
                         className="flex-1 rounded-full h-12 font-semibold" 
                         onClick={handleAddToCart}
+                        disabled={adding}
                       >
-                        <ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart
+                        {adding ? (
+                          <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Adding...</>
+                        ) : (
+                          <><ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart</>
+                        )}
                       </Button>
                     )}
                     <Button 
@@ -288,7 +294,7 @@ export default function ProductDetail() {
             </div>
 
             {/* Product Description - With Smooth Read More */}
-            <div className="flex-grow min-w-0 w-full overflow-hidden">
+            <div ref={descriptionRef} className="flex-grow min-w-0 w-full overflow-hidden">
               <ProductDescriptionCollapsible
                 key={product.id}
                 content={product.description}
@@ -385,12 +391,16 @@ export default function ProductDetail() {
         onConfirm={confirmDeleteReview}
       />
 
-      {/* ===== MOBILE STICKY PURCHASE BAR (only when inline section is scrolled away) ===== */}
-      {product.stock_quantity > 0 && !purchaseVisible && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-[0_-2px_10px_rgba(0,0,0,0.08)] px-4 py-3 md:hidden">
+      {/* ===== MOBILE STICKY PURCHASE BAR (slides up when inline section scrolls away) ===== */}
+      {product.stock_quantity > 0 && (
+        <div
+          className={`fixed bottom-0 left-0 right-0 z-50 bg-white border-t shadow-[0_-2px_10px_rgba(0,0,0,0.08)] px-4 py-3 md:hidden transition-transform duration-300 ease-in-out ${
+            showStickyBar ? 'translate-y-0' : 'translate-y-full'
+          }`}
+        >
           <div className="flex items-center gap-3">
             {/* Add to Cart / Go to Cart */}
-            {((cartItems || []).some(i => i.product_id === product.id) || adding) ? (
+            {((cartItems || []).some(i => i.product_id === product.id)) ? (
               <Button
                 className="flex-1 h-11 rounded-full font-semibold text-sm bg-primary text-primary-foreground"
                 onClick={() => navigate('/cart')}
@@ -401,8 +411,13 @@ export default function ProductDetail() {
               <Button
                 className="flex-1 h-11 rounded-full font-semibold text-sm"
                 onClick={handleAddToCart}
+                disabled={adding}
               >
-                <ShoppingCart className="mr-1.5 h-4 w-4" /> Add to Cart
+                {adding ? (
+                  <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Adding...</>
+                ) : (
+                  <><ShoppingCart className="mr-1.5 h-4 w-4" /> Add to Cart</>
+                )}
               </Button>
             )}
 
