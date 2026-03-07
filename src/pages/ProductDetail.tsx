@@ -39,7 +39,7 @@ export default function ProductDetail() {
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<'recent' | 'rating_high' | 'rating_low'>('recent');
   const purchaseSectionRef = useRef<HTMLDivElement>(null);
-  const descriptionRef = useRef<HTMLDivElement>(null);
+  const reviewsRef = useRef<HTMLDivElement>(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
   
   const {
@@ -71,13 +71,13 @@ export default function ProductDetail() {
       });
   }, [id]);
 
-  // Show sticky bar when the description section scrolls into view
+  // Show sticky bar when the Customer Reviews section scrolls into view
   useEffect(() => {
-    const el = descriptionRef.current;
+    const el = reviewsRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
       ([entry]) => setShowStickyBar(entry.isIntersecting),
-      { rootMargin: '-80px 0px 0px 0px', threshold: 0 }
+      { threshold: 0.1 }
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -294,7 +294,7 @@ export default function ProductDetail() {
             </div>
 
             {/* Product Description - With Smooth Read More */}
-            <div ref={descriptionRef} className="flex-grow min-w-0 w-full overflow-hidden">
+            <div className="flex-grow min-w-0 w-full overflow-hidden">
               <ProductDescriptionCollapsible
                 key={product.id}
                 content={product.description}
@@ -305,7 +305,7 @@ export default function ProductDetail() {
         </div>
 
         {/* Reviews Section */}
-        <div className="border-t pt-12">
+        <div ref={reviewsRef} className="border-t pt-12">
           <Tabs defaultValue="reviews" className="w-full">
             <TabsList className="mb-8">
               <TabsTrigger value="reviews" className="gap-2">
