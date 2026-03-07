@@ -20,16 +20,23 @@ export const DescriptionRenderer = ({
       'ul', 'ol', 'li', 'blockquote', 'code', 'pre', 'span', 'div',
       'hr', 'a', 'img'
     ],
-    ALLOWED_ATTR: ['class', 'style', 'href', 'target', 'rel', 'src', 'alt'],
+    ALLOWED_ATTR: ['class', 'href', 'target', 'rel', 'src', 'alt'],
     ALLOW_DATA_ATTR: false,
   });
+
+  // Quill inserts &nbsp; (non-breaking spaces) between words/spans.
+  // The browser treats text joined by &nbsp; as a single unbreakable word,
+  // causing mid-word breaks when overflow-wrap kicks in.
+  // Replace &nbsp; with regular spaces so words wrap at natural boundaries.
+  const normalizedHTML = sanitizedHTML
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\u00A0/g, ' ');
 
   return (
     <div className="w-full min-w-0">
       <div 
-        className={`product-description max-w-none break-words [word-break:normal] [overflow-wrap:break-word] [hyphens:none] ${className}`}
-        style={{ lineHeight: 1.7 }}
-        dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
+        className={`product-description max-w-none ${className}`}
+        dangerouslySetInnerHTML={{ __html: normalizedHTML }}
       />
     </div>
   );

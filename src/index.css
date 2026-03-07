@@ -163,13 +163,41 @@
   }
 }
 
+/* Product Description — word-break overrides.
+   Placed OUTSIDE @layer so they beat all layered styles (utilities, prose, etc.).
+   - word-break:normal   → never split words arbitrarily
+   - overflow-wrap:break-word → wrap at spaces; only break mid-word for unbreakable strings
+   - white-space:normal  → allow normal line wrapping */
+.product-description,
+.product-description *,
+.product-description p,
+.product-description li,
+.product-description span,
+.product-description div,
+.product-description strong,
+.product-description em,
+.product-description h1,
+.product-description h2,
+.product-description h3,
+.product-description h4,
+.product-description h5,
+.product-description h6 {
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
+  hyphens: none !important;
+}
+
+.product-description {
+  max-width: 100%;
+  width: 100%;
+  line-height: 1.7;
+}
+
 /* Product Description Formatting Styles */
 @layer components {
   .product-description {
     @apply text-muted-foreground leading-relaxed;
-    word-break: normal;
-    overflow-wrap: break-word;
-    hyphens: none;
   }
 
   .product-description p {
