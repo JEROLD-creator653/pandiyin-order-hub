@@ -167,6 +167,9 @@
 @layer components {
   .product-description {
     @apply text-muted-foreground leading-relaxed;
+    word-break: normal;
+    overflow-wrap: break-word;
+    hyphens: none;
   }
 
   .product-description p {

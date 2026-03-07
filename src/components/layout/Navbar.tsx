@@ -32,6 +32,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [profileName, setProfileName] = useState<string | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const { user, isAdmin, signOut } = useAuth();
   const { itemCount } = useCart();
@@ -46,7 +47,8 @@ export default function Navbar() {
 
   // Fetch profile name for mobile menu
   useEffect(() => {
-    if (!user) { setProfileName(null); return; }
+    if (!user) { setProfileName(null); setLoadingProfile(false); return; }
+    setLoadingProfile(true);
     supabase
       .from('profiles')
       .select('full_name')
@@ -54,6 +56,7 @@ export default function Navbar() {
       .single()
       .then(({ data }) => {
         if (data?.full_name) setProfileName(data.full_name);
+        setLoadingProfile(false);
       });
   }, [user]);
 
@@ -265,7 +268,7 @@ export default function Navbar() {
                           <User className="h-5 w-5 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0 text-left">
-                          <p className="text-sm font-semibold truncate">{profileName || user.email?.split('@')[0] || 'Profile'}</p>
+                          <p className="text-sm font-semibold truncate">{loadingProfile ? '...' : (profileName || user.email?.split('@')[0] || 'Profile')}</p>
                           <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                         </div>
                         <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${accountDropdownOpen ? 'rotate-180' : ''}`} />

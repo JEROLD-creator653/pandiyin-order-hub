@@ -25,11 +25,13 @@ export const DescriptionRenderer = ({
   });
 
   return (
-    <div 
-      className={`product-description max-w-none ${className}`}
-      style={{ lineHeight: 1.7, wordBreak: 'normal', overflowWrap: 'break-word' }}
-      dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
-    />
+    <div className="w-full min-w-0">
+      <div 
+        className={`product-description max-w-none break-words [word-break:normal] [overflow-wrap:break-word] [hyphens:none] ${className}`}
+        style={{ lineHeight: 1.7 }}
+        dangerouslySetInnerHTML={{ __html: sanitizedHTML }}
+      />
+    </div>
   );
 };
 

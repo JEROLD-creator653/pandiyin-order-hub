@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useStoreSettings } from "@/hooks/useStoreSettings";
 
 export default function Footer() {
-  const { data: store } = useStoreSettings();
+  const { data: store, isLoading: loadingStore } = useStoreSettings();
   const whatsappNumber = store?.whatsapp?.replace(/\D/g, '') || '';
   const phoneNumber = store?.phone?.replace(/\D/g, '') || '';
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
@@ -44,7 +44,7 @@ export default function Footer() {
             <div className="space-y-1">
               <h3 className="text-sm font-semibold">Address</h3>
               <p className="text-sm opacity-80 leading-relaxed whitespace-pre-line">
-                {store?.address || 'Madurai, Tamil Nadu, India'}
+                {loadingStore ? '...' : (store?.address || 'Madurai, Tamil Nadu, India')}
               </p>
             </div>
           </div>
@@ -193,7 +193,7 @@ export default function Footer() {
 
               {/* Mail */}
               <a
-                href={`mailto:${store?.email || 'pandiyinnatureinpack@gmail.com'}`}
+                href={loadingStore ? '#' : `mailto:${store?.email || 'pandiyinnatureinpack@gmail.com'}`}
                 aria-label="Email"
                 className="h-12 w-12 rounded-full border border-primary-foreground/50 flex items-center justify-center 
                            hover:bg-primary-foreground hover:text-foreground hover:scale-110 

@@ -155,7 +155,7 @@ export default function ProductDetail() {
           </div>
 
           {/* Right Column: Product Details (Desktop 3/5, Mobile Full Width) */}
-          <div className="lg:col-span-3 flex flex-col">
+          <div className="lg:col-span-3 flex flex-col min-w-0">
             {/* Product Header */}
             {product.categories?.name && (
               <Badge variant="secondary" className="mb-3 w-fit">{product.categories.name}</Badge>
@@ -274,7 +274,7 @@ export default function ProductDetail() {
             </div>
 
             {/* Product Description - With Smooth Read More */}
-            <div className="flex-grow">
+            <div className="flex-grow min-w-0 w-full overflow-hidden">
               <ProductDescriptionCollapsible
                 key={product.id}
                 content={product.description}
