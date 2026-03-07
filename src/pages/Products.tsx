@@ -47,6 +47,13 @@ export default function Products() {
     const cat = searchParams.get('category');
     return cat ? [cat] : [];
   });
+  // Sync selectedCategories when the URL category param changes
+  const urlCategory = searchParams.get('category');
+  useEffect(() => {
+    setSelectedCategories(urlCategory ? [urlCategory] : []);
+    window.scrollTo(0, 0);
+  }, [urlCategory]);
+
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [manualMin, setManualMin] = useState('');
   const [manualMax, setManualMax] = useState('');
