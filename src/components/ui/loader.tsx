@@ -31,6 +31,8 @@ export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProp
         lg: 'w-12 h-12',
     };
 
+    const leafSize = { sm: 28, md: 40, lg: 52 }[size];
+
     return (
         <div className={cn("flex flex-col items-center justify-center min-h-[50vh] w-full", className)}>
             <motion.div
@@ -40,17 +42,21 @@ export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProp
                 transition={{ duration: 0.25 }}
                 className="flex flex-col items-center gap-4"
             >
-                <div className="relative">
-                    <div className={cn("rounded-full border-2 border-primary/20", sizeClasses[size])} />
-                    <div
-                        className={cn(
-                            "absolute top-0 left-0 rounded-full border-2 border-primary border-t-transparent animate-spin",
-                            sizeClasses[size]
-                        )}
-                    />
-                    {/* Subtle glow effect */}
-                    <div className={cn("absolute top-0 left-0 rounded-full bg-primary/20 blur-xl", sizeClasses[size])} />
-                </div>
+                <motion.div
+                    animate={{
+                        y: [0, -6, 0, 4, 0],
+                        x: [0, 3, 0, -3, 0],
+                        rotate: [0, 12, 0, -12, 0],
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                >
+                    <svg width={leafSize} height={leafSize} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M32 4C32 4 8 20 8 40C8 52 18 60 32 60C46 60 56 52 56 40C56 20 32 4 32 4Z" className="fill-primary/90" />
+                        <path d="M32 14V52" className="stroke-primary-foreground/40" strokeWidth="1.5" strokeLinecap="round" />
+                        <path d="M32 24L20 32M32 32L18 40M32 40L22 46" className="stroke-primary-foreground/30" strokeWidth="1" strokeLinecap="round" />
+                        <path d="M32 24L44 32M32 32L46 40M32 40L42 46" className="stroke-primary-foreground/30" strokeWidth="1" strokeLinecap="round" />
+                    </svg>
+                </motion.div>
                 {text && (
                     <p className="text-muted-foreground text-sm font-medium animate-pulse">
                         {text}

@@ -35,7 +35,7 @@ export const GlobalLoader = () => {
                     transition={{ duration: 0.3 }}
                     className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm"
                 >
-                    <Loader text="Loading..." size="lg" className="min-h-0" delay={0} />
+                    <Loader text="Loading fresh homemade goodness…" size="lg" className="min-h-0" delay={0} />
                 </motion.div>
             )}
         </AnimatePresence>
