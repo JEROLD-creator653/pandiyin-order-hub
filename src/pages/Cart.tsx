@@ -23,6 +23,15 @@ export default function Cart() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const totalWeightKg = useMemo(() => {
+    return items.reduce((sum, item) => {
+      const wkg = Number((item.product as any).weight_kg) || 0;
+      return sum + wkg * item.quantity;
+    }, 0);
+  }, [items]);
+
+  const chargedWeight = useMemo(() => getChargedWeight(totalWeightKg), [totalWeightKg]);
+
   if (!user) {
     return (
       <div className="container mx-auto px-4 pt-24 pb-20 text-center">
