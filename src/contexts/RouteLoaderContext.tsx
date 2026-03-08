@@ -31,8 +31,8 @@ interface RouteLoaderProviderProps {
 
 export const RouteLoaderProvider: React.FC<RouteLoaderProviderProps> = ({ 
   children,
-  minLoadDuration = 700,
-  maxLoadDuration = 1200,
+  minLoadDuration = 1800,
+  maxLoadDuration = 3500,
   autoTrigger = true,
   excludePaths = ['/auth']
 }) => {
