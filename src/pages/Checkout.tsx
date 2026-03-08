@@ -451,11 +451,7 @@ export default function Checkout() {
               </RadioGroup>
               <div className="flex items-center justify-end gap-1.5 mt-3 pt-3 border-t border-border/50">
                 <span className="text-xs text-muted-foreground">Powered by</span>
-                <svg width="80" height="16" viewBox="0 0 512 107" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M87.4 0L60.2 107H42.8L70 0H87.4ZM156.6 69.4C156.6 90.2 142 107 118.8 107H80.6L107.8 0H140.2C157.2 0 168 11 168 27.6C168 45 156.4 55.4 145.6 59.4C152.6 62.2 156.6 68 156.6 69.4ZM139 30.4C139 22.8 134 17.6 126 17.6H113.6L106 52H120C132.6 52 139 42 139 30.4ZM127 69.4C127 69.2 126.4 64.6 117.6 64.6H100.4L93.6 89.4H114C125 89.4 127 77 127 69.4Z" fill="hsl(var(--foreground))"/>
-                  <path d="M222.2 107H204.4L198 81H172.4L158.8 107H140.4L192.2 0H213.6L222.2 107ZM196 64L190.6 24.2L175.8 64H196Z" fill="hsl(var(--foreground))"/>
-                  <path d="M240 107H222.6L256.2 47.4L242.8 0H261.2L269.6 33.4L296.2 0H316L275 47.4L288.2 107H269.8L260 60L240 107Z" fill="hsl(var(--foreground))"/>
-                </svg>
+                <img src="/razorpay-badge.svg" alt="Razorpay" className="h-5 opacity-70" />
               </div>
             </CardContent>
           </Card>
