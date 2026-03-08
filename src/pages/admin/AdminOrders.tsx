@@ -30,7 +30,9 @@ export default function AdminOrders() {
         q = q.ilike('order_number', `%${debouncedSearch}%`);
       }
       const { data } = await q;
-      setOrders(data || []);
+      // Filter out orders with no items (blank/incomplete orders)
+      const validOrders = (data || []).filter(o => o.order_items && o.order_items.length > 0);
+      setOrders(validOrders);
     } finally {
       setLoading(false);
     }
