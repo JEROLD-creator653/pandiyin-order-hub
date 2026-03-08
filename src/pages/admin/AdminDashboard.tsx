@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { BarChart3, Package, ShoppingCart, Users, AlertTriangle, TrendingUp } from 'lucide-react';
+import { BarChart3, Package, ShoppingCart, Users, AlertTriangle, TrendingUp, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatPrice } from '@/lib/formatters';
 import { Loader, TableSkeleton } from '@/components/ui/loader';
 import { Skeleton } from '@/components/ui/skeleton';
+import RevenueExportDialog from '@/components/RevenueExportDialog';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ products: 0, orders: 0, customers: 0, revenue: 0 });
@@ -15,6 +17,7 @@ export default function AdminDashboard() {
   const [lowStock, setLowStock] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exportOpen, setExportOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -85,7 +88,14 @@ export default function AdminDashboard() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Revenue Overview</CardTitle></CardHeader>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Revenue Overview</CardTitle>
+              <Button size="sm" variant="outline" onClick={() => setExportOpen(true)} className="gap-1.5">
+                <Download className="h-4 w-4" /> Export
+              </Button>
+            </div>
+          </CardHeader>
           <CardContent>
             {loading ? (
               <div className="h-[250px] flex items-center justify-center">
@@ -161,6 +171,7 @@ export default function AdminDashboard() {
           )}
         </CardContent>
       </Card>
+      <RevenueExportDialog open={exportOpen} onOpenChange={setExportOpen} />
     </div>
   );
 }
