@@ -39,76 +39,66 @@ export const RouteLoaderProvider: React.FC<RouteLoaderProviderProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const loadingStartTime = useRef<number>(0);
   const minLoadDurationRef = useRef<number>(minLoadDuration);
-  const loadingTimeout = useRef<NodeJS.Timeout>();
-  const maxLoadTimeout = useRef<NodeJS.Timeout>();
-  const isLoadingRef = useRef(false);
-
-  // Keep ref in sync with state to avoid stale closures
-  useEffect(() => {
-    isLoadingRef.current = isLoading;
-  }, [isLoading]);
+  const timerIds = useRef<number[]>([]);
 
   const clearAllTimers = useCallback(() => {
-    if (loadingTimeout.current) clearTimeout(loadingTimeout.current);
-    if (maxLoadTimeout.current) clearTimeout(maxLoadTimeout.current);
+    timerIds.current.forEach(id => window.clearTimeout(id));
+    timerIds.current = [];
   }, []);
+
+  const addTimer = useCallback((fn: () => void, delay: number) => {
+    const id = window.setTimeout(fn, delay);
+    timerIds.current.push(id);
+    return id;
+  }, []);
+
+  const dismiss = useCallback(() => {
+    clearAllTimers();
+    setIsLoading(false);
+  }, [clearAllTimers]);
 
   const startRouteLoad = useCallback((customMinDuration?: number) => {
     clearAllTimers();
-
     setIsLoading(true);
-    isLoadingRef.current = true;
     loadingStartTime.current = Date.now();
     minLoadDurationRef.current = customMinDuration || minLoadDuration;
 
-    // Hard safety timeout - ALWAYS dismiss after maxLoadDuration
-    maxLoadTimeout.current = setTimeout(() => {
+    // Auto-dismiss after min duration
+    addTimer(() => {
       setIsLoading(false);
-      isLoadingRef.current = false;
-    }, maxLoadDuration);
-
-    // Auto-dismiss after min duration if no pending data loads
-    loadingTimeout.current = setTimeout(() => {
-      setIsLoading(false);
-      isLoadingRef.current = false;
-      clearAllTimers();
     }, minLoadDurationRef.current);
-  }, [minLoadDuration, maxLoadDuration, clearAllTimers]);
+
+    // Hard safety: ALWAYS dismiss after maxLoadDuration no matter what
+    addTimer(() => {
+      setIsLoading(false);
+    }, maxLoadDuration);
+  }, [minLoadDuration, maxLoadDuration, clearAllTimers, addTimer]);
 
   const endRouteLoad = useCallback(() => {
     const elapsed = Date.now() - loadingStartTime.current;
     
     if (elapsed >= minLoadDurationRef.current) {
-      clearAllTimers();
-      setIsLoading(false);
-      isLoadingRef.current = false;
+      dismiss();
     } else {
       const remaining = minLoadDurationRef.current - elapsed;
-      loadingTimeout.current = setTimeout(() => {
-        setIsLoading(false);
-        isLoadingRef.current = false;
-        if (maxLoadTimeout.current) clearTimeout(maxLoadTimeout.current);
-      }, remaining);
+      addTimer(dismiss, remaining);
     }
-  }, [clearAllTimers]);
+  }, [dismiss, addTimer]);
 
   const forceLoad = useCallback(async (duration: number) => {
     clearAllTimers();
     setIsLoading(true);
-    isLoadingRef.current = true;
     loadingStartTime.current = Date.now();
 
     return new Promise<void>((resolve) => {
-      loadingTimeout.current = setTimeout(() => {
+      addTimer(() => {
         setIsLoading(false);
-        isLoadingRef.current = false;
         resolve();
       }, duration);
     });
-  }, [clearAllTimers]);
+  }, [clearAllTimers, addTimer]);
 
   const registerDataLoad = useCallback((promise: Promise<any>): Promise<any> => {
-    // Simply return the promise - loading is managed by timers
     return promise;
   }, []);
 
@@ -155,9 +145,9 @@ const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
           key="route-loader"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.2, ease: 'easeInOut' } }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-background/80 backdrop-blur-md"
-          style={{ overscrollBehavior: 'contain' }}
+          exit={{ opacity: 0, transition: { duration: 0.15, ease: 'easeOut' } }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/90"
+          onPointerDown={(e) => e.stopPropagation()}
         >
           <div className="flex flex-col items-center gap-3">
             <img
