@@ -10,6 +10,18 @@ import { useAuth } from '@/hooks/useAuth';
 import { formatPrice } from '@/lib/formatters';
 import { generateInvoicePdf, type InvoiceData, type InvoiceItem } from '@/lib/invoicePdf';
 
+const getPaymentModeLabel = (mode: string): string => {
+  const labels: Record<string, string> = {
+    card: 'Card',
+    upi: 'UPI',
+    netbanking: 'Net Banking',
+    wallet: 'Wallet',
+    emi: 'EMI',
+    bank_transfer: 'Bank Transfer',
+  };
+  return labels[mode] || mode.charAt(0).toUpperCase() + mode.slice(1);
+};
+
 export default function OrderConfirmation() {
   const { id } = useParams();
   const { user, isAdmin, loading: authLoading } = useAuth();
@@ -106,7 +118,7 @@ export default function OrderConfirmation() {
       discount: Number(order.discount),
       couponCode: order.coupon_code || undefined,
       grandTotal: Number(order.total),
-      paymentMethod: order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online',
+      paymentMethod: order.payment_mode ? getPaymentModeLabel(order.payment_mode) : (order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'),
     };
 
     const doc = generateInvoicePdf(invoiceData);
@@ -192,7 +204,7 @@ export default function OrderConfirmation() {
               </div>
 
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Payment: {order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'}</span>
+                <span>Payment: {order.payment_mode ? getPaymentModeLabel(order.payment_mode) : (order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online')}</span>
                 <span className="capitalize">Status: {order.status}</span>
               </div>
 
