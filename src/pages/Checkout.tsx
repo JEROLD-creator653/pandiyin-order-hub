@@ -136,7 +136,7 @@ export default function Checkout() {
       if (error) throw error;
       const validation = data?.[0];
       if (!validation || !validation.is_valid) {
-        toast({ title: 'Invalid coupon', description: validation?.error_message || 'Could not apply coupon', variant: 'destructive' });
+        setCheckoutError(validation?.error_message || 'Invalid coupon. Could not apply coupon.');
         return;
       }
       const disc = validation.discount_type === 'percentage'
