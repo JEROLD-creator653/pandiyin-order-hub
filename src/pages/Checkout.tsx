@@ -294,7 +294,7 @@ export default function Checkout() {
               clearCart();
               navigate(`/order-confirmation/${order.id}`);
             } else {
-              setPaymentError('Payment verification failed. Please contact support.');
+              setCheckoutError('Payment verification failed. Please contact support.');
             }
           } catch (err: any) {
             setPaymentError(err.message || 'Verification error. Please try again.');
