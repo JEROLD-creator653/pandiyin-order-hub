@@ -161,13 +161,17 @@ export default function AdminSettings() {
                   />
                 </div>
                 {region.is_enabled && region.region_key !== 'international' && (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Per KG Rate (₹)</Label>
+                      <Input type="number" value={region.per_kg_rate} onChange={e => updateRegion(region.id, 'per_kg_rate', e.target.value)} />
+                    </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Base Charge (₹)</Label>
                       <Input type="number" value={region.base_charge} onChange={e => updateRegion(region.id, 'base_charge', e.target.value)} />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">Free Delivery Above (₹)</Label>
+                      <Label className="text-xs">Free Above (₹)</Label>
                       <Input type="number" value={region.free_delivery_above} onChange={e => updateRegion(region.id, 'free_delivery_above', e.target.value)} placeholder="No limit" />
                     </div>
                   </div>
