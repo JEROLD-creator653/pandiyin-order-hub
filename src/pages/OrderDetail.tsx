@@ -10,6 +10,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
 import { generateInvoicePdf, type InvoiceData, type InvoiceItem } from '@/lib/invoicePdf';
 
+const getPaymentModeLabel = (mode: string): string => {
+  const labels: Record<string, string> = {
+    card: 'Card',
+    upi: 'UPI',
+    netbanking: 'Net Banking',
+    wallet: 'Wallet',
+    emi: 'EMI',
+    bank_transfer: 'Bank Transfer',
+  };
+  return labels[mode] || mode.charAt(0).toUpperCase() + mode.slice(1);
+};
+
 const statusSteps = [
   { key: 'pending', label: 'Order Placed', icon: Clock },
   { key: 'confirmed', label: 'Confirmed', icon: Package },
