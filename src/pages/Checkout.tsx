@@ -335,7 +335,7 @@ export default function Checkout() {
       return;
     }
     if (!selectedAddress.state) {
-      toast({ title: 'Address missing state info', description: 'Please update your address with a valid pincode', variant: 'destructive' });
+      setCheckoutError('Address missing state info. Please update your address with a valid pincode.');
       return;
     }
     if (!agreementChecked) {
