@@ -397,46 +397,18 @@ export default function Checkout() {
             </CardContent>
           </Card>
 
-          {/* Delivery State Selection */}
-          <Card>
-            <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Truck className="h-5 w-5" /> Delivery State</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <Select value={deliveryState} onValueChange={setDeliveryState}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your delivery state" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ZONE_GROUPS.map(group => (
-                    <SelectGroup key={group.zone}>
-                      <SelectLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</SelectLabel>
-                      {group.states.map(state => (
-                        <SelectItem key={state} value={state}>{state}</SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {!deliveryState && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5" /> Select state to see delivery cost
-                </p>
-              )}
-
-              {/* Free Delivery Nudge — Tamil Nadu only */}
-              {freeDeliveryNudge && (
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">
-                  <p className="text-sm font-medium text-primary">
-                    🚚 Add {formatPrice(freeDeliveryNudge.remaining)} more for FREE delivery!
-                  </p>
-                  <Progress value={freeDeliveryNudge.progress} className="h-2" />
-                  <p className="text-xs text-muted-foreground">
-                    Free delivery on orders above {formatPrice(freeDeliveryNudge.threshold!)}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Free Delivery Nudge — Tamil Nadu only */}
+          {freeDeliveryNudge && (
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">
+              <p className="text-sm font-medium text-primary">
+                🚚 Add {formatPrice(freeDeliveryNudge.remaining)} more for FREE delivery!
+              </p>
+              <Progress value={freeDeliveryNudge.progress} className="h-2" />
+              <p className="text-xs text-muted-foreground">
+                Free delivery on orders above {formatPrice(freeDeliveryNudge.threshold!)}
+              </p>
+            </div>
+          )}
 
           <Card>
             <CardHeader><CardTitle className="text-lg">Payment Method</CardTitle></CardHeader>
