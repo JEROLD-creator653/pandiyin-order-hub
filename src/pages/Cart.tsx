@@ -72,6 +72,9 @@ export default function Cart() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <Link to={`/products/${item.product_id}`} className="font-semibold text-sm hover:text-primary line-clamp-1">{item.product.name}</Link>
+                  {item.product.stock_quantity > 0 && item.product.stock_quantity <= 5 && (
+                    <p className="text-xs font-medium text-destructive mt-0.5">Only {item.product.stock_quantity} left in stock!</p>
+                  )}
                   {(item.product as any).weight && <p className="text-xs text-muted-foreground mt-0.5">{(item.product as any).weight}{(item.product as any).unit ? ` ${(item.product as any).unit}` : ''}</p>}
                   {(() => {
                     const pricing = getPricingInfo(item.product.price, (item.product as any).compare_price);
