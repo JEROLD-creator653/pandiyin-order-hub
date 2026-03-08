@@ -128,25 +128,12 @@ export function useProductReviews({
         return;
       }
 
-      // Fetch profile names for reviewers
-      const userIds = [...new Set((data || []).map((r: any) => r.user_id).filter(Boolean))];
-      let profileMap: Record<string, string> = {};
-      if (userIds.length > 0) {
-        const { data: profiles } = await (supabase as any)
-          .from('profiles')
-          .select('user_id, full_name')
-          .in('user_id', userIds);
-        if (profiles) {
-          profileMap = Object.fromEntries(
-            profiles.map((p: any) => [p.user_id, p.full_name])
-          );
-        }
-      }
-
-      // Map reviews, use profile name or fallback to 'Verified Customer'
+      // Use user_name directly from product_reviews table
       const reviewsWithUser = (data || []).map((review: any) => ({
         ...review,
-        user_name: profileMap[review.user_id] || 'Verified Customer',
+        user_name: review.user_name && review.user_name !== 'Anonymous' 
+          ? review.user_name 
+          : 'Customer',
         user_email: ''
       }));
 
@@ -210,12 +197,23 @@ export function useProductReviews({
     }
 
     try {
+      // Fetch the user's profile name to store with the review
+      let userName = 'Customer';
+      const { data: profileData } = await (supabase as any)
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (profileData?.full_name) {
+        userName = profileData.full_name;
+      }
+
       const payload = {
         user_id: userId,
         product_id: productId,
         rating: reviewData.rating,
-        description: trimmedDescription
-        // Note: user_name will be added once the database column is created
+        description: trimmedDescription,
+        user_name: userName
       };
 
       let error;
