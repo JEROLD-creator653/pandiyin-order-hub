@@ -164,6 +164,7 @@ export default function AdminProducts() {
       category_id: p.category_id || '',
       stock_quantity: String(p.stock_quantity),
       weight: p.weight ? String(p.weight) : '',
+      weight_kg: p.weight_kg ? String(p.weight_kg) : '',
       unit: p.unit || 'g',
       gst_percentage: String(p.gst_percentage || 5),
       hsn_code: p.hsn_code || '',
