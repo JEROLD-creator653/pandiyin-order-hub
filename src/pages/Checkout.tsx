@@ -449,6 +449,10 @@ export default function Checkout() {
                   </Label>
                 </div>
               </RadioGroup>
+              <div className="flex items-center justify-end gap-1.5 mt-3 pt-3 border-t border-border/50">
+                <span className="text-xs text-muted-foreground">Powered by</span>
+                <img src="/razorpay-badge.svg" alt="Razorpay" className="h-5 opacity-70" />
+              </div>
             </CardContent>
           </Card>
 
