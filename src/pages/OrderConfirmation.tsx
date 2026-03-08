@@ -106,7 +106,7 @@ export default function OrderConfirmation() {
       discount: Number(order.discount),
       couponCode: order.coupon_code || undefined,
       grandTotal: Number(order.total),
-      paymentMethod: order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online',
+      paymentMethod: order.payment_mode ? getPaymentModeLabel(order.payment_mode) : (order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'),
     };
 
     const doc = generateInvoicePdf(invoiceData);
