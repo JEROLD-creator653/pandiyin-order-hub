@@ -275,9 +275,9 @@ export async function generateInvoicePdf(data: InvoiceData) {
 
   const paymentGrid = [
     ['Payment Method', data.paymentMethod],
-    ['Gateway', data.paymentGateway || '—'],
+    ['Gateway', data.paymentGateway || '-'],
     ['Payment Status', data.paymentStatus || 'Pending'],
-    ['Payment ID', data.paymentId || '—'],
+    ['Payment ID', data.paymentId || '-'],
   ];
 
   // Draw 2x2 grid
