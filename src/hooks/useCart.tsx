@@ -126,7 +126,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
         addMutation.mutate({ productId, quantity: newQty });
       },
-      updateQuantity: (itemId, quantity) => updateMutation.mutate({ itemId, quantity }),
+      updateQuantity: (itemId, quantity) => {
+        const item = items.find(i => i.id === itemId);
+        if (item && quantity > item.product.stock_quantity) {
+          toast({ title: 'Stock limit reached', description: `Only ${item.product.stock_quantity} available`, variant: 'destructive' });
+          return;
+        }
+        updateMutation.mutate({ itemId, quantity });
+      },
       removeItem: (itemId) => removeMutation.mutate(itemId),
       clearCart: () => clearMutation.mutate(),
     }}>
