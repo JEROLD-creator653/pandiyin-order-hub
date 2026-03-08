@@ -71,7 +71,7 @@ interface Product {
   stock_quantity: number;
   is_available: boolean;
   is_featured: boolean;
-  weight?: number;
+  weight?: string | number;
   unit?: string;
   gst_percentage?: number;
   hsn_code?: string;
