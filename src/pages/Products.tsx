@@ -478,20 +478,20 @@ export default function Products() {
             <motion.div key={p.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="h-full">
               <Link to={`/products/${p.id}`} className="h-full block">
                 <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col border-0 shadow-sm">
-                  <div className="h-52 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
+                  <div className="h-40 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
                     {p.image_url ? (
                       <img src={p.image_url} alt={p.name} className="w-full h-full object-cover object-center rounded-lg group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     ) : (
                       <Leaf className="h-12 w-12 text-muted-foreground/30" />
                     )}
                     {p.stock_quantity <= 5 && p.stock_quantity > 0 && (
-                      <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-600 text-white text-xs border-0 shadow-sm">Few Left</Badge>
+                      <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] md:text-xs border-0 shadow-sm">Few Left</Badge>
                     )}
                     {p.stock_quantity === 0 && (
-                      <Badge variant="destructive" className="absolute top-2 right-2 text-xs border-0 shadow-sm">Out of Stock</Badge>
+                      <Badge variant="destructive" className="absolute top-2 right-2 text-[10px] md:text-xs border-0 shadow-sm">Out of Stock</Badge>
                     )}
                   </div>
-                  <CardContent className="p-4 flex-1 flex flex-col">
+                  <CardContent className="p-3 md:p-4 flex-1 flex flex-col">
                     <p className="text-xs text-muted-foreground mb-0.5">{(p as any).categories?.name}</p>
                     <h3 className="font-semibold text-base font-sans line-clamp-2 mb-1.5 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
                     {p.weight && <p className="text-xs text-muted-foreground mb-1">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
