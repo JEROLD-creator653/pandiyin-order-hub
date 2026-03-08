@@ -95,6 +95,7 @@ const App = () => (
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
                   <Route index element={<AdminDashboard />} />
+                  <Route path="alerts" element={<AdminAlerts />} />
                   <Route path="products" element={<AdminProducts />} />
                   <Route path="categories" element={<AdminCategories />} />
                   <Route path="orders" element={<AdminOrders />} />
