@@ -137,10 +137,6 @@ export default function ProductDetail() {
     }
   };
 
-  if (loading) return (
-    <Loader text="Loading product details..." className="min-h-[60vh]" delay={200} />
-  );
-
   const productUrl = `${window.location.origin}/products/${id}`;
   const plainDescription = product?.description?.replace(/<[^>]*>/g, '').slice(0, 160) || product?.name || '';
 
@@ -168,6 +164,10 @@ export default function ProductDetail() {
       ]),
     ];
   }, [product, stats, productUrl, plainDescription]);
+
+  if (loading) return (
+    <Loader text="Loading product details..." className="min-h-[60vh]" delay={200} />
+  );
 
   return (
     <div className="min-h-screen bg-background pt-20 md:pt-24 pb-[100px] md:pb-8">
