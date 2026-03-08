@@ -32,10 +32,14 @@ export const GlobalLoader = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/80 backdrop-blur-sm"
+                    transition={{ duration: 0.4 }}
+                    className="fixed inset-0 z-[9999] flex items-center justify-center"
+                    style={{
+                        background: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(130 30% 95%) 40%, hsl(90 20% 92%) 70%, hsl(var(--background)) 100%)',
+                        backdropFilter: 'blur(6px)',
+                    }}
                 >
-                    <Loader text="Loading fresh homemade goodness…" size="lg" className="min-h-0" delay={0} />
+                    <Loader text="Preparing fresh homemade goodness…" size="lg" className="min-h-0" delay={0} />
                 </motion.div>
             )}
         </AnimatePresence>
