@@ -116,7 +116,7 @@ export default function AdminProducts() {
           .order('created_at', { ascending: false }),
         supabase.from('categories').select('*').order('sort_order'),
       ]);
-      setProducts(p || []);
+      setProducts((p as any) || []);
       setCategories(c || []);
     } catch (error) {
       toast.error('Failed to load products');
