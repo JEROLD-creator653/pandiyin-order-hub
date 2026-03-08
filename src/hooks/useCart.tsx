@@ -118,7 +118,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
           return;
         }
         const existing = items.find(i => i.product_id === productId);
-        addMutation.mutate({ productId, quantity: existing ? existing.quantity + quantity : quantity });
+        const newQty = existing ? existing.quantity + quantity : quantity;
+        const stock = existing?.product?.stock_quantity ?? Infinity;
+        if (newQty > stock) {
+          toast({ title: 'Stock limit reached', description: `Only ${stock} available`, variant: 'destructive' });
+          return;
+        }
+        addMutation.mutate({ productId, quantity: newQty });
       },
       updateQuantity: (itemId, quantity) => updateMutation.mutate({ itemId, quantity }),
       removeItem: (itemId) => removeMutation.mutate(itemId),
