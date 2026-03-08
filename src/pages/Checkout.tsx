@@ -44,6 +44,7 @@ export default function Checkout() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [agreementChecked, setAgreementChecked] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('razorpay');
+  const MAX_NOTES_LENGTH = 500;
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);

@@ -8,7 +8,7 @@ const corsHeaders = {
 
 // State → zone mapping
 const STATE_ZONES: Record<string, string> = {};
-['Tamil Nadu'].forEach(s => STATE_ZONES[s] = 'local');
+['Tamil Nadu', 'Puducherry', 'Pondicherry'].forEach(s => STATE_ZONES[s] = 'local');
 ['Kerala', 'Karnataka', 'Andhra Pradesh', 'Telangana'].forEach(s => STATE_ZONES[s] = 'nearby');
 // Everything else → rest_of_india (handled by default)
 
