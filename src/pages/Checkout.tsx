@@ -19,7 +19,7 @@ import { useShippingRegions } from '@/hooks/useShippingRegions';
 import AddressManager, { Address } from '@/components/AddressManager';
 import { formatPrice } from '@/lib/formatters';
 import { ButtonLoader, Loader } from '@/components/ui/loader';
-import { ZONE_GROUPS, STATE_ZONES, getChargedWeight, calculateDeliveryCharge, type ShippingZoneConfig } from '@/lib/deliveryCalculations';
+import { STATE_ZONES, getChargedWeight, calculateDeliveryCharge, type ShippingZoneConfig } from '@/lib/deliveryCalculations';
 
 declare global {
   interface Window {
