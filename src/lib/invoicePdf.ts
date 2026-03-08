@@ -194,27 +194,14 @@ export async function generateInvoicePdf(data: InvoiceData) {
   doc.setFontSize(7.5);
   doc.text(`GSTIN: ${COMPANY.gstin}`, textStartX, y);
 
-  // Right side: Invoice meta (right-aligned labels and values)
+  // Right side: Invoice meta (right-aligned)
   const rightCol = mr;
   let ry = 16;
 
   const metaLabelX = pw - 80;
   const metaValueX = rightCol;
 
-  const addMeta = (label: string, value: string) => {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
-    doc.setTextColor(...GRAY);
-    doc.text(label, metaLabelX, ry);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...DARK_TEXT);
-    doc.text(value, metaValueX, ry, { align: 'right' });
-    ry += 4.5;
-  };
-
-  addMeta('Invoice Number:', data.invoiceNumber);
-  addMeta('Invoice Date:', data.orderDate);
-  addMeta('Invoice Time:', data.orderTime);
+  // (meta will be drawn after TAX INVOICE row)
 
   y = Math.max(y, ry) + 5;
 
@@ -222,13 +209,33 @@ export async function generateInvoicePdf(data: InvoiceData) {
   drawLine(doc, y, ml, mr, DARK_GREEN, 0.6);
   y += 7;
 
-  // TAX INVOICE banner row (centered, between header and shipping)
+  // TAX INVOICE banner row (centered)
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
   doc.setTextColor(...DARK_GREEN);
   doc.text('TAX INVOICE', pw / 2, y, { align: 'center' });
-  y += 5;
+  y += 6;
 
+  // Invoice meta below TAX INVOICE (centered layout)
+  const metaCenterX = pw / 2;
+  const metaSpacing = 4.5;
+
+  const drawMetaRow = (label: string, value: string) => {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...GRAY);
+    doc.text(label, metaCenterX - 2, y, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...DARK_TEXT);
+    doc.text(value, metaCenterX + 2, y);
+    y += metaSpacing;
+  };
+
+  drawMetaRow('Invoice Number:', data.invoiceNumber);
+  drawMetaRow('Invoice Date:', data.orderDate);
+  drawMetaRow('Invoice Time:', data.orderTime);
+
+  y += 2;
   drawLine(doc, y, ml, mr, LIGHT_GREEN, 0.3);
   y += 7;
 
