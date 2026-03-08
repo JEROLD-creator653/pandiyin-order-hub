@@ -175,7 +175,7 @@ export default function ProductDetail() {
             {product.categories?.name && (
               <Badge variant="secondary" className="mb-3 w-fit">{product.categories.name}</Badge>
             )}
-            <h1 className="text-3xl lg:text-4xl font-display font-bold mb-4">{product.name}</h1>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-bold mb-3 md:mb-4">{product.name}</h1>
             
             {/* Rating Summary */}
             {stats && stats.total_reviews > 0 && stats.average_rating > 0 && (
