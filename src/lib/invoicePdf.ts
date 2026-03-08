@@ -395,7 +395,7 @@ export async function generateInvoicePdf(data: InvoiceData) {
   ];
   if (data.discount > 0) {
     const discLabel = data.couponCode ? `Discount (${data.couponCode})` : 'Discount';
-    summaryItems.push({ label: discLabel, value: `– ${formatPrice(data.discount)}`, bold: false });
+    summaryItems.push({ label: discLabel, value: `- ${formatPrice(data.discount)}`, bold: false });
   }
 
   // Draw summary rows
