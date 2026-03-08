@@ -308,7 +308,7 @@ export default function Checkout() {
         modal: {
           ondismiss: () => {
             supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
-            setPaymentError('Payment cancelled. Your order has been saved. You can retry payment.');
+            setCheckoutError('Payment cancelled. Your order has been saved. You can retry payment.');
             setLoading(false);
           },
         },
