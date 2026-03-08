@@ -36,9 +36,7 @@ export default function ErrorModal({
             transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-           <div className="w-[90vw] max-w-md">
-          >
-            <div className="relative overflow-hidden rounded-3xl border-2 border-border bg-background shadow-[0_20px_60px_-12px_hsl(150,20%,12%,0.25)]">
+            <div className="w-[90vw] max-w-md relative overflow-hidden rounded-3xl border-2 border-border bg-background shadow-[0_20px_60px_-12px_hsl(150,20%,12%,0.25)]">
               {/* Top accent bar */}
               <div className="h-1.5 w-full bg-gradient-to-r from-destructive via-destructive/70 to-destructive/40" />
 
