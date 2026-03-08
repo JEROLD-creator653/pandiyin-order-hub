@@ -1005,6 +1005,7 @@ export type Database = {
       }
       generate_invoice_number: { Args: never; Returns: string }
       get_gst_type_for_state: { Args: { p_state: string }; Returns: string }
+      get_review_user_name: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
