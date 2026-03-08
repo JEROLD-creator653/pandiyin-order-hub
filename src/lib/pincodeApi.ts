@@ -48,8 +48,16 @@ export async function fetchPincodeDetails(
 ): Promise<PincodeResult | null> {
   if (!/^\d{6}$/.test(pincode)) return null;
 
+  // Try primary API
   try {
-    const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
     const data: PostalApiResponse[] = await res.json();
 
     if (data?.[0]?.Status === 'Success' && data[0].PostOffice?.length > 0) {
@@ -59,7 +67,6 @@ export async function fetchPincodeDetails(
         return null;
       }
 
-      // Determine city: use Block if not "NA", fallback to District
       const city =
         selectedPostOffice.Block && selectedPostOffice.Block !== 'NA'
           ? selectedPostOffice.Block
@@ -75,7 +82,34 @@ export async function fetchPincodeDetails(
 
     return null;
   } catch (error) {
-    console.error('Pincode lookup error:', error);
+    console.error('Primary pincode API failed, trying fallback:', error);
+  }
+
+  // Fallback API
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+    const res = await fetch(`https://api.zippopotam.us/in/${pincode}`, {
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.places?.length > 0) {
+        const place = data.places[0];
+        return {
+          area: place['place name'] || '',
+          city: place['place name'] || '',
+          district: place['place name'] || '',
+          state: place['state'] || '',
+        };
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('Fallback pincode API also failed:', error);
     return null;
   }
 }
