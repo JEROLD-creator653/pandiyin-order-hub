@@ -95,7 +95,7 @@ export default function TrustBadges() {
                   gap: '16px',
                 }}
               >
-                {/* Badge Logo - No White Space */}
+                {/* Badge Logo - Lazy loaded with dimensions */}
                 <div 
                   className="flex-shrink-0 badge-logo-container-mobile badge-lift rounded-full overflow-hidden"
                   style={{
@@ -112,6 +112,10 @@ export default function TrustBadges() {
                   <img 
                     src={badge.logo} 
                     alt={badge.text}
+                    width={95}
+                    height={95}
+                    loading="lazy"
+                    decoding="async"
                     className="badge-logo-no-whitespace rounded-full"
                     style={{
                       width: '100%',

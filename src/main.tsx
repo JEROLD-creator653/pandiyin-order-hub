@@ -34,6 +34,5 @@ import { setupPerformanceOptimizations } from "./lib/performance";
 
 // Initialize performance optimizations
 setupPerformanceOptimizations();
-trackWebVitals();
 
 createRoot(document.getElementById("root")!).render(<App />);
