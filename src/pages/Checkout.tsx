@@ -460,9 +460,9 @@ export default function Checkout() {
               </RadioGroup>
 
               <div className="flex items-center justify-center gap-2 pt-2 border-t border-border/40">
-                <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground/50" />
-                <span className="text-[11px] text-muted-foreground/60 tracking-wide">Secure payments powered by</span>
-                <img src="/razorpay-badge.svg" alt="Razorpay" className="h-3.5 opacity-50" />
+                <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground tracking-wide">Secure payments powered by</span>
+                <img src="/razorpay-badge.svg" alt="Razorpay" className="h-5" />
               </div>
             </CardContent>
           </Card>
