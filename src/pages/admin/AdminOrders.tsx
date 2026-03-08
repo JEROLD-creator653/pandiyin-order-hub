@@ -212,62 +212,200 @@ export default function AdminOrders() {
       </Card>
 
       <Dialog open={!!detail} onOpenChange={() => setDetail(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Order {detail?.order_number}</DialogTitle></DialogHeader>
-          {detail && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><span className="text-muted-foreground">Status:</span> <Badge className={statusColors[detail.status]}>{detail.status}</Badge></div>
-                <div><span className="text-muted-foreground">Payment:</span> {detail.payment_method.toUpperCase()}</div>
-                <div><span className="text-muted-foreground">Subtotal:</span> {formatPrice(detail.subtotal)}</div>
-                <div><span className="text-muted-foreground">Delivery:</span> {formatPrice(detail.delivery_charge)}</div>
-                {Number(detail.discount) > 0 && (
-                  <div className="col-span-2 bg-green-50 border border-green-200 rounded p-2">
+        <DialogContent className="max-w-xl p-0 overflow-hidden rounded-xl shadow-lg border-0">
+          {detail && (() => {
+            const addr = detail.delivery_address as any;
+            const orderDate = new Date(detail.created_at);
+            const paymentMethod = detail.payment_mode || detail.payment_method || '';
+            const paymentMethodLabel = paymentMethod === 'upi' ? 'UPI' : paymentMethod === 'card' ? 'Card' : paymentMethod === 'netbanking' ? 'Net Banking' : paymentMethod === 'cod' ? 'Cash on Delivery' : paymentMethod.toUpperCase();
+
+            return (
+              <div className="bg-background">
+                {/* SECTION 1 — ORDER HEADER */}
+                <div className="px-6 pt-6 pb-4">
+                  <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">Order Receipt</p>
+                  <div className="space-y-1.5 text-sm">
                     <div className="flex items-center justify-between">
-                      <span className="text-green-800 font-medium">
-                        💰 Discount {detail.coupon_code && `(${detail.coupon_code})`}
+                      <span className="text-muted-foreground">Order ID</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="font-bold font-mono text-foreground">{detail.order_number}</span>
+                        <button onClick={() => copyToClipboard(detail.order_number, 'Order ID')} className="text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3.5 w-3.5" /></button>
                       </span>
-                      <span className="text-green-700 font-bold">-{formatPrice(detail.discount)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Date</span>
+                      <span className="text-foreground">{orderDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Time</span>
+                      <span className="text-foreground">{orderDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Status</span>
+                      <Badge className={`${statusColors[detail.status]} capitalize text-xs px-2.5 py-0.5`}>{detail.status}</Badge>
                     </div>
                   </div>
-                )}
-                <div className="font-bold col-span-2 pt-1 border-t"><div className="flex justify-between"><span className="text-muted-foreground">Total:</span><span>{formatPrice(detail.total)}</span></div></div>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-sm text-muted-foreground">Update status</span>
-                <Select value={detail.status} onValueChange={v => updateStatus(detail.id, v)}>
-                  <SelectTrigger className="w-40 h-8 capitalize"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {statuses.map(s => (
-                      <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {detail.delivery_address && (
-                <div className="text-sm p-3 bg-muted rounded-lg">
-                  <p className="font-medium mb-1">Delivery Address</p>
-                  <p>{(detail.delivery_address as any).full_name}, {(detail.delivery_address as any).phone}</p>
-                  <p>{(detail.delivery_address as any).address_line1}, {(detail.delivery_address as any).city} - {(detail.delivery_address as any).pincode}</p>
                 </div>
-              )}
-              {detail.notes && (
-                <div className="text-sm p-3 bg-primary/10 border border-primary/30 rounded-lg">
-                  <p className="font-medium mb-1 text-primary">Customer Instructions</p>
-                  <p className="text-foreground whitespace-pre-wrap">{detail.notes}</p>
-                </div>
-              )}
-              <div>
-                <p className="font-medium text-sm mb-2">Items</p>
-                {orderItems.map(item => (
-                  <div key={item.id} className="flex justify-between text-sm py-1 border-b last:border-0">
-                    <span>{item.product_name} ×{item.quantity}</span>
-                    <span>{formatPrice(item.total)}</span>
+
+                <Separator />
+
+                {/* SECTION 2 — PAYMENT INFORMATION */}
+                <div className="px-6 py-4">
+                  <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">Payment Information</p>
+                  <div className="space-y-1.5 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Gateway</span>
+                      <span className="text-foreground">Razorpay</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Method</span>
+                      <span className="text-foreground">{paymentMethodLabel}</span>
+                    </div>
+                    {detail.stripe_payment_id && detail.stripe_payment_id !== '' && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-muted-foreground">Payment ID</span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="font-mono text-xs text-foreground">{detail.stripe_payment_id}</span>
+                          <button onClick={() => copyToClipboard(detail.stripe_payment_id, 'Payment ID')} className="text-muted-foreground hover:text-foreground transition-colors"><Copy className="h-3.5 w-3.5" /></button>
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Payment Status</span>
+                      <Badge variant="outline" className={`capitalize text-xs px-2.5 py-0.5 ${detail.payment_status === 'paid' ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-amber-300 bg-amber-50 text-amber-700'}`}>{detail.payment_status}</Badge>
+                    </div>
                   </div>
-                ))}
+                </div>
+
+                <Separator />
+
+                {/* SECTION 3 — DELIVERY ADDRESS */}
+                {addr && (
+                  <>
+                    <div className="px-6 py-4">
+                      <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">Delivery Address</p>
+                      <div className="bg-muted/50 rounded-lg p-3.5 text-sm space-y-0.5">
+                        <p className="font-semibold text-foreground">{addr.full_name}</p>
+                        {addr.phone && <p className="text-muted-foreground">Phone: {addr.phone}</p>}
+                        <p className="text-foreground">{addr.address_line1}</p>
+                        {addr.address_line2 && <p className="text-foreground">{addr.address_line2}</p>}
+                        <p className="text-foreground">{addr.city}{addr.district ? `, ${addr.district}` : ''} – {addr.pincode}</p>
+                        <p className="text-foreground">{addr.state}</p>
+                      </div>
+                    </div>
+                    <Separator />
+                  </>
+                )}
+
+                {/* Customer Notes */}
+                {detail.notes && detail.notes !== '' && (
+                  <>
+                    <div className="px-6 py-4">
+                      <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">Customer Notes</p>
+                      <p className="text-sm text-foreground bg-muted/50 rounded-lg p-3.5 whitespace-pre-wrap">{detail.notes}</p>
+                    </div>
+                    <Separator />
+                  </>
+                )}
+
+                {/* SECTION 4 — ORDER ITEMS */}
+                <div className="px-6 py-4">
+                  <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">Order Items</p>
+                  <div className="text-sm">
+                    {/* Table Header */}
+                    <div className="grid grid-cols-12 gap-2 pb-2 border-b text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      <span className="col-span-6">Product</span>
+                      <span className="col-span-2 text-center">Qty</span>
+                      <span className="col-span-2 text-right">Price</span>
+                      <span className="col-span-2 text-right">Total</span>
+                    </div>
+                    {/* Table Rows */}
+                    {orderItems.map(item => (
+                      <div key={item.id} className="grid grid-cols-12 gap-2 py-2.5 border-b border-dashed last:border-0 items-center">
+                        <span className="col-span-6 font-medium text-foreground truncate">{item.product_name}</span>
+                        <span className="col-span-2 text-center text-muted-foreground">{item.quantity}</span>
+                        <span className="col-span-2 text-right text-muted-foreground">{formatPrice(item.product_price)}</span>
+                        <span className="col-span-2 text-right font-medium text-foreground">{formatPrice(item.total)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* SECTION 5 — ORDER SUMMARY */}
+                <div className="px-6 py-4">
+                  <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">Order Summary</p>
+                  <div className="space-y-1.5 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="text-foreground">{formatPrice(detail.subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Delivery</span>
+                      <span className="text-foreground">{Number(detail.delivery_charge) === 0 ? 'Free' : formatPrice(detail.delivery_charge)}</span>
+                    </div>
+                    {Number(detail.gst_amount) > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">GST</span>
+                        <span className="text-foreground">{formatPrice(detail.gst_amount)}</span>
+                      </div>
+                    )}
+                    {Number(detail.discount) > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Discount {detail.coupon_code && `(${detail.coupon_code})`}</span>
+                        <span className="text-emerald-600 font-medium">-{formatPrice(detail.discount)}</span>
+                      </div>
+                    )}
+                    <Separator className="my-2" />
+                    <div className="flex justify-between">
+                      <span className="font-bold text-foreground text-base">Grand Total</span>
+                      <span className="font-bold text-foreground text-base">{formatPrice(detail.total)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* SECTION 6 — ORDER STATUS CONTROL */}
+                <div className="px-6 py-4">
+                  <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">Update Order Status</p>
+                  <div className="flex items-center gap-3">
+                    <Select value={newStatus} onValueChange={setNewStatus}>
+                      <SelectTrigger className="flex-1 h-9 capitalize"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {statuses.map(s => (
+                          <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      size="sm"
+                      disabled={newStatus === detail.status}
+                      onClick={() => updateStatus(detail.id, newStatus)}
+                    >
+                      Save Status
+                    </Button>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* SECTION 7 — ADMIN ACTIONS */}
+                <div className="px-6 py-4 flex flex-wrap items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={handleGenerateInvoice} className="gap-1.5">
+                    <FileText className="h-3.5 w-3.5" /> Generate Invoice
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handlePrint} className="gap-1.5">
+                    <Printer className="h-3.5 w-3.5" /> Print Receipt
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={copyOrderDetails} className="gap-1.5">
+                    <ClipboardList className="h-3.5 w-3.5" /> Copy Details
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
