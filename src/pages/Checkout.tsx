@@ -72,27 +72,17 @@ export default function Checkout() {
 
   useEffect(() => {
     if (items.length === 0) return;
-    const fetchProductGst = async () => {
-      const productIds = items.map(item => item.product_id);
-      const { data: productsData } = await supabase
-        .from('products')
-        .select('id, gst_percentage, hsn_code, tax_inclusive')
-        .in('id', productIds);
-      const gstMap = new Map(productsData?.map(p => [p.id, p]) || []);
-      setProductGstMap(gstMap);
-      let totalGst = 0;
-      items.forEach(item => {
-        const productGst = gstMap.get(item.product_id) || {};
-        const itemGstPercentage = (productGst as any)?.gst_percentage || 5;
-        const itemBasePrice = (productGst as any)?.tax_inclusive
-          ? item.product.price * 100 / (100 + itemGstPercentage)
-          : item.product.price;
-        const itemGstAmount = (itemBasePrice * itemGstPercentage / 100) * item.quantity;
-        totalGst += itemGstAmount;
-      });
-      setCalculatedGstAmount(totalGst);
-    };
-    fetchProductGst();
+    let totalGst = 0;
+    items.forEach(item => {
+      const p = item.product as any;
+      const itemGstPercentage = p?.gst_percentage || 5;
+      const itemBasePrice = p?.tax_inclusive !== false
+        ? item.product.price * 100 / (100 + itemGstPercentage)
+        : item.product.price;
+      const itemGstAmount = (itemBasePrice * itemGstPercentage / 100) * item.quantity;
+      totalGst += itemGstAmount;
+    });
+    setCalculatedGstAmount(totalGst);
   }, [items]);
 
   // Weight-based delivery calculation
