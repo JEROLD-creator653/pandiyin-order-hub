@@ -64,8 +64,8 @@ export default function AdminProducts() {
 
   const [form, setForm] = useState({
     name: '', description: '', price: '', compare_price: '', category_id: '',
-    stock_quantity: '', weight: '', weight_value: '', weight_unit: 'g',
-    unit: 'g', gst_percentage: '5', hsn_code: '',
+    stock_quantity: '', weight: '', unit: 'g',
+    gst_percentage: '5', hsn_code: '',
     is_available: true, is_featured: false,
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
