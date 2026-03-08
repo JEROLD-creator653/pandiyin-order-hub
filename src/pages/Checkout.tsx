@@ -336,8 +336,8 @@ export default function Checkout() {
       toast({ title: 'Please select or add a delivery address', variant: 'destructive' });
       return;
     }
-    if (!deliveryState) {
-      toast({ title: 'Please select your delivery state', variant: 'destructive' });
+    if (!selectedAddress.state) {
+      toast({ title: 'Address missing state info', description: 'Please update your address with a valid pincode', variant: 'destructive' });
       return;
     }
     if (!agreementChecked) {
