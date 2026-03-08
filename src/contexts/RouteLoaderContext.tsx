@@ -190,7 +190,63 @@ interface GlobalRouteLoaderProps {
  * Premium Apple/Stripe-style loading overlay
  * Full-screen loader with smooth animations and subtle effects
  */
+const LEAF_COLORS = [
+  'hsl(var(--primary))',
+  'hsl(var(--primary) / 0.7)',
+  'hsl(120, 40%, 45%)',
+  'hsl(90, 50%, 50%)',
+  'hsl(45, 80%, 55%)',
+  'hsl(30, 70%, 50%)',
+];
+
+const LeafSVG = ({ color, size = 24 }: { color: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <path
+      d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20c4 0 8.68-3.93 9-12z"
+      fill={color}
+      opacity={0.85}
+    />
+    <path
+      d="M17 8c.59-1.36.94-2.87 1-4.5C12.26 3.5 8.5 6.48 6 10c-.26.41-.5.81-.73 1.22C7.37 8.1 11.29 6.5 17 8z"
+      fill={color}
+      opacity={0.6}
+    />
+  </svg>
+);
+
+const FallingLeaf = ({ delay, startX, color, size }: { delay: number; startX: number; color: string; size: number }) => (
+  <motion.div
+    className="absolute pointer-events-none"
+    style={{ left: `${startX}%`, top: -30 }}
+    initial={{ y: -30, x: 0, rotate: 0, opacity: 0 }}
+    animate={{
+      y: ['0vh', '105vh'],
+      x: [0, Math.sin(startX) * 60, -Math.sin(startX) * 40, Math.sin(startX) * 30],
+      rotate: [0, 120, 240, 360 + Math.random() * 180],
+      opacity: [0, 1, 1, 0.6, 0],
+    }}
+    transition={{
+      duration: 3.5 + Math.random() * 2,
+      delay,
+      repeat: Infinity,
+      ease: 'easeIn',
+    }}
+  >
+    <LeafSVG color={color} size={size} />
+  </motion.div>
+);
+
 const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
+  const leaves = React.useMemo(() =>
+    Array.from({ length: 12 }).map((_, i) => ({
+      id: i,
+      delay: i * 0.3,
+      startX: 5 + Math.random() * 90,
+      color: LEAF_COLORS[i % LEAF_COLORS.length],
+      size: 18 + Math.random() * 14,
+    })),
+  []);
+
   return (
     <AnimatePresence mode="wait">
       {isLoading && (
@@ -199,95 +255,54 @@ const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.25, ease: "easeInOut" }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/98 backdrop-blur-lg"
-          style={{ 
-            // Prevent scrolling while loading
-            touchAction: 'none',
-            overscrollBehavior: 'contain'
-          }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/95 backdrop-blur-md overflow-hidden"
+          style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
         >
-          {/* Subtle gradient background effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 opacity-50" />
-          
-          <div className="relative flex flex-col items-center gap-8">
-            {/* Premium spinner with glow effect */}
-            <motion.div 
-              className="relative flex items-center justify-center"
-              initial={{ scale: 0.9, opacity: 0 }}
+          {/* Falling leaves */}
+          {leaves.map((leaf) => (
+            <FallingLeaf key={leaf.id} {...leaf} />
+          ))}
+
+          {/* Center content */}
+          <div className="relative flex flex-col items-center gap-6 z-10">
+            {/* Central leaf icon with pulse */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              transition={{ duration: 0.4, ease: 'easeOut' }}
+              className="relative"
             >
-              {/* Outer ring - static */}
-              <div className="w-20 h-20 rounded-full border-[3px] border-primary/10" />
-              
-              {/* Middle ring - slow spin */}
-              <motion.div 
-                className="absolute top-0 left-0 w-20 h-20 rounded-full border-[3px] border-primary/30 border-t-transparent"
-                animate={{ rotate: 360 }}
-                transition={{ 
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
+              <motion.div
+                animate={{ scale: [1, 1.1, 1], opacity: [0.3, 0.5, 0.3] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                className="absolute inset-0 rounded-full bg-primary/20 blur-2xl w-20 h-20 -translate-x-2 -translate-y-2"
               />
-              
-              {/* Inner ring - fast spin */}
-              <motion.div 
-                className="absolute top-2 left-2 w-16 h-16 rounded-full border-[2.5px] border-primary border-t-transparent border-r-transparent"
-                animate={{ rotate: 360 }}
-                transition={{ 
-                  duration: 0.8,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-              />
-              
-              {/* Center glow effect */}
-              <motion.div 
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-primary/20 blur-2xl"
-                animate={{ 
-                  scale: [1, 1.2, 1],
-                  opacity: [0.3, 0.5, 0.3]
-                }}
-                transition={{ 
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
+              <motion.div
+                animate={{ rotate: [0, 10, -10, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <LeafSVG color="hsl(var(--primary))" size={48} />
+              </motion.div>
             </motion.div>
-            
-            {/* Loading text with shimmer effect */}
+
+            {/* Loading text */}
             <motion.div
               className="flex flex-col items-center gap-2"
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15, duration: 0.3 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
             >
               <p className="text-muted-foreground text-sm font-medium tracking-wide">
                 Loading
               </p>
-              <motion.div 
-                className="flex gap-1"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
+              <motion.div className="flex gap-1">
                 {[0, 1, 2].map((i) => (
                   <motion.span
                     key={i}
                     className="w-1.5 h-1.5 rounded-full bg-primary/60"
-                    animate={{ 
-                      scale: [1, 1.3, 1],
-                      opacity: [0.5, 1, 0.5]
-                    }}
-                    transition={{ 
-                      duration: 1.2,
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                      ease: "easeInOut"
-                    }}
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.4, 1, 0.4] }}
+                    transition={{ duration: 1, repeat: Infinity, delay: i * 0.2, ease: 'easeInOut' }}
                   />
                 ))}
               </motion.div>
