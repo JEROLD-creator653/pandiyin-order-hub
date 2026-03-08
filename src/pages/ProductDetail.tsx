@@ -232,16 +232,16 @@ export default function ProductDetail() {
                         variant="ghost" 
                         size="icon" 
                         onClick={() => setQty(q => Math.max(1, q - 1))}
-                        className="h-9 w-9"
+                        className="h-10 w-10 active:scale-95"
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
-                      <span className="w-12 text-center font-semibold">{qty}</span>
+                      <span className="w-10 text-center font-semibold">{qty}</span>
                       <Button 
                         variant="ghost" 
                         size="icon" 
                         onClick={() => setQty(q => Math.min(product.stock_quantity, q + 1))}
-                        className="h-9 w-9"
+                        className="h-10 w-10 active:scale-95"
                       >
                         <Plus className="h-4 w-4" />
                       </Button>

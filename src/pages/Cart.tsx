@@ -73,8 +73,8 @@ export default function Cart() {
         <div className="lg:col-span-2 space-y-4">
           {items.map((item, i) => (
             <motion.div key={item.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}>
-              <Card className="p-4 flex gap-4">
-                <div className="w-20 h-20 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
+              <Card className="p-3 md:p-4 flex gap-3 md:gap-4">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-lg bg-muted flex-shrink-0 overflow-hidden flex items-center justify-center">
                   {item.product.image_url ? (
                     <img src={item.product.image_url} alt={item.product.name} className="w-full h-full object-cover rounded-lg" />
                   ) : (

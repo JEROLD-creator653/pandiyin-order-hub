@@ -450,7 +450,7 @@ export default function Checkout() {
               <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
                 <label
                   htmlFor="razorpay"
-                  className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                  className={`flex items-center gap-3 md:gap-4 p-3 md:p-4 border-2 rounded-xl cursor-pointer transition-all active:scale-[0.98] ${
                     paymentMethod === 'razorpay'
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:border-primary/30'

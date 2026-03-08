@@ -437,10 +437,10 @@ export default function Index() {
                           <h3 className="font-semibold text-sm md:text-base font-sans line-clamp-2 mb-1 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
                           {p.weight && <p className="text-[10px] md:text-xs text-muted-foreground mb-1 md:mb-2">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
                         </div>
-                        <div className="flex items-center justify-between gap-2 mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-lg text-primary">{formatPrice(p.price)}</span>
-                            {p.compare_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2 md:mb-3">
+                          <div className="flex items-center gap-1.5 md:gap-2">
+                            <span className="font-medium text-base md:text-lg text-primary">{formatPrice(p.price)}</span>
+                            {p.compare_price && <span className="text-xs md:text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
                           </div>
                           {p.average_rating !== null && p.average_rating !== undefined && Number(p.average_rating) > 0 && (
                             <span className="flex items-center gap-1 text-sm font-medium text-slate-600">
