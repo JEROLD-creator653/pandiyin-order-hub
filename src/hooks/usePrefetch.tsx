@@ -31,7 +31,7 @@ export function usePrefetchBanners() {
       queryKey: ['banners'],
       queryFn: async () => {
         const { data, error } = await (supabase as any)
-          .from('public_banners')
+          .from('banners')
           .select('*')
           .eq('is_active', true)
           .order('sort_order', { ascending: true });
