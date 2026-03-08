@@ -339,7 +339,7 @@ export default function Checkout() {
       return;
     }
     if (!agreementChecked) {
-      toast({ title: 'Please agree to our policies', description: 'You must accept our Terms of Service, Return Policy and Shipping Policy to proceed', variant: 'destructive' });
+      setCheckoutError('Please agree to our Terms of Service, Return Policy and Shipping Policy to proceed.');
       return;
     }
 
