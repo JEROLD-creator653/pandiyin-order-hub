@@ -193,7 +193,7 @@ export default function ProductDetail() {
               return (
                 <div className="mb-6">
                   <div className="flex items-baseline gap-3 mb-2">
-                    <span className="text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
+                    <span className="text-3xl md:text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
                     {pricing.hasDiscount && (
                       <>
                         <span className="text-lg text-muted-foreground line-through">{formatPrice(pricing.comparePrice)}</span>
