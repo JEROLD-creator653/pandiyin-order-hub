@@ -44,6 +44,7 @@ import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminShipping from "./pages/admin/AdminShipping";
+import AdminAlerts from "./pages/admin/AdminAlerts";
 
 // React Query client — ensures fresh data on navigation
 const queryClient = new QueryClient({
