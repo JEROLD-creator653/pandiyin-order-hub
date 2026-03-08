@@ -37,7 +37,7 @@ export default function AdminSettings() {
 
   const loadRegions = async () => {
     const { data } = await supabase.from('shipping_regions').select('*').order('sort_order');
-    setRegions((data || []).map(r => ({ ...r, base_charge: String(r.base_charge), free_delivery_above: r.free_delivery_above ? String(r.free_delivery_above) : '' })));
+    setRegions((data || []).map((r: any) => ({ ...r, base_charge: String(r.base_charge), free_delivery_above: r.free_delivery_above ? String(r.free_delivery_above) : '', per_kg_rate: String(r.per_kg_rate || 0) })));
   };
 
   const saveStore = async () => {
