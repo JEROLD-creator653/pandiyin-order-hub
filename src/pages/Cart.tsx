@@ -1,6 +1,7 @@
+import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Trash2, Minus, Plus, ShoppingBag, Leaf } from 'lucide-react';
+import { Trash2, Minus, Plus, ShoppingBag, Leaf, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useCart } from '@/hooks/useCart';
@@ -9,6 +10,7 @@ import ProductRecommendations from '@/components/ProductRecommendations';
 import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import { formatPrice } from '@/lib/formatters';
 import { Loader } from '@/components/ui/loader';
+import { getChargedWeight } from '@/lib/deliveryCalculations';
 
 function getPricingInfo(price: number, comparePrice?: number) {
   const hasDiscount = comparePrice && comparePrice > price;
