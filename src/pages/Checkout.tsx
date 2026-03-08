@@ -19,7 +19,14 @@ import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import { formatPrice } from '@/lib/formatters';
 import { ButtonLoader, Loader } from '@/components/ui/loader';
 
-// Helper function to get GST type based on state
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
+const RAZORPAY_KEY_ID = 'rzp_test_SOl9lqqJlvN9Ln';
+
 const getGSTType = (state: string): 'cgst_sgst' | 'igst' => {
   const sameSateStates = ['Tamil Nadu', 'Puducherry'];
   return sameSateStates.includes(state) ? 'cgst_sgst' : 'igst';
@@ -32,7 +39,7 @@ export default function Checkout() {
   const { regions, getDeliveryCharge } = useShippingRegions();
   const [loading, setLoading] = useState(false);
   const [agreementChecked, setAgreementChecked] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<string>('cod');
+  const [paymentMethod, setPaymentMethod] = useState<string>('razorpay');
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [deliveryCharge, setDeliveryCharge] = useState(0);
@@ -44,59 +51,46 @@ export default function Checkout() {
   const [calculatedGstAmount, setCalculatedGstAmount] = useState(0);
 
   useEffect(() => {
-    // Wait for auth loading to complete before redirecting
     if (!authLoading && !user) {
       navigate('/auth');
       return;
     }
-
-    // Check cart only after user is confirmed
     if (user && items.length === 0) {
       navigate('/cart');
       return;
     }
     supabase.from('store_settings').select('*').limit(1).maybeSingle().then(({ data }) => {
       if (data) {
-        setGstSettings({
-          gst_enabled: (data as any).gst_enabled || false,
-        });
+        setGstSettings({ gst_enabled: (data as any).gst_enabled || false });
       }
     });
   }, [user, items.length, authLoading]);
 
-  // Fetch product GST details and calculate total GST
   useEffect(() => {
     if (items.length === 0) return;
-
     const fetchProductGst = async () => {
       const productIds = items.map(item => item.product_id);
       const { data: productsData } = await supabase
         .from('products')
         .select('id, gst_percentage, hsn_code, tax_inclusive')
         .in('id', productIds);
-
       const gstMap = new Map(productsData?.map(p => [p.id, p]) || []);
       setProductGstMap(gstMap);
-
-      // Calculate total GST from all products
       let totalGst = 0;
       items.forEach(item => {
         const productGst = gstMap.get(item.product_id) || {};
         const itemGstPercentage = (productGst as any)?.gst_percentage || 5;
-        const itemBasePrice = (productGst as any)?.tax_inclusive ?
-          item.product.price * 100 / (100 + itemGstPercentage) :
-          item.product.price;
+        const itemBasePrice = (productGst as any)?.tax_inclusive
+          ? item.product.price * 100 / (100 + itemGstPercentage)
+          : item.product.price;
         const itemGstAmount = (itemBasePrice * itemGstPercentage / 100) * item.quantity;
         totalGst += itemGstAmount;
       });
-
       setCalculatedGstAmount(totalGst);
     };
-
     fetchProductGst();
   }, [items]);
 
-  // Recalculate delivery when address changes
   useEffect(() => {
     if (selectedAddress?.state && regions.length > 0) {
       const charge = getDeliveryCharge(selectedAddress.state, total);
@@ -106,159 +100,239 @@ export default function Checkout() {
     }
   }, [selectedAddress, regions, total, getDeliveryCharge]);
 
-
-
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
     if (!user) {
       toast({ title: 'Please login to apply coupon', variant: 'destructive' });
       return;
     }
-
     try {
-      // Call server-side validation function
       const { data, error } = await supabase.rpc('validate_coupon' as any, {
         _coupon_code: couponCode.trim().toUpperCase(),
         _user_id: user.id,
-        _order_total: total
+        _order_total: total,
       });
-
       if (error) throw error;
-
       const validation = data?.[0];
       if (!validation || !validation.is_valid) {
-        toast({ 
-          title: 'Invalid coupon', 
-          description: validation?.error_message || 'Could not apply coupon',
-          variant: 'destructive' 
-        });
+        toast({ title: 'Invalid coupon', description: validation?.error_message || 'Could not apply coupon', variant: 'destructive' });
         return;
       }
-
-      // Calculate discount based on validated coupon
-      const disc = validation.discount_type === 'percentage' 
-        ? (total * Number(validation.discount_value)) / 100 
+      const disc = validation.discount_type === 'percentage'
+        ? (total * Number(validation.discount_value)) / 100
         : Number(validation.discount_value);
-      
       setDiscount(disc);
       toast({ title: `Coupon applied! You save ${formatPrice(disc)}` });
     } catch (err: any) {
       console.error('Coupon validation error:', err);
-      toast({ 
-        title: 'Error', 
-        description: 'Failed to validate coupon',
-        variant: 'destructive' 
-      });
+      toast({ title: 'Error', description: 'Failed to validate coupon', variant: 'destructive' });
     }
   };
 
   const gstAmount = gstSettings.gst_enabled ? calculatedGstAmount : 0;
-
-  // CRITICAL FIX: GST is already included in product prices (tax_inclusive = true)
-  // Do NOT add gstAmount to total - this would double-charge the customer
-  // Final total = product subtotal (GST-inclusive) + delivery - discount
   const grandTotal = total - discount + deliveryCharge;
 
-  // Show loading state while auth is initializing
   if (authLoading) {
     return <Loader text="Preparing secure checkout..." className="min-h-[60vh]" delay={200} />;
   }
-
   if (!user) return null;
+
+  const createOrder = async () => {
+    const totalMRP = items.reduce((a, i) => a + ((i.product as any).compare_price || i.product.price) * i.quantity, 0);
+    const sellingTotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0);
+    const gstType = getGSTType(selectedAddress?.state || '');
+    let cgstAmount = 0, sgstAmount = 0, igstAmount = 0;
+    if (gstType === 'cgst_sgst') {
+      cgstAmount = gstAmount / 2;
+      sgstAmount = gstAmount / 2;
+    } else {
+      igstAmount = gstAmount;
+    }
+    const avgGstPercentage = total > 0 ? (gstAmount / total) * 100 : 0;
+
+    const { data: order, error } = await supabase.from('orders').insert({
+      user_id: user!.id,
+      order_number: 'temp',
+      subtotal: sellingTotal,
+      delivery_charge: deliveryCharge,
+      discount: discount,
+      total: grandTotal,
+      gst_amount: gstAmount,
+      gst_percentage: avgGstPercentage,
+      gst_type: gstType,
+      cgst_amount: cgstAmount,
+      sgst_amount: sgstAmount,
+      igst_amount: igstAmount,
+      delivery_state: selectedAddress?.state || '',
+      coupon_code: couponCode || null,
+      payment_method: paymentMethod === 'razorpay' ? 'stripe' as any : 'cod' as any, // 'stripe' enum reused for online
+      payment_status: paymentMethod === 'razorpay' ? 'pending' : 'pending',
+      delivery_address: selectedAddress as any,
+      notes: notes || null,
+    }).select().single();
+    if (error) throw error;
+
+    const orderItems = items.map(item => {
+      const productGst = productGstMap.get(item.product_id) || {};
+      const itemGstPercentage = (productGst as any)?.gst_percentage || 5;
+      const itemBasePrice = (productGst as any)?.tax_inclusive
+        ? item.product.price * 100 / (100 + itemGstPercentage)
+        : item.product.price;
+      const itemGstAmount = (itemBasePrice * itemGstPercentage / 100) * item.quantity;
+      return {
+        order_id: order.id,
+        product_id: item.product_id,
+        product_name: item.product.name,
+        product_price: item.product.price,
+        quantity: item.quantity,
+        total: item.product.price * item.quantity,
+        gst_percentage: itemGstPercentage,
+        hsn_code: (productGst as any)?.hsn_code || '',
+        gst_amount: itemGstAmount,
+        tax_inclusive: (productGst as any)?.tax_inclusive ?? true,
+        product_base_price: itemBasePrice,
+      };
+    });
+    await supabase.from('order_items').insert(orderItems);
+
+    if (couponCode && discount > 0) {
+      await supabase.rpc('redeem_coupon' as any, {
+        _coupon_code: couponCode.trim().toUpperCase(),
+        _user_id: user!.id,
+        _order_id: order.id,
+      });
+    }
+
+    return order;
+  };
+
+  const handleRazorpayPayment = async () => {
+    if (!window.Razorpay) {
+      toast({ title: 'Payment gateway not loaded', description: 'Please refresh the page and try again', variant: 'destructive' });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // 1. Create Razorpay order via edge function
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-order`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            amount: grandTotal,
+            currency: 'INR',
+            receipt: `order_${Date.now()}`,
+            notes: { user_id: user.id },
+          }),
+        }
+      );
+
+      const razorpayOrder = await res.json();
+      if (!res.ok) throw new Error(razorpayOrder.error || 'Failed to create payment order');
+
+      // 2. Create our DB order
+      const order = await createOrder();
+
+      // 3. Open Razorpay checkout
+      const options = {
+        key: RAZORPAY_KEY_ID,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        name: 'PANDIYIN Nature In Pack',
+        description: `Order #${order.order_number}`,
+        order_id: razorpayOrder.id,
+        handler: async (response: any) => {
+          try {
+            // 4. Verify payment server-side
+            const verifyRes = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-verify`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                  apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  order_id: order.id,
+                }),
+              }
+            );
+            const verifyData = await verifyRes.json();
+
+            if (verifyData.verified) {
+              clearCart();
+              navigate(`/order-confirmation/${order.id}`);
+            } else {
+              toast({ title: 'Payment verification failed', description: 'Please contact support', variant: 'destructive' });
+            }
+          } catch (err: any) {
+            console.error('Verification error:', err);
+            toast({ title: 'Verification error', description: err.message, variant: 'destructive' });
+          }
+        },
+        prefill: {
+          name: selectedAddress?.full_name || '',
+          contact: selectedAddress?.phone || '',
+        },
+        theme: { color: '#16a34a' },
+        modal: {
+          ondismiss: () => {
+            // Payment cancelled - update order status
+            supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
+            toast({ title: 'Payment cancelled', description: 'Your order has been saved. You can retry payment.' });
+            setLoading(false);
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', (response: any) => {
+        console.error('Payment failed:', response.error);
+        supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
+        toast({ title: 'Payment failed', description: response.error?.description || 'Please try again', variant: 'destructive' });
+        setLoading(false);
+      });
+      rzp.open();
+    } catch (err: any) {
+      console.error('Payment error:', err);
+      toast({ title: 'Payment failed', description: err.message, variant: 'destructive' });
+      setLoading(false);
+    }
+  };
 
   const placeOrder = async () => {
     if (!selectedAddress || !selectedAddress.full_name || !selectedAddress.phone || !selectedAddress.address_line1 || !selectedAddress.pincode) {
-      toast({ title: 'Please select or add a delivery address', variant: 'destructive' }); return;
+      toast({ title: 'Please select or add a delivery address', variant: 'destructive' });
+      return;
     }
-    
     if (!agreementChecked) {
       toast({ title: 'Please agree to our policies', description: 'You must accept our Terms of Service, Return Policy and Shipping Policy to proceed', variant: 'destructive' });
       return;
     }
-    
+
+    if (paymentMethod === 'razorpay') {
+      await handleRazorpayPayment();
+      return;
+    }
+
+    // COD flow (kept but hidden per memory - COD disabled)
     setLoading(true);
     try {
-      // Calculate MRP and selling totals  
-      const totalMRP = items.reduce((a, i) => a + ((i.product as any).compare_price || i.product.price) * i.quantity, 0);
-      const sellingTotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0);
-      const productDiscount = totalMRP - sellingTotal;
-
-      // Determine GST type based on state
-      const gstType = getGSTType(selectedAddress.state || '');
-      let cgstAmount = 0, sgstAmount = 0, igstAmount = 0;
-
-      if (gstType === 'cgst_sgst') {
-        cgstAmount = gstAmount / 2;
-        sgstAmount = gstAmount / 2;
-      } else {
-        igstAmount = gstAmount;
-      }
-
-      const avgGstPercentage = total > 0 ? (gstAmount / total) * 100 : 0;
-
-      const { data: order, error } = await supabase.from('orders').insert({
-        user_id: user!.id,
-        order_number: 'temp',
-        subtotal: sellingTotal,
-        delivery_charge: deliveryCharge,
-        discount: discount, // Use the coupon discount from state
-        total: grandTotal,
-        gst_amount: gstAmount,
-        gst_percentage: avgGstPercentage,
-        gst_type: gstType,
-        cgst_amount: cgstAmount,
-        sgst_amount: sgstAmount,
-        igst_amount: igstAmount,
-        delivery_state: selectedAddress.state || '',
-        coupon_code: couponCode || null,
-        payment_method: paymentMethod as any,
-        payment_status: 'pending',
-        delivery_address: selectedAddress as any,
-        notes: notes || null,
-      }).select().single();
-      if (error) throw error;
-
-      const orderItems = items.map(item => {
-        const productGst = productGstMap.get(item.product_id) || {};
-        const itemGstPercentage = (productGst as any)?.gst_percentage || 5;
-        const itemBasePrice = (productGst as any)?.tax_inclusive ?
-          item.product.price * 100 / (100 + itemGstPercentage) :
-          item.product.price;
-        const itemGstAmount = (itemBasePrice * itemGstPercentage / 100) * item.quantity;
-
-        return {
-          order_id: order.id,
-          product_id: item.product_id,
-          product_name: item.product.name,
-          product_price: item.product.price,
-          quantity: item.quantity,
-          total: item.product.price * item.quantity,
-          gst_percentage: itemGstPercentage,
-          hsn_code: (productGst as any)?.hsn_code || '',
-          gst_amount: itemGstAmount,
-          tax_inclusive: (productGst as any)?.tax_inclusive ?? true,
-          product_base_price: itemBasePrice,
-        };
-      });
-      await supabase.from('order_items').insert(orderItems);
-      
-      // Redeem coupon if one was used
-      if (couponCode && discount > 0) {
-        const { error: redeemError } = await supabase.rpc('redeem_coupon' as any, {
-          _coupon_code: couponCode.trim().toUpperCase(),
-          _user_id: user!.id,
-          _order_id: order.id
-        });
-        
-        if (redeemError) {
-          console.error('Coupon redemption error:', redeemError);
-          // Don't fail the order, just log the error
-        }
-      }
-      
+      const order = await createOrder();
       clearCart();
-      
-      // Navigate directly to order confirmation
       navigate(`/order-confirmation/${order.id}`);
     } catch (err: any) {
       toast({ title: 'Order failed', description: err.message, variant: 'destructive' });
@@ -290,13 +364,11 @@ export default function Checkout() {
             <CardHeader><CardTitle className="text-lg">Payment Method</CardTitle></CardHeader>
             <CardContent>
               <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <RadioGroupItem value="cod" id="cod" />
-                  <Label htmlFor="cod" className="flex items-center gap-2 cursor-pointer"><Banknote className="h-5 w-5" /> Cash on Delivery</Label>
-                </div>
-                <div className="flex items-center gap-3 p-3 border rounded-lg opacity-50">
-                  <RadioGroupItem value="stripe" id="stripe" disabled />
-                  <Label htmlFor="stripe" className="flex items-center gap-2"><CreditCard className="h-5 w-5" /> Pay Online (Coming Soon)</Label>
+                <div className={`flex items-center gap-3 p-3 border rounded-lg ${paymentMethod === 'razorpay' ? 'border-primary bg-primary/5' : ''}`}>
+                  <RadioGroupItem value="razorpay" id="razorpay" />
+                  <Label htmlFor="razorpay" className="flex items-center gap-2 cursor-pointer">
+                    <CreditCard className="h-5 w-5" /> Pay Online (UPI / Cards / Net Banking)
+                  </Label>
                 </div>
               </RadioGroup>
             </CardContent>
@@ -322,10 +394,8 @@ export default function Checkout() {
               ))}
             </div>
             <Separator className="mb-4" />
-            
-            {/* Flipkart-Style Pricing Breakdown */}
+
             {(() => {
-              // Calculate MRP total and selling total
               const totalMRP = items.reduce((a, i) => {
                 const comparePrice = (i.product as any).compare_price;
                 return a + (comparePrice && comparePrice > i.product.price ? comparePrice : i.product.price) * i.quantity;
@@ -333,7 +403,7 @@ export default function Checkout() {
               const sellingTotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0);
               const discountAmount = totalMRP - sellingTotal;
               const hasDiscount = discountAmount > 0;
-              
+
               return (
                 <div className="space-y-2 text-sm mb-4">
                   {hasDiscount && (
@@ -373,7 +443,6 @@ export default function Checkout() {
               );
             })()}
 
-            {/* Included Taxes - Compact */}
             {gstSettings.gst_enabled && gstAmount > 0 && (
               <div className="mb-3 pt-2 text-xs">
                 <p className="text-muted-foreground">Included Taxes: {formatPrice(gstAmount)}</p>
@@ -411,7 +480,6 @@ export default function Checkout() {
               <Button variant="outline" onClick={applyCoupon} size="sm">Apply</Button>
             </div>
 
-            {/* Legal Agreement Checkbox */}
             <div className="mt-4 flex gap-3 items-start p-3 bg-muted rounded-lg border">
               <input
                 type="checkbox"
@@ -422,25 +490,17 @@ export default function Checkout() {
               />
               <label htmlFor="agreement" className="text-xs text-muted-foreground cursor-pointer leading-relaxed">
                 I agree to the{" "}
-                <a href="/terms" className="text-primary hover:underline font-semibold">
-                  Terms of Service
-                </a>
-                ,{" "}
-                <a href="/return-refund" className="text-primary hover:underline font-semibold">
-                  Return & Refund Policy
-                </a>
+                <a href="/terms" className="text-primary hover:underline font-semibold">Terms of Service</a>,{" "}
+                <a href="/return-refund" className="text-primary hover:underline font-semibold">Return & Refund Policy</a>
                 {" "}and{" "}
-                <a href="/shipping-policy" className="text-primary hover:underline font-semibold">
-                  Shipping Policy
-                </a>
+                <a href="/shipping-policy" className="text-primary hover:underline font-semibold">Shipping Policy</a>
               </label>
             </div>
 
             <Button className="w-full mt-6 rounded-full" size="lg" onClick={placeOrder} disabled={loading || !agreementChecked}>
-              {loading ? <ButtonLoader text="Placing order..." /> : `Place Order · ${formatPrice(grandTotal)}`}
+              {loading ? <ButtonLoader text="Processing payment..." /> : `Pay Now · ${formatPrice(grandTotal)}`}
             </Button>
 
-            {/* Trust badges */}
             <div className="mt-5 flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
               <div className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> Secure Checkout</div>
               <div className="flex items-center gap-1"><Truck className="h-3.5 w-3.5" /> Fast Delivery</div>
