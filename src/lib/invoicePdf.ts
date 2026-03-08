@@ -4,12 +4,13 @@ import { formatPrice } from './formatters';
 
 const COMPANY = {
   name: 'PANDIYIN Nature In Pack',
+  tagline: 'Premium Homemade & Natural Products',
   addressLine1: '802, VPM House, Mandhaikaliamman Kovil Street',
   addressLine2: 'Krishnapuram Road, M.Kallupatti',
-  addressLine3: 'Madurai District – 625535',
+  addressLine3: 'Madurai District – 625535, Tamil Nadu, India',
   phone: '+91 63837 09933',
   email: 'pandiyinnatureinpack@gmail.com',
-  website: 'https://pandiyin-natureinpack.vercel.app/',
+  website: 'pandiyin-natureinpack.vercel.app',
   gstin: '33HADPM5916B1ZZ',
 };
 
@@ -25,15 +26,20 @@ const STATE_GST_CODES: Record<string, string> = {
   'Andaman and Nicobar Islands': '35', 'Telangana': '36', 'Ladakh': '38',
 };
 
-// Light green color for dividers/borders
+// Brand colors
+const DARK_GREEN: [number, number, number] = [30, 70, 32];
 const LIGHT_GREEN: [number, number, number] = [134, 197, 156];
+const LIGHTER_GREEN: [number, number, number] = [230, 245, 233];
+const GRAY: [number, number, number] = [100, 100, 100];
+const BLACK: [number, number, number] = [0, 0, 0];
+const DARK_TEXT: [number, number, number] = [30, 30, 30];
 
 export function generateInvoiceNumber(): string {
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, '0');
   const d = String(now.getDate()).padStart(2, '0');
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let rand = '';
   for (let i = 0; i < 6; i++) rand += chars[Math.floor(Math.random() * chars.length)];
   return `PNP-${y}${m}${d}-${rand}`;
@@ -112,117 +118,188 @@ function numberToWords(num: number): string {
   return result + ' Only';
 }
 
-function drawLightGreenLine(doc: jsPDF, y: number, margin: number, pw: number) {
-  doc.setDrawColor(...LIGHT_GREEN);
-  doc.setLineWidth(0.4);
-  doc.line(margin, y, pw - margin, y);
+function drawLine(doc: jsPDF, y: number, x1: number, x2: number, color: [number, number, number] = LIGHT_GREEN, width = 0.3) {
+  doc.setDrawColor(...color);
+  doc.setLineWidth(width);
+  doc.line(x1, y, x2, y);
+}
+
+function sectionTitle(doc: jsPDF, text: string, x: number, y: number): number {
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...DARK_GREEN);
+  doc.text(text, x, y);
+  return y + 5;
 }
 
 export function generateInvoicePdf(data: InvoiceData) {
   const doc = new jsPDF('p', 'mm', 'a4');
   const pw = doc.internal.pageSize.getWidth();
   const ph = doc.internal.pageSize.getHeight();
-  const margin = 14;
-  let y = 14;
+  const ml = 16; // margin left
+  const mr = pw - 16; // margin right
+  let y = 16;
 
-  // ─── LOGO PLACEHOLDER + COMPANY NAME ───
-  // Draw a placeholder box for logo (will be replaced with actual logo)
-  doc.setDrawColor(...LIGHT_GREEN);
-  doc.setLineWidth(0.3);
-  doc.rect(margin, y - 6, 18, 18);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(5.5);
-  doc.setTextColor(160, 160, 160);
-  doc.text('LOGO', margin + 9, y + 3.5, { align: 'center' });
+  // ═══════════════════════════════════════════════════════
+  // SECTION 1 — HEADER (Two-column: Company left, Invoice right)
+  // ═══════════════════════════════════════════════════════
 
-  // Company details next to logo
-  const logoRight = margin + 22;
+  // Left side: Company branding
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.setTextColor(0);
-  doc.text(COMPANY.name, logoRight, y);
+  doc.setFontSize(14);
+  doc.setTextColor(...DARK_GREEN);
+  doc.text(COMPANY.name.toUpperCase(), ml, y);
   y += 4;
 
-  doc.setFont('helvetica', 'normal');
+  doc.setFont('helvetica', 'italic');
   doc.setFontSize(7);
-  doc.setTextColor(60);
-  doc.text(COMPANY.addressLine1, logoRight, y); y += 3.2;
-  doc.text(COMPANY.addressLine2, logoRight, y); y += 3.2;
-  doc.text(COMPANY.addressLine3, logoRight, y); y += 3.2;
-  doc.text(`Phone: ${COMPANY.phone}  |  Email: ${COMPANY.email}`, logoRight, y); y += 3.2;
-  doc.text(`Website: ${COMPANY.website}`, logoRight, y); y += 3.2;
-  doc.text(`GSTIN: ${COMPANY.gstin}`, logoRight, y);
+  doc.setTextColor(...GRAY);
+  doc.text(COMPANY.tagline, ml, y);
+  y += 5.5;
 
-  // ─── TAX INVOICE (top right, simple black text) ───
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...DARK_TEXT);
+  doc.text(COMPANY.addressLine1, ml, y); y += 3.5;
+  doc.text(COMPANY.addressLine2, ml, y); y += 3.5;
+  doc.text(COMPANY.addressLine3, ml, y); y += 4;
+  doc.text(`Phone: ${COMPANY.phone}`, ml, y); y += 3.5;
+  doc.text(`Email: ${COMPANY.email}`, ml, y); y += 3.5;
+  doc.text(`Website: ${COMPANY.website}`, ml, y); y += 3.5;
+
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.setTextColor(0);
-  doc.text('TAX INVOICE', pw - margin, 14, { align: 'right' });
+  doc.setFontSize(7.5);
+  doc.text(`GSTIN: ${COMPANY.gstin}`, ml, y);
 
-  y += 6;
-  drawLightGreenLine(doc, y, margin, pw);
-  y += 6;
+  // Right side: TAX INVOICE title + invoice meta
+  const rightCol = mr;
+  let ry = 16;
 
-  // ─── INVOICE METADATA (right side, two-column) ───
-  const labelX = pw - 95;
-  const valueX = pw - margin;
-  let my = y;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.setTextColor(...DARK_GREEN);
+  doc.text('TAX INVOICE', rightCol, ry, { align: 'right' });
+  ry += 8;
 
-  const addMetaRow = (label: string, value: string) => {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(0);
-    doc.text(label, labelX, my);
+  // Invoice meta (right-aligned labels and values)
+  const metaLabelX = pw - 80;
+  const metaValueX = rightCol;
+
+  const addMeta = (label: string, value: string) => {
     doc.setFont('helvetica', 'normal');
-    doc.text(value, valueX, my, { align: 'right' });
-    my += 4.5;
+    doc.setFontSize(7.5);
+    doc.setTextColor(...GRAY);
+    doc.text(label, metaLabelX, ry);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...DARK_TEXT);
+    doc.text(value, metaValueX, ry, { align: 'right' });
+    ry += 4.5;
   };
 
-  addMetaRow('Invoice Number', data.invoiceNumber);
-  addMetaRow('Invoice Date', data.orderDate);
-  addMetaRow('Time', data.orderTime);
-  addMetaRow('Payment Method', data.paymentMethod);
-  if (data.paymentGateway) addMetaRow('Payment Gateway', data.paymentGateway);
-  if (data.paymentStatus) addMetaRow('Payment Status', data.paymentStatus);
-  if (data.paymentId) addMetaRow('Payment ID', data.paymentId);
+  addMeta('Invoice Number:', data.invoiceNumber);
+  addMeta('Invoice Date:', data.orderDate);
+  addMeta('Invoice Time:', data.orderTime);
 
-  // ─── BILL TO (left side, same Y range) ───
+  y = Math.max(y, ry) + 5;
+
+  // Header divider — double line
+  drawLine(doc, y, ml, mr, DARK_GREEN, 0.6);
+  drawLine(doc, y + 1.2, ml, mr, LIGHT_GREEN, 0.3);
+  y += 7;
+
+  // ═══════════════════════════════════════════════════════
+  // SECTION 2 — SHIPPING ADDRESS
+  // ═══════════════════════════════════════════════════════
+
+  y = sectionTitle(doc, 'SHIPPING ADDRESS', ml, y);
+
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(0);
-  doc.text('Bill To:', margin, y);
-  y += 5;
+  doc.setFontSize(8.5);
+  doc.setTextColor(...BLACK);
+  doc.text(data.customerName, ml, y);
+  y += 4.5;
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.setTextColor(30);
-  doc.text(data.customerName, margin, y); y += 3.8;
-  const custLines = data.customerAddress.split('\n');
-  custLines.forEach(line => {
-    doc.text(line, margin, y); y += 3.8;
+  doc.setTextColor(...DARK_TEXT);
+  const addressLines = data.customerAddress.split('\n');
+  addressLines.forEach(line => {
+    doc.text(line, ml, y);
+    y += 4;
   });
-  doc.text(`Phone: ${data.customerPhone}`, margin, y); y += 5;
+
+  y += 1;
+  doc.text(`Phone: ${data.customerPhone}`, ml, y);
+  y += 4.5;
 
   const stateCode = STATE_GST_CODES[data.customerState] || '33';
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
-  doc.setTextColor(0);
-  doc.text(`Place of Supply: ${data.customerState} – ${stateCode}`, margin, y);
-
-  // Use max of bill-to Y and meta Y
-  y = Math.max(y, my) + 6;
-  drawLightGreenLine(doc, y, margin, pw);
+  doc.setTextColor(...DARK_GREEN);
+  doc.text(`Place of Supply: ${data.customerState} (${stateCode})`, ml, y);
   y += 6;
 
-  // ─── ITEMS TABLE ───
-  const tableHead = [['Sl.', 'Description', 'HSN/SAC', 'Qty', 'Unit Price', 'GST %', 'Total']];
+  drawLine(doc, y, ml, mr);
+  y += 7;
+
+  // ═══════════════════════════════════════════════════════
+  // SECTION 3 — PAYMENT DETAILS (Two-column grid)
+  // ═══════════════════════════════════════════════════════
+
+  y = sectionTitle(doc, 'PAYMENT DETAILS', ml, y);
+
+  const paymentGrid = [
+    ['Payment Method', data.paymentMethod],
+    ['Gateway', data.paymentGateway || '—'],
+    ['Payment Status', data.paymentStatus || 'Pending'],
+    ['Payment ID', data.paymentId || '—'],
+  ];
+
+  // Draw 2x2 grid
+  const col1LabelX = ml;
+  const col1ValueX = ml + 32;
+  const col2LabelX = pw / 2 + 5;
+  const col2ValueX = pw / 2 + 37;
+
+  for (let i = 0; i < paymentGrid.length; i += 2) {
+    // Left column
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...GRAY);
+    doc.text(paymentGrid[i][0] + ':', col1LabelX, y);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...DARK_TEXT);
+    doc.text(paymentGrid[i][1], col1ValueX, y);
+
+    // Right column
+    if (i + 1 < paymentGrid.length) {
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...GRAY);
+      doc.text(paymentGrid[i + 1][0] + ':', col2LabelX, y);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...DARK_TEXT);
+      doc.text(paymentGrid[i + 1][1], col2ValueX, y);
+    }
+    y += 5;
+  }
+
+  y += 4;
+  drawLine(doc, y, ml, mr);
+  y += 7;
+
+  // ═══════════════════════════════════════════════════════
+  // SECTION 4 — PRODUCT TABLE
+  // ═══════════════════════════════════════════════════════
+
+  y = sectionTitle(doc, 'ORDER ITEMS', ml, y);
+
+  const tableHead = [['Sl No', 'Product Description', 'HSN/SAC', 'Qty', 'Unit Price (₹)', 'Total (₹)']];
   const tableBody = data.items.map((item, i) => [
-    (i + 1).toString(),
+    String(i + 1),
     item.name,
-    item.hsn || '-',
-    item.quantity.toString(),
+    item.hsn || '—',
+    String(item.quantity),
     formatPrice(item.price),
-    `${item.gstPercentage}%`,
     formatPrice(item.total),
   ]);
 
@@ -232,114 +309,173 @@ export function generateInvoicePdf(data: InvoiceData) {
     body: tableBody,
     theme: 'grid',
     headStyles: {
-      fillColor: [255, 255, 255],
-      textColor: [0, 0, 0],
+      fillColor: LIGHTER_GREEN,
+      textColor: DARK_GREEN,
       fontSize: 8,
       fontStyle: 'bold',
       halign: 'center',
       lineColor: LIGHT_GREEN,
-      lineWidth: 0.4,
+      lineWidth: 0.3,
+      cellPadding: 3,
     },
     bodyStyles: {
       fontSize: 8,
-      textColor: [30, 30, 30],
+      textColor: DARK_TEXT,
       lineColor: LIGHT_GREEN,
-      lineWidth: 0.3,
+      lineWidth: 0.2,
+      cellPadding: 2.5,
     },
-    alternateRowStyles: { fillColor: [255, 255, 255] },
+    alternateRowStyles: { fillColor: [252, 252, 252] },
     styles: {
       lineColor: LIGHT_GREEN,
-      lineWidth: 0.3,
+      lineWidth: 0.2,
+      overflow: 'linebreak',
     },
     columnStyles: {
-      0: { cellWidth: 12, halign: 'center' },
-      1: { cellWidth: 'auto' },
-      2: { cellWidth: 20, halign: 'center' },
-      3: { cellWidth: 14, halign: 'center' },
-      4: { cellWidth: 26, halign: 'right' },
-      5: { cellWidth: 18, halign: 'center' },
-      6: { cellWidth: 28, halign: 'right', fontStyle: 'bold' },
+      0: { cellWidth: 14, halign: 'center' },
+      1: { cellWidth: 'auto', halign: 'left' },
+      2: { cellWidth: 22, halign: 'center' },
+      3: { cellWidth: 16, halign: 'center' },
+      4: { cellWidth: 28, halign: 'right' },
+      5: { cellWidth: 28, halign: 'right', fontStyle: 'bold' },
     },
-    margin: { left: margin, right: margin },
+    margin: { left: ml, right: 16 },
   });
 
-  y = (doc as any).lastAutoTable.finalY + 6;
+  y = (doc as any).lastAutoTable.finalY + 8;
 
-  // ─── TAX BREAKDOWN ───
+  // ═══════════════════════════════════════════════════════
+  // SECTION 5 — ORDER SUMMARY (right-aligned)
+  // ═══════════════════════════════════════════════════════
+
+  // GST calculation
   const gstGroups: Record<number, number> = {};
   data.items.forEach(item => {
     const rate = item.gstPercentage || 0;
     const taxAmount = item.total * rate / (100 + rate);
     gstGroups[rate] = (gstGroups[rate] || 0) + taxAmount;
   });
-
-  doc.setFontSize(7.5);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(80);
-  Object.entries(gstGroups).forEach(([rate, amount]) => {
-    if (Number(rate) > 0) {
-      doc.text(`Including ${rate}% GST: ${formatPrice(amount)}`, margin, y);
-      y += 4;
-    }
-  });
-  doc.setTextColor(0);
-  y += 2;
-
-  // ─── TOTALS (right-aligned) ───
-  const totalsX = pw - 90;
-  const valX = pw - margin;
-
-  const addTotalLine = (label: string, value: string, bold = false) => {
-    doc.setFont('helvetica', bold ? 'bold' : 'normal');
-    doc.setFontSize(bold ? 9.5 : 8.5);
-    doc.setTextColor(0);
-    doc.text(label, totalsX, y);
-    doc.text(value, valX, y, { align: 'right' });
-    y += 5.5;
-  };
-
-  addTotalLine('Subtotal:', formatPrice(data.subtotal));
-  addTotalLine('Delivery Charge:', data.deliveryCharge === 0 ? 'FREE' : formatPrice(data.deliveryCharge));
-
   const totalGST = Object.values(gstGroups).reduce((a, b) => a + b, 0);
-  addTotalLine('GST Included:', formatPrice(totalGST));
 
+  const summaryBoxX = pw - 100;
+  const summaryLabelX = summaryBoxX + 4;
+  const summaryValueX = mr - 4;
+
+  // Summary background box
+  const summaryStartY = y;
+  const summaryItems = [
+    { label: 'Subtotal', value: formatPrice(data.subtotal), bold: false },
+    { label: 'Delivery Charge', value: data.deliveryCharge === 0 ? 'FREE' : formatPrice(data.deliveryCharge), bold: false },
+    { label: 'GST Included', value: formatPrice(totalGST), bold: false },
+  ];
   if (data.discount > 0) {
-    const discLabel = data.couponCode ? `Discount (${data.couponCode}):` : 'Discount:';
-    addTotalLine(discLabel, `- ${formatPrice(data.discount)}`);
+    const discLabel = data.couponCode ? `Discount (${data.couponCode})` : 'Discount';
+    summaryItems.push({ label: discLabel, value: `– ${formatPrice(data.discount)}`, bold: false });
   }
 
-  // Light green line above grand total
-  drawLightGreenLine(doc, y, totalsX - 2, pw);
-  y += 5;
-  addTotalLine('Grand Total:', formatPrice(data.grandTotal), true);
-  y += 2;
-
-  // ─── AMOUNT IN WORDS ───
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(0);
-  doc.text('Amount in Words:', margin, y);
-  y += 4.5;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  const words = numberToWords(data.grandTotal);
-  const wordLines = doc.splitTextToSize(words, pw - margin * 2);
-  wordLines.forEach((line: string) => {
-    doc.text(line, margin, y);
-    y += 3.8;
+  // Draw summary rows
+  summaryItems.forEach(item => {
+    doc.setFont('helvetica', item.bold ? 'bold' : 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...DARK_TEXT);
+    doc.text(item.label, summaryLabelX, y);
+    doc.text(item.value, summaryValueX, y, { align: 'right' });
+    y += 5.5;
   });
 
-  // ─── FOOTER (bottom of page) ───
-  const footerY = ph - 12;
-  drawLightGreenLine(doc, footerY, margin, pw);
+  // Grand total separator
+  y += 1;
+  drawLine(doc, y, summaryBoxX, mr, DARK_GREEN, 0.5);
+  y += 6;
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(...DARK_GREEN);
+  doc.text('Grand Total', summaryLabelX, y);
+  doc.text(formatPrice(data.grandTotal), summaryValueX, y, { align: 'right' });
+  y += 4;
+
+  // Draw subtle box around summary
+  const boxH = y - summaryStartY + 3;
+  doc.setDrawColor(...LIGHT_GREEN);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(summaryBoxX, summaryStartY - 5, mr - summaryBoxX, boxH, 2, 2);
+
+  y += 8;
+
+  // ═══════════════════════════════════════════════════════
+  // SECTION 6 — AMOUNT IN WORDS
+  // ═══════════════════════════════════════════════════════
+
+  y = sectionTitle(doc, 'AMOUNT IN WORDS', ml, y);
+
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(8.5);
+  doc.setTextColor(...DARK_TEXT);
+  const words = numberToWords(data.grandTotal);
+  const wordLines = doc.splitTextToSize(words, pw - ml * 2);
+  wordLines.forEach((line: string) => {
+    doc.text(line, ml, y);
+    y += 4;
+  });
+
+  y += 4;
+  drawLine(doc, y, ml, mr);
+  y += 6;
+
+  // ═══════════════════════════════════════════════════════
+  // GST BREAKDOWN (small print)
+  // ═══════════════════════════════════════════════════════
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
-  doc.setTextColor(80);
+  doc.setTextColor(...GRAY);
+  Object.entries(gstGroups).forEach(([rate, amount]) => {
+    if (Number(rate) > 0) {
+      doc.text(`* Includes ${rate}% GST: ${formatPrice(amount)} (Tax inclusive pricing)`, ml, y);
+      y += 3.5;
+    }
+  });
+
+  // ═══════════════════════════════════════════════════════
+  // Authorized Signatory
+  // ═══════════════════════════════════════════════════════
+
+  const sigY = Math.max(y + 12, ph - 55);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(...GRAY);
+  doc.text('For ' + COMPANY.name, mr, sigY, { align: 'right' });
+  doc.text('Authorized Signatory', mr, sigY + 12, { align: 'right' });
+  drawLine(doc, sigY + 8, mr - 45, mr, GRAY, 0.2);
+
+  // ═══════════════════════════════════════════════════════
+  // SECTION 7 — FOOTER
+  // ═══════════════════════════════════════════════════════
+
+  const footerY = ph - 18;
+  drawLine(doc, footerY, ml, mr, DARK_GREEN, 0.5);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...DARK_GREEN);
+  doc.text('Thank you for shopping with Pandiyin Nature In Pack!', pw / 2, footerY + 5, { align: 'center' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...GRAY);
   doc.text(
-    `Phone: ${COMPANY.phone}  |  Email: ${COMPANY.email}  |  Website: ${COMPANY.website}`,
+    `Phone: ${COMPANY.phone}  •  Email: ${COMPANY.email}  •  Website: ${COMPANY.website}`,
     pw / 2,
-    footerY + 6,
+    footerY + 9.5,
+    { align: 'center' }
+  );
+
+  doc.setFontSize(6);
+  doc.text(
+    'This is a computer-generated invoice and does not require a physical signature.',
+    pw / 2,
+    footerY + 13.5,
     { align: 'center' }
   );
 
