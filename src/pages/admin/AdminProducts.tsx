@@ -138,7 +138,8 @@ export default function AdminProducts() {
 
     try {
       setIsUploadingImage(true);
-      const weight_kg = computeWeightKg(form.weight_value, form.weight_unit);
+      // Auto-compute weight_kg from single weight + unit
+      const weight_kg = computeWeightKg(form.weight, form.unit);
 
       if (editing) {
         const updateData: any = {
@@ -164,7 +165,8 @@ export default function AdminProducts() {
             name: form.name, description: form.description,
             price: Number(form.price), category_id: form.category_id || undefined,
             stock_quantity: Number(form.stock_quantity) || 0,
-            weight_kg, gst_percentage: Number(form.gst_percentage), hsn_code: form.hsn_code,
+            weight: form.weight ? String(form.weight) : '', weight_kg, unit: form.unit,
+            gst_percentage: Number(form.gst_percentage), hsn_code: form.hsn_code,
           } as any,
           user.id
         );
