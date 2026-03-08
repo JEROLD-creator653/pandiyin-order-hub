@@ -124,7 +124,7 @@ export default function Checkout() {
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
     if (!user) {
-      toast({ title: 'Please login to apply coupon', variant: 'destructive' });
+      setCheckoutError('Please login to apply coupon');
       return;
     }
     try {
