@@ -413,13 +413,13 @@ export default function Index() {
 
       {/* Featured Products */}
       {featured.length > 0 && (
-        <section className="py-16 bg-secondary/30">
+        <section className="py-10 md:py-16 bg-secondary/30">
           <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-10">
-              <h2 className="text-3xl font-display font-bold">Bestsellers</h2>
-              <Button asChild variant="ghost"><Link to="/products">View All <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
+            <div className="flex items-center justify-between mb-6 md:mb-10">
+              <h2 className="text-2xl md:text-3xl font-display font-bold">Bestsellers</h2>
+              <Button asChild variant="ghost" size="sm"><Link to="/products">View All <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
               {featured.map((p, i) => (
                 <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="h-full">
                   <Link to={`/products/${p.id}`} className="h-full block">
