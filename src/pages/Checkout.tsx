@@ -104,10 +104,14 @@ export default function Checkout() {
 
   const effectiveDeliveryCharge = deliveryCharge ?? 0;
 
-  // Free delivery nudge for Tamil Nadu
+  // Free delivery nudge for all zones
   const freeDeliveryNudge = useMemo(() => {
-    if (!deliveryState || STATE_ZONES[deliveryState] !== 'local') return null;
-    const threshold = zoneConfig.local.freeAbove;
+    if (!deliveryState) return null;
+    const zone = STATE_ZONES[deliveryState];
+    if (!zone) return null;
+    const config = zoneConfig[zone as keyof ShippingZoneConfig];
+    if (!config) return null;
+    const threshold = config.freeAbove;
     if (!threshold || total >= threshold) return null;
     const remaining = threshold - total;
     const progress = (total / threshold) * 100;
