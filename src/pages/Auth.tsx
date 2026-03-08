@@ -166,6 +166,8 @@ export default function Auth() {
                     src="/logo.ico"
                     alt="PANDIYIN Logo"
                     className="w-full h-full object-contain"
+                    loading="eager"
+                    fetchPriority="high"
                   />
                 </div>
               </motion.div>
@@ -199,13 +201,13 @@ export default function Auth() {
                 <AnimatePresence mode="wait">
                   {isSignUp && (
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
+                      initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                      animate={{ opacity: 1, height: "auto", marginBottom: 0 }}
+                      exit={{ opacity: 0, height: 0, marginBottom: 0 }}
                       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                      className="overflow-hidden"
+                      style={{ overflow: "hidden" }}
                     >
-                      <div className="space-y-2 mb-4">
+                      <div className="space-y-2 pb-0">
                         <Label
                           htmlFor="name"
                           className="text-sm font-semibold text-gray-800"
