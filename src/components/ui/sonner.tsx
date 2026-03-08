@@ -11,7 +11,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       position="top-center"
-      duration={1200}
+      duration={700}
       className="toaster group"
       icons={{
         error: <AlertCircle className="h-5 w-5" />,
