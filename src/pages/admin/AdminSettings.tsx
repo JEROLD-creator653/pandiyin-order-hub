@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Save, Truck, MapPin, Globe, ToggleLeft } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -13,7 +13,6 @@ import { useQueryClient } from '@tanstack/react-query';
 export default function AdminSettings() {
   const [store, setStore] = useState({ store_name: '', phone: '', whatsapp: '', email: '', address: '', gst_enabled: false, gst_number: '' });
   const [storeId, setStoreId] = useState('');
-  const [regions, setRegions] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const queryClient = useQueryClient();
 
@@ -32,7 +31,6 @@ export default function AdminSettings() {
         setStoreId(data.id);
       }
     });
-    loadRegions();
   }, []);
 
   const saveStore = async () => {
@@ -49,8 +47,6 @@ export default function AdminSettings() {
     if (error) {
       toast({ title: 'Failed to save settings', description: error.message, variant: 'destructive' });
     } else {
-      // Invalidate the shared store_settings cache so Footer, WhatsApp button,
-      // PolicyLayout, etc. pick up the new values immediately
       await queryClient.invalidateQueries({ queryKey: ['store_settings'] });
       toast({ title: 'Store settings saved' });
     }
@@ -59,7 +55,6 @@ export default function AdminSettings() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      {/* Store Information */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Store Information</CardTitle>
@@ -78,7 +73,6 @@ export default function AdminSettings() {
 
           <Separator />
 
-          {/* GST Settings */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -103,7 +97,6 @@ export default function AdminSettings() {
           </Button>
         </CardContent>
       </Card>
-
     </div>
   );
 }
