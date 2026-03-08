@@ -120,6 +120,9 @@ export default function OrderConfirmation() {
       couponCode: order.coupon_code || undefined,
       grandTotal: Number(order.total),
       paymentMethod: order.payment_mode ? getPaymentModeLabel(order.payment_mode) : (order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'),
+      paymentGateway: order.payment_method === 'cod' ? undefined : 'Razorpay',
+      paymentStatus: order.payment_status === 'paid' ? 'Paid' : 'Pending',
+      paymentId: order.stripe_payment_id || undefined,
     };
 
     const doc = generateInvoicePdf(invoiceData);
