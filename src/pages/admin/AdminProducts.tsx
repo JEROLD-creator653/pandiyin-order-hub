@@ -72,6 +72,7 @@ interface Product {
   is_available: boolean;
   is_featured: boolean;
   weight?: string | number;
+  weight_kg?: number;
   unit?: string;
   gst_percentage?: number;
   hsn_code?: string;
