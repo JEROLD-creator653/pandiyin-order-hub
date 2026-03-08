@@ -187,8 +187,8 @@ interface GlobalRouteLoaderProps {
 }
 
 /**
- * Premium Apple/Stripe-style loading overlay
- * Full-screen loader with smooth animations and subtle effects
+ * Nature-themed leaf loading overlay
+ * A single green leaf gently spins and floats for a calm, brand-aligned experience
  */
 const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
   return (
@@ -199,99 +199,81 @@ const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.25, ease: "easeInOut" }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/98 backdrop-blur-lg"
-          style={{ 
-            // Prevent scrolling while loading
-            touchAction: 'none',
-            overscrollBehavior: 'contain'
-          }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-background/98"
+          style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
         >
-          {/* Subtle gradient background effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 opacity-50" />
-          
-          <div className="relative flex flex-col items-center gap-8">
-            {/* Premium spinner with glow effect */}
-            <motion.div 
-              className="relative flex items-center justify-center"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
-            >
-              {/* Outer ring - static */}
-              <div className="w-20 h-20 rounded-full border-[3px] border-primary/10" />
-              
-              {/* Middle ring - slow spin */}
-              <motion.div 
-                className="absolute top-0 left-0 w-20 h-20 rounded-full border-[3px] border-primary/30 border-t-transparent"
-                animate={{ rotate: 360 }}
-                transition={{ 
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-              />
-              
-              {/* Inner ring - fast spin */}
-              <motion.div 
-                className="absolute top-2 left-2 w-16 h-16 rounded-full border-[2.5px] border-primary border-t-transparent border-r-transparent"
-                animate={{ rotate: 360 }}
-                transition={{ 
-                  duration: 0.8,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-              />
-              
-              {/* Center glow effect */}
-              <motion.div 
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-primary/20 blur-2xl"
-                animate={{ 
-                  scale: [1, 1.2, 1],
-                  opacity: [0.3, 0.5, 0.3]
-                }}
-                transition={{ 
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-            </motion.div>
-            
-            {/* Loading text with shimmer effect */}
+          <div className="relative flex flex-col items-center gap-6">
+            {/* Leaf SVG with floating + spinning animation */}
             <motion.div
-              className="flex flex-col items-center gap-2"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15, duration: 0.3 }}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              <p className="text-muted-foreground text-sm font-medium tracking-wide">
-                Loading
-              </p>
-              <motion.div 
-                className="flex gap-1"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
+              <motion.div
+                animate={{
+                  y: [0, -8, 0, 6, 0],
+                  x: [0, 4, 0, -4, 0],
+                  rotate: [0, 15, 0, -15, 0],
+                }}
+                transition={{
+                  duration: 3.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
               >
-                {[0, 1, 2].map((i) => (
-                  <motion.span
-                    key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-primary/60"
-                    animate={{ 
-                      scale: [1, 1.3, 1],
-                      opacity: [0.5, 1, 0.5]
-                    }}
-                    transition={{ 
-                      duration: 1.2,
-                      repeat: Infinity,
-                      delay: i * 0.2,
-                      ease: "easeInOut"
-                    }}
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 64 64"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="drop-shadow-md"
+                >
+                  {/* Leaf body */}
+                  <path
+                    d="M32 4C32 4 8 20 8 40C8 52 18 60 32 60C46 60 56 52 56 40C56 20 32 4 32 4Z"
+                    className="fill-primary/90"
                   />
-                ))}
+                  {/* Leaf vein - center */}
+                  <path
+                    d="M32 14V52"
+                    className="stroke-primary-foreground/40"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                  {/* Leaf veins - left */}
+                  <path
+                    d="M32 24L20 32M32 32L18 40M32 40L22 46"
+                    className="stroke-primary-foreground/30"
+                    strokeWidth="1"
+                    strokeLinecap="round"
+                  />
+                  {/* Leaf veins - right */}
+                  <path
+                    d="M32 24L44 32M32 32L46 40M32 40L42 46"
+                    className="stroke-primary-foreground/30"
+                    strokeWidth="1"
+                    strokeLinecap="round"
+                  />
+                  {/* Highlight */}
+                  <path
+                    d="M28 16C28 16 16 28 16 38C16 42 20 44 24 42"
+                    className="fill-primary-foreground/10"
+                  />
+                </svg>
               </motion.div>
             </motion.div>
+
+            {/* Branding text */}
+            <motion.p
+              className="text-muted-foreground text-sm font-medium tracking-wide"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
+            >
+              Loading fresh homemade goodness…
+            </motion.p>
           </div>
         </motion.div>
       )}
