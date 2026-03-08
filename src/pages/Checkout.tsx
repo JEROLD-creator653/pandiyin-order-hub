@@ -429,7 +429,7 @@ export default function Checkout() {
             </CardContent>
           </Card>
 
-          {/* Free Delivery Nudge — Tamil Nadu only */}
+          {/* Free Delivery Nudge */}
           {freeDeliveryNudge && (
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">
               <p className="text-sm font-medium text-primary">
