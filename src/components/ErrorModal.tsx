@@ -1,13 +1,5 @@
-import { AlertCircle } from 'lucide-react';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogAction,
-} from '@/components/ui/alert-dialog';
+import { AlertCircle, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ErrorModalProps {
   open: boolean;
@@ -23,28 +15,68 @@ export default function ErrorModal({
   message,
 }: ErrorModalProps) {
   return (
-    <AlertDialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <AlertDialogContent className="max-w-md border-2 border-[hsl(0,60%,75%)] bg-[hsl(0,80%,95%)] text-foreground rounded-2xl shadow-2xl">
-        <AlertDialogHeader className="items-center text-center gap-3">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-destructive/15 border border-destructive/20">
-            <AlertCircle className="h-7 w-7 text-destructive" />
-          </div>
-          <AlertDialogTitle className="text-lg font-display tracking-tight text-[hsl(0,50%,30%)]">
-            {title}
-          </AlertDialogTitle>
-          <AlertDialogDescription className="text-sm text-[hsl(0,30%,45%)] leading-relaxed">
-            {message}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="justify-center sm:justify-center">
-          <AlertDialogAction
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 bg-foreground/40"
             onClick={onClose}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl px-8 font-display font-medium tracking-wide shadow-md"
+          />
+
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 20 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            className="fixed left-1/2 top-1/2 z-50 w-[90vw] max-w-md -translate-x-1/2 -translate-y-1/2"
           >
-            OK
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+            <div className="relative overflow-hidden rounded-3xl border-2 border-border bg-background shadow-[0_20px_60px_-12px_hsl(150,20%,12%,0.25)]">
+              {/* Top accent bar */}
+              <div className="h-1.5 w-full bg-gradient-to-r from-destructive via-destructive/70 to-destructive/40" />
+
+              {/* Close button */}
+              <button
+                onClick={onClose}
+                className="absolute right-4 top-5 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+
+              {/* Content */}
+              <div className="px-6 pb-6 pt-6 text-center">
+                {/* Icon */}
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 ring-4 ring-destructive/5">
+                  <AlertCircle className="h-8 w-8 text-destructive" />
+                </div>
+
+                {/* Title */}
+                <h3 className="font-display text-xl font-semibold tracking-tight text-foreground mb-2">
+                  {title}
+                </h3>
+
+                {/* Message */}
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-[300px] mx-auto">
+                  {message}
+                </p>
+
+                {/* Action button */}
+                <button
+                  onClick={onClose}
+                  className="mt-6 inline-flex items-center justify-center rounded-xl bg-primary px-10 py-3 text-sm font-display font-semibold tracking-wide text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:shadow-lg active:scale-[0.98]"
+                >
+                  Got it
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
