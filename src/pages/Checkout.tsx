@@ -330,6 +330,7 @@ export default function Checkout() {
   };
 
   const placeOrder = async () => {
+    setCheckoutError(null);
     if (!selectedAddress || !selectedAddress.full_name || !selectedAddress.phone || !selectedAddress.address_line1 || !selectedAddress.pincode) {
       setCheckoutError('Please select or add a delivery address');
       return;
