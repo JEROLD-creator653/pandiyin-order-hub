@@ -192,7 +192,7 @@ export default function OrderConfirmation() {
               </div>
 
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Payment: {order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'}</span>
+                <span>Payment: {order.payment_mode ? getPaymentModeLabel(order.payment_mode) : (order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online')}</span>
                 <span className="capitalize">Status: {order.status}</span>
               </div>
 
