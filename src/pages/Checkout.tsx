@@ -40,7 +40,7 @@ export default function Checkout() {
   const { items, total, clearCart, refetch } = useCart();
   const { regions, getDeliveryCharge, getZoneConfig } = useShippingRegions();
   const [loading, setLoading] = useState(false);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [agreementChecked, setAgreementChecked] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('razorpay');
   const [couponCode, setCouponCode] = useState('');
