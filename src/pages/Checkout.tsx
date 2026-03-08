@@ -324,7 +324,7 @@ export default function Checkout() {
       rzp.open();
     } catch (err: any) {
       console.error('Payment error:', err);
-      setPaymentError(err.message || 'Payment failed. Please try again.');
+      setCheckoutError(err.message || 'Payment failed. Please try again.');
       setLoading(false);
     }
   };
