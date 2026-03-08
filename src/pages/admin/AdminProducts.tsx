@@ -99,6 +99,7 @@ export default function AdminProducts() {
     category_id: '',
     stock_quantity: '',
     weight: '',
+    weight_kg: '',
     unit: 'g',
     gst_percentage: '5',
     hsn_code: '',
