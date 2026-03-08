@@ -171,10 +171,45 @@ export default function OrderDetail() {
           </CardContent>
         </Card>
 
+        {/* Payment Details */}
+        <Card>
+          <CardHeader><CardTitle className="text-lg flex items-center gap-2"><CreditCard className="h-4 w-4" /> Payment Details</CardTitle></CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-xs">Payment Method</p>
+                <p className="font-medium">{order.payment_mode ? getPaymentModeLabel(order.payment_mode) : (order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online')}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-xs">Payment Status</p>
+                <Badge className={`text-xs ${order.payment_status === 'paid' ? 'bg-green-100 text-green-800' : order.payment_status === 'failed' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                  {order.payment_status === 'paid' ? '✓ Paid' : order.payment_status === 'failed' ? '✗ Failed' : '⏳ Pending'}
+                </Badge>
+              </div>
+              {order.stripe_payment_id && (
+                <div className="space-y-1 col-span-2">
+                  <p className="text-muted-foreground text-xs">Transaction ID</p>
+                  <p className="font-mono text-xs bg-muted px-2 py-1.5 rounded break-all">{order.stripe_payment_id}</p>
+                </div>
+              )}
+              {order.payment_method !== 'cod' && (
+                <div className="space-y-1">
+                  <p className="text-muted-foreground text-xs">Payment Gateway</p>
+                  <p className="font-medium flex items-center gap-1"><Shield className="h-3 w-3 text-primary" /> Razorpay</p>
+                </div>
+              )}
+              <div className="space-y-1">
+                <p className="text-muted-foreground text-xs">Amount Paid</p>
+                <p className="font-semibold text-primary flex items-center gap-1"><IndianRupee className="h-3 w-3" />{formatPrice(order.total).replace('Rs.', '').trim()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Summary + Address */}
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
-            <CardHeader><CardTitle className="text-lg">Payment Summary</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-lg">Order Summary</CardTitle></CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(order.subtotal)}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span>{order.delivery_charge == 0 ? 'Free' : formatPrice(order.delivery_charge)}</span></div>
@@ -191,7 +226,6 @@ export default function OrderDetail() {
               )}
               <Separator />
               <div className="flex justify-between text-base"><span className="font-bold">Total</span><span className="font-medium text-primary">{formatPrice(order.total)}</span></div>
-              <div className="flex justify-between text-muted-foreground"><span>Payment</span><span className="capitalize">{order.payment_mode ? getPaymentModeLabel(order.payment_mode) : (order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online')}</span></div>
               <Separator className="my-2" />
               <Button variant="outline" size="sm" className="w-full gap-2" onClick={handleDownloadInvoice}>
                 <Download className="h-3.5 w-3.5" /> Download Invoice (PDF)
