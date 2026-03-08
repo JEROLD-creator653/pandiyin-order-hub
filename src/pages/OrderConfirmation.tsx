@@ -88,7 +88,7 @@ export default function OrderConfirmation() {
     );
   }
 
-  const handleDownloadInvoice = () => {
+  const handleDownloadInvoice = async () => {
     if (!order) return;
     const addr = order.delivery_address as any;
     const invoiceItems: InvoiceItem[] = items.map(i => ({
