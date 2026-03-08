@@ -339,6 +339,40 @@ export default function Checkout() {
       return;
     }
 
+    // Pre-payment revalidation: fetch latest prices & stock
+    const productIds = items.map(i => i.product_id);
+    const { data: latestProducts } = await supabase
+      .from('products')
+      .select('id, price, stock_quantity, is_available')
+      .in('id', productIds);
+
+    if (latestProducts) {
+      const unavailable = latestProducts.filter(p => !p.is_available);
+      if (unavailable.length > 0) {
+        toast({ title: 'Some products are no longer available', description: 'Please review your cart', variant: 'destructive' });
+        refetch();
+        return;
+      }
+      const outOfStock = items.filter(item => {
+        const latest = latestProducts.find(p => p.id === item.product_id);
+        return latest && item.quantity > latest.stock_quantity;
+      });
+      if (outOfStock.length > 0) {
+        toast({ title: 'Stock has changed', description: 'Some items exceed available stock. Please review your cart.', variant: 'destructive' });
+        refetch();
+        return;
+      }
+      const priceChanged = items.some(item => {
+        const latest = latestProducts.find(p => p.id === item.product_id);
+        return latest && latest.price !== item.product.price;
+      });
+      if (priceChanged) {
+        toast({ title: 'Prices updated', description: 'Product prices have changed. Please review the updated totals before proceeding.', variant: 'destructive' });
+        refetch();
+        return;
+      }
+    }
+
     if (paymentMethod === 'razorpay') {
       await handleRazorpayPayment();
       return;
