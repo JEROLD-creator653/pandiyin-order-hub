@@ -187,7 +187,7 @@ interface GlobalRouteLoaderProps {
 }
 
 /**
- * Single leaf spinning down in a spiral — like 🍃 falling from a tree
+ * 🍃 Realistic falling leaf — spirals down with natural sway, tumble & 3D flip
  */
 const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
   return (
@@ -200,7 +200,7 @@ const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
-          style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
+          style={{ touchAction: 'none', overscrollBehavior: 'contain', perspective: '600px' }}
         >
           <div
             className="absolute inset-0"
@@ -210,26 +210,67 @@ const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
             }}
           />
 
-          <div className="relative flex flex-col items-center gap-8">
-            {/* Spiral-falling leaf container */}
-            <div className="relative w-24 h-24 flex items-center justify-center">
-              {/* Circular orbit path */}
+          <div className="relative flex flex-col items-center gap-6">
+            {/* Falling area */}
+            <div className="relative w-32 h-32 flex items-center justify-center" style={{ perspective: '500px' }}>
+              {/* Layer 1: Slow circular orbit */}
               <motion.div
                 className="absolute"
                 animate={{ rotate: 360 }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
-                style={{ width: 60, height: 60 }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }}
+                style={{ width: 70, height: 70 }}
               >
-                {/* Leaf positioned at edge of orbit, spinning on its own axis */}
+                {/* Layer 2: Gentle vertical bob — simulates falling & rising in air */}
                 <motion.div
-                  className="absolute -top-3 left-1/2 -translate-x-1/2"
-                  animate={{ rotateY: [0, 180, 360] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                  className="absolute -top-4 left-1/2 -translate-x-1/2"
+                  animate={{
+                    y: [0, 8, 2, 12, 4, 0],
+                  }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <span className="text-3xl drop-shadow-lg select-none" style={{ display: 'block' }}>🍃</span>
+                  {/* Layer 3: Horizontal sway — wind push */}
+                  <motion.div
+                    animate={{
+                      x: [0, 6, -4, 8, -6, 0],
+                    }}
+                    transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    {/* Layer 4: 3D tumble — realistic leaf flip */}
+                    <motion.div
+                      animate={{
+                        rotateX: [0, 15, -10, 20, -5, 0],
+                        rotateY: [0, 180, 360],
+                        rotateZ: [0, -8, 5, -12, 8, 0],
+                      }}
+                      transition={{
+                        rotateY: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+                        rotateX: { duration: 4.5, repeat: Infinity, ease: "easeInOut" },
+                        rotateZ: { duration: 5.5, repeat: Infinity, ease: "easeInOut" },
+                      }}
+                      style={{ transformStyle: 'preserve-3d' }}
+                    >
+                      <span className="text-4xl drop-shadow-xl select-none block">🍃</span>
+                    </motion.div>
+                  </motion.div>
                 </motion.div>
               </motion.div>
             </div>
+
+            {/* Soft ground shadow */}
+            <motion.div
+              className="rounded-full"
+              style={{ background: 'hsl(var(--foreground) / 0.06)' }}
+              initial={{ width: 0, height: 0, opacity: 0 }}
+              animate={{ width: 40, height: 5, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
+            >
+              <motion.div
+                className="w-full h-full rounded-full"
+                style={{ background: 'hsl(var(--foreground) / 0.04)' }}
+                animate={{ scaleX: [1, 1.2, 0.85, 1.1, 1] }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </motion.div>
 
             <motion.p
               className="text-muted-foreground/70 text-sm font-medium tracking-wide"

@@ -25,8 +25,8 @@ export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProp
 
     if (!show) return null;
 
-    const orbitSize = { sm: 40, md: 56, lg: 68 }[size];
-    const emojiSize = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl' }[size];
+    const orbitSize = { sm: 44, md: 58, lg: 70 }[size];
+    const emojiSize = { sm: 'text-xl', md: 'text-3xl', lg: 'text-4xl' }[size];
 
     return (
         <div className={cn("flex flex-col items-center justify-center min-h-[50vh] w-full", className)}>
@@ -37,19 +37,38 @@ export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProp
                 transition={{ duration: 0.3 }}
                 className="flex flex-col items-center gap-6"
             >
-                <div className="relative flex items-center justify-center" style={{ width: orbitSize + 24, height: orbitSize + 24 }}>
+                <div className="relative flex items-center justify-center" style={{ width: orbitSize + 28, height: orbitSize + 28, perspective: '500px' }}>
                     <motion.div
                         className="absolute"
                         animate={{ rotate: 360 }}
-                        transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                        transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }}
                         style={{ width: orbitSize, height: orbitSize }}
                     >
                         <motion.div
-                            className="absolute -top-2 left-1/2 -translate-x-1/2"
-                            animate={{ rotateY: [0, 180, 360] }}
-                            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute -top-3 left-1/2 -translate-x-1/2"
+                            animate={{ y: [0, 6, 1, 10, 3, 0] }}
+                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                         >
-                            <span className={cn(emojiSize, "drop-shadow-lg select-none block")}>🍃</span>
+                            <motion.div
+                                animate={{ x: [0, 5, -3, 6, -4, 0] }}
+                                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                            >
+                                <motion.div
+                                    animate={{
+                                        rotateX: [0, 12, -8, 16, -4, 0],
+                                        rotateY: [0, 180, 360],
+                                        rotateZ: [0, -6, 4, -10, 6, 0],
+                                    }}
+                                    transition={{
+                                        rotateY: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+                                        rotateX: { duration: 4.5, repeat: Infinity, ease: "easeInOut" },
+                                        rotateZ: { duration: 5.5, repeat: Infinity, ease: "easeInOut" },
+                                    }}
+                                    style={{ transformStyle: 'preserve-3d' }}
+                                >
+                                    <span className={cn(emojiSize, "drop-shadow-xl select-none block")}>🍃</span>
+                                </motion.div>
+                            </motion.div>
                         </motion.div>
                     </motion.div>
                 </div>
