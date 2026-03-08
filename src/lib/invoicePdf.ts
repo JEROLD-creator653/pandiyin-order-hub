@@ -194,17 +194,10 @@ export async function generateInvoicePdf(data: InvoiceData) {
   doc.setFontSize(7.5);
   doc.text(`GSTIN: ${COMPANY.gstin}`, textStartX, y);
 
-  // Right side: TAX INVOICE title + invoice meta
+  // Right side: Invoice meta (right-aligned labels and values)
   const rightCol = mr;
   let ry = 16;
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.setTextColor(...DARK_GREEN);
-  doc.text('TAX INVOICE', rightCol, ry, { align: 'right' });
-  ry += 8;
-
-  // Invoice meta (right-aligned labels and values)
   const metaLabelX = pw - 80;
   const metaValueX = rightCol;
 
@@ -225,9 +218,18 @@ export async function generateInvoicePdf(data: InvoiceData) {
 
   y = Math.max(y, ry) + 5;
 
-  // Header divider — double line
+  // Header divider
   drawLine(doc, y, ml, mr, DARK_GREEN, 0.6);
-  drawLine(doc, y + 1.2, ml, mr, LIGHT_GREEN, 0.3);
+  y += 7;
+
+  // TAX INVOICE banner row (centered, between header and shipping)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(...DARK_GREEN);
+  doc.text('TAX INVOICE', pw / 2, y, { align: 'center' });
+  y += 5;
+
+  drawLine(doc, y, ml, mr, LIGHT_GREEN, 0.3);
   y += 7;
 
   // ═══════════════════════════════════════════════════════
