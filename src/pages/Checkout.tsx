@@ -404,7 +404,7 @@ export default function Checkout() {
         >
           <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="font-semibold text-destructive text-sm">Payment Issue</p>
+            <p className="font-semibold text-destructive text-sm">Checkout Issue</p>
             <p className="text-sm text-muted-foreground mt-1">{checkoutError}</p>
           </div>
           <button onClick={() => setCheckoutError(null)} className="text-muted-foreground hover:text-foreground transition-colors">
