@@ -416,8 +416,6 @@ export default function Checkout() {
           </button>
         </motion.div>
       )}
-        </div>
-      )}
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-5 gap-8">
         <div className="md:col-span-3 space-y-6">
