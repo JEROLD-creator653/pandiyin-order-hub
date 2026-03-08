@@ -206,7 +206,7 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                 </table>
-                <div className="overflow-y-auto max-h-[240px] scrollbar-thin">
+                <div className="overflow-y-auto max-h-[240px] [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                   <table className="w-full text-sm">
                     <tbody>
                       {data.topProducts.map((p, i) => (
