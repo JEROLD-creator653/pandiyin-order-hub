@@ -1,8 +1,15 @@
 {
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "https://adgihdeigquuoozmvfai.supabase.co/functions/v1/sitemap" },
     { "source": "/(.*)", "destination": "/" }
   ],
   "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
