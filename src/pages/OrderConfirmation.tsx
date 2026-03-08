@@ -88,7 +88,7 @@ export default function OrderConfirmation() {
     );
   }
 
-  const handleDownloadInvoice = () => {
+  const handleDownloadInvoice = async () => {
     if (!order) return;
     const addr = order.delivery_address as any;
     const invoiceItems: InvoiceItem[] = items.map(i => ({
@@ -125,7 +125,7 @@ export default function OrderConfirmation() {
       paymentId: order.stripe_payment_id || undefined,
     };
 
-    const doc = generateInvoicePdf(invoiceData);
+    const doc = await generateInvoicePdf(invoiceData);
     doc.save(`Invoice-${invoiceData.invoiceNumber}.pdf`);
   };
 

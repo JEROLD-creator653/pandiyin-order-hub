@@ -132,7 +132,22 @@ function sectionTitle(doc: jsPDF, text: string, x: number, y: number): number {
   return y + 5;
 }
 
-export function generateInvoicePdf(data: InvoiceData) {
+async function loadLogoBase64(): Promise<string | null> {
+  try {
+    const response = await fetch('/invoice-logo.png');
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function generateInvoicePdf(data: InvoiceData) {
   const doc = new jsPDF('p', 'mm', 'a4');
   const pw = doc.internal.pageSize.getWidth();
   const ph = doc.internal.pageSize.getHeight();
@@ -144,32 +159,40 @@ export function generateInvoicePdf(data: InvoiceData) {
   // SECTION 1 — HEADER (Two-column: Company left, Invoice right)
   // ═══════════════════════════════════════════════════════
 
+  // Logo
+  const logoBase64 = await loadLogoBase64();
+  const logoSize = 18;
+  if (logoBase64) {
+    doc.addImage(logoBase64, 'PNG', ml, y - 4, logoSize, logoSize);
+  }
+  const textStartX = logoBase64 ? ml + logoSize + 3 : ml;
+
   // Left side: Company branding
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
   doc.setTextColor(...DARK_GREEN);
-  doc.text(COMPANY.name.toUpperCase(), ml, y);
+  doc.text(COMPANY.name.toUpperCase(), textStartX, y);
   y += 4;
 
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(7);
   doc.setTextColor(...GRAY);
-  doc.text(COMPANY.tagline, ml, y);
+  doc.text(COMPANY.tagline, textStartX, y);
   y += 5.5;
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(...DARK_TEXT);
-  doc.text(COMPANY.addressLine1, ml, y); y += 3.5;
-  doc.text(COMPANY.addressLine2, ml, y); y += 3.5;
-  doc.text(COMPANY.addressLine3, ml, y); y += 4;
-  doc.text(`Phone: ${COMPANY.phone}`, ml, y); y += 3.5;
-  doc.text(`Email: ${COMPANY.email}`, ml, y); y += 3.5;
-  doc.text(`Website: ${COMPANY.website}`, ml, y); y += 3.5;
+  doc.text(COMPANY.addressLine1, textStartX, y); y += 3.5;
+  doc.text(COMPANY.addressLine2, textStartX, y); y += 3.5;
+  doc.text(COMPANY.addressLine3, textStartX, y); y += 4;
+  doc.text(`Phone: ${COMPANY.phone}`, textStartX, y); y += 3.5;
+  doc.text(`Email: ${COMPANY.email}`, textStartX, y); y += 3.5;
+  doc.text(`Website: ${COMPANY.website}`, textStartX, y); y += 3.5;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
-  doc.text(`GSTIN: ${COMPANY.gstin}`, ml, y);
+  doc.text(`GSTIN: ${COMPANY.gstin}`, textStartX, y);
 
   // Right side: TAX INVOICE title + invoice meta
   const rightCol = mr;
