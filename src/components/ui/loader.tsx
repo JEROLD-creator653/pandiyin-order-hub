@@ -13,16 +13,6 @@ interface LoaderProps {
     delay?: number; // Delay in ms before showing
 }
 
-const SmallFallingLeaf = ({ size }: { size: number }) => (
-    <svg width={size} height={Math.round(size * 1.33)} viewBox="0 0 48 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-md">
-        <path d="M24 2C24 2 4 18 4 38C4 50 12 58 24 58C36 58 44 50 44 38C44 18 24 2 24 2Z" className="fill-primary/80" />
-        <path d="M24 10V50" className="stroke-primary-foreground/25" strokeWidth="1.2" strokeLinecap="round" />
-        <path d="M24 20L14 28M24 28L12 36M24 36L16 42" className="stroke-primary-foreground/15" strokeWidth="0.8" strokeLinecap="round" />
-        <path d="M24 20L34 28M24 28L36 36M24 36L32 42" className="stroke-primary-foreground/15" strokeWidth="0.8" strokeLinecap="round" />
-        <path d="M24 54L24 62" className="stroke-primary/60" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-);
-
 export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProps) => {
     const [show, setShow] = React.useState(delay === 0);
 
@@ -35,7 +25,8 @@ export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProp
 
     if (!show) return null;
 
-    const leafSize = { sm: 28, md: 36, lg: 44 }[size];
+    const orbitSize = { sm: 40, md: 56, lg: 68 }[size];
+    const emojiSize = { sm: 'text-xl', md: 'text-2xl', lg: 'text-3xl' }[size];
 
     return (
         <div className={cn("flex flex-col items-center justify-center min-h-[50vh] w-full", className)}>
@@ -46,36 +37,22 @@ export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProp
                 transition={{ duration: 0.3 }}
                 className="flex flex-col items-center gap-6"
             >
-                <motion.div
-                    initial={{ y: -40, opacity: 0, rotate: -15 }}
-                    animate={{ y: 0, opacity: 1, rotate: 0 }}
-                    transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
-                >
+                <div className="relative flex items-center justify-center" style={{ width: orbitSize + 24, height: orbitSize + 24 }}>
                     <motion.div
-                        animate={{
-                            y: [0, 5, 12, 7, 16, 10, 18, 12, 5, 0],
-                            x: [0, 10, 5, -6, -12, -5, 6, 12, 6, 0],
-                            rotate: [0, 6, 12, 5, -3, -10, -6, 2, 8, 0],
-                        }}
-                        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute"
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 2.5, repeat: Infinity, ease: "linear" }}
+                        style={{ width: orbitSize, height: orbitSize }}
                     >
-                        <SmallFallingLeaf size={leafSize} />
+                        <motion.div
+                            className="absolute -top-2 left-1/2 -translate-x-1/2"
+                            animate={{ rotateY: [0, 180, 360] }}
+                            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                            <span className={cn(emojiSize, "drop-shadow-lg select-none block")}>🍃</span>
+                        </motion.div>
                     </motion.div>
-                </motion.div>
-
-                <motion.div
-                    className="rounded-full bg-foreground/5"
-                    initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: leafSize, height: 4, opacity: 1 }}
-                    transition={{ delay: 0.5, duration: 0.4 }}
-                >
-                    <motion.div
-                        className="w-full h-full rounded-full bg-foreground/5"
-                        animate={{ scaleX: [1, 1.1, 0.9, 1] }}
-                        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-                    />
-                </motion.div>
-
+                </div>
                 {text && (
                     <p className="text-muted-foreground/70 text-sm font-medium tracking-wide animate-pulse">
                         {text}
