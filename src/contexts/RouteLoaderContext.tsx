@@ -186,9 +186,40 @@ interface GlobalRouteLoaderProps {
   isLoading: boolean;
 }
 
+const LEAVES = [
+  // 3 large leaves
+  { size: 48, x: [0, 8, 14, 5, -10, -14, -7, 0], y: [0, -12, -5, 10, 3, -8, 2, 0], rotate: [0, 10, 20, 14, -8, -18, -6, 0], duration: 6.2, delay: 0, opacity: 0.9 },
+  { size: 42, x: [0, -10, -6, 8, 12, 4, -5, 0], y: [0, 6, -8, -14, 0, 10, 4, 0], rotate: [0, -12, -22, -10, 6, 16, 8, 0], duration: 7.0, delay: 0.3, opacity: 0.85 },
+  { size: 44, x: [0, 6, -4, -12, -8, 6, 10, 0], y: [0, -6, 8, 2, -10, -4, 6, 0], rotate: [0, 14, 8, -10, -20, -6, 12, 0], duration: 5.8, delay: 0.6, opacity: 0.88 },
+  // 2 small accent leaves
+  { size: 24, x: [0, -6, -12, -4, 8, 10, 4, 0], y: [0, 4, -4, -8, 2, 6, 0, 0], rotate: [0, -8, -16, -24, -12, 4, 10, 0], duration: 8.0, delay: 0.2, opacity: 0.5 },
+  { size: 20, x: [0, 10, 6, -4, -10, -6, 2, 0], y: [0, -4, 6, 10, 4, -6, -2, 0], rotate: [0, 18, 28, 16, 4, -8, 6, 0], duration: 9.0, delay: 0.5, opacity: 0.4 },
+];
+
+const LEAF_POSITIONS = [
+  'translate-x-0 translate-y-0',         // center
+  '-translate-x-12 -translate-y-8',      // top-left
+  'translate-x-14 translate-y-6',        // bottom-right
+  '-translate-x-20 translate-y-14',      // far left low (small)
+  'translate-x-18 -translate-y-16',      // far right high (small)
+];
+
+const LeafSVG = ({ size, detailed = true }: { size: number; detailed?: boolean }) => (
+  <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-md">
+    <path d="M32 4C32 4 8 20 8 40C8 52 18 60 32 60C46 60 56 52 56 40C56 20 32 4 32 4Z" className="fill-primary/85" />
+    <path d="M32 14V52" className="stroke-primary-foreground/30" strokeWidth="1.5" strokeLinecap="round" />
+    {detailed && (
+      <>
+        <path d="M32 24L20 32M32 32L18 40M32 40L22 46" className="stroke-primary-foreground/20" strokeWidth="1" strokeLinecap="round" />
+        <path d="M32 24L44 32M32 32L46 40M32 40L42 46" className="stroke-primary-foreground/20" strokeWidth="1" strokeLinecap="round" />
+        <path d="M28 16C28 16 16 28 16 38C16 42 20 44 24 42" className="fill-primary-foreground/8" />
+      </>
+    )}
+  </svg>
+);
+
 /**
- * Nature-themed leaf loading overlay
- * A single green leaf gently spins and floats for a calm, brand-aligned experience
+ * Nature-themed multi-leaf loading overlay
  */
 const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
   return (
@@ -203,60 +234,39 @@ const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
           className="fixed inset-0 z-[9999] flex items-center justify-center"
           style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
         >
-          {/* Soft blurred gradient background */}
           <div
             className="absolute inset-0"
             style={{
               background: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(130 30% 95%) 40%, hsl(90 20% 92%) 70%, hsl(var(--background)) 100%)',
-              backdropFilter: 'blur(6px)',
+              backdropFilter: 'blur(8px)',
             }}
           />
 
-          <div className="relative flex flex-col items-center gap-6">
-            {/* Floating leaf */}
-            <motion.div
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-            >
-              <motion.div
-                animate={{
-                  y: [0, -10, -4, 8, 2, 0],
-                  x: [0, 6, 12, 4, -8, -12, -6, 0],
-                  rotate: [0, 8, 18, 12, -6, -16, -8, 0],
-                }}
-                transition={{
-                  duration: 6,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <svg
-                  width="52"
-                  height="52"
-                  viewBox="0 0 64 64"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="drop-shadow-lg"
+          <div className="relative flex flex-col items-center gap-8">
+            <div className="relative w-40 h-40 flex items-center justify-center">
+              {LEAVES.map((leaf, i) => (
+                <motion.div
+                  key={i}
+                  className={`absolute ${LEAF_POSITIONS[i]}`}
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: leaf.opacity }}
+                  transition={{ duration: 0.5, delay: leaf.delay, ease: "easeOut" }}
                 >
-                  <path
-                    d="M32 4C32 4 8 20 8 40C8 52 18 60 32 60C46 60 56 52 56 40C56 20 32 4 32 4Z"
-                    className="fill-primary/85"
-                  />
-                  <path d="M32 14V52" className="stroke-primary-foreground/35" strokeWidth="1.5" strokeLinecap="round" />
-                  <path d="M32 24L20 32M32 32L18 40M32 40L22 46" className="stroke-primary-foreground/25" strokeWidth="1" strokeLinecap="round" />
-                  <path d="M32 24L44 32M32 32L46 40M32 40L42 46" className="stroke-primary-foreground/25" strokeWidth="1" strokeLinecap="round" />
-                  <path d="M28 16C28 16 16 28 16 38C16 42 20 44 24 42" className="fill-primary-foreground/8" />
-                </svg>
-              </motion.div>
-            </motion.div>
+                  <motion.div
+                    animate={{ x: leaf.x, y: leaf.y, rotate: leaf.rotate }}
+                    transition={{ duration: leaf.duration, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    <LeafSVG size={leaf.size} detailed={i < 3} />
+                  </motion.div>
+                </motion.div>
+              ))}
+            </div>
 
-            {/* Branding text */}
             <motion.p
               className="text-muted-foreground/80 text-sm font-medium tracking-wide"
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.4 }}
+              transition={{ delay: 0.4, duration: 0.4 }}
             >
               Preparing fresh homemade goodness…
             </motion.p>
