@@ -71,7 +71,7 @@ interface Product {
   stock_quantity: number;
   is_available: boolean;
   is_featured: boolean;
-  weight?: number;
+  weight?: string | number;
   unit?: string;
   gst_percentage?: number;
   hsn_code?: string;
@@ -116,7 +116,7 @@ export default function AdminProducts() {
           .order('created_at', { ascending: false }),
         supabase.from('categories').select('*').order('sort_order'),
       ]);
-      setProducts(p || []);
+      setProducts((p as any) || []);
       setCategories(c || []);
     } catch (error) {
       toast.error('Failed to load products');
@@ -198,14 +198,14 @@ export default function AdminProducts() {
 
       if (editing) {
         // Update existing product
-        const updateData = {
+        const updateData: any = {
           name: form.name,
           description: form.description,
           price: Number(form.price),
           compare_price: form.compare_price ? Number(form.compare_price) : null,
           category_id: form.category_id || null,
           stock_quantity: Number(form.stock_quantity),
-          weight: form.weight ? Number(form.weight) : null,
+          weight: form.weight ? String(form.weight) : '',
           unit: form.unit,
           gst_percentage: Number(form.gst_percentage),
           hsn_code: form.hsn_code,
@@ -236,9 +236,7 @@ export default function AdminProducts() {
             price: Number(form.price),
             category_id: form.category_id || undefined,
             stock_quantity: Number(form.stock_quantity) || 0,
-            gst_percentage: Number(form.gst_percentage),
-            hsn_code: form.hsn_code,
-          },
+          } as any,
           user.id
         );
 
@@ -493,7 +491,7 @@ export default function AdminProducts() {
                     placeholder="e.g., 190590"
                     value={form.hsn_code}
                     onChange={(e) => setForm({ ...form, hsn_code: e.target.value })}
-                    maxLength="8"
+                    maxLength={8}
                   />
                 </div>
               </div>

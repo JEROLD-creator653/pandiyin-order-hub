@@ -47,7 +47,5 @@ export default defineConfig(({ mode }) => ({
     sourcemap: false,
   },
   // Optimize CSS
-  css: {
-    minify: true,
-  },
+  css: {},
 }));
