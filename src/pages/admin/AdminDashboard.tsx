@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { BarChart3, Package, ShoppingCart, Users, AlertTriangle, TrendingUp } from 'lucide-react';
+import { BarChart3, Package, ShoppingCart, Users, AlertTriangle, TrendingUp, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatPrice } from '@/lib/formatters';
 import { Loader, TableSkeleton } from '@/components/ui/loader';
 import { Skeleton } from '@/components/ui/skeleton';
+import RevenueExportDialog from '@/components/RevenueExportDialog';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ products: 0, orders: 0, customers: 0, revenue: 0 });
