@@ -40,7 +40,7 @@ export default function Checkout() {
   const { items, total, clearCart, refetch } = useCart();
   const { regions, getDeliveryCharge, getZoneConfig } = useShippingRegions();
   const [loading, setLoading] = useState(false);
-  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [agreementChecked, setAgreementChecked] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('razorpay');
   const [couponCode, setCouponCode] = useState('');
@@ -124,7 +124,7 @@ export default function Checkout() {
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
     if (!user) {
-      toast({ title: 'Please login to apply coupon', variant: 'destructive' });
+      setCheckoutError('Please login to apply coupon');
       return;
     }
     try {
@@ -136,7 +136,7 @@ export default function Checkout() {
       if (error) throw error;
       const validation = data?.[0];
       if (!validation || !validation.is_valid) {
-        toast({ title: 'Invalid coupon', description: validation?.error_message || 'Could not apply coupon', variant: 'destructive' });
+        setCheckoutError(validation?.error_message || 'Invalid coupon. Could not apply coupon.');
         return;
       }
       const disc = validation.discount_type === 'percentage'
@@ -146,7 +146,7 @@ export default function Checkout() {
       toast({ title: `Coupon applied! You save ${formatPrice(disc)}` });
     } catch (err: any) {
       console.error('Coupon validation error:', err);
-      toast({ title: 'Error', description: 'Failed to validate coupon', variant: 'destructive' });
+      setCheckoutError('Failed to validate coupon. Please try again.');
     }
   };
 
@@ -229,9 +229,9 @@ export default function Checkout() {
   };
 
   const handleRazorpayPayment = async () => {
-    setPaymentError(null);
+    setCheckoutError(null);
     if (!window.Razorpay) {
-      setPaymentError('Payment gateway not loaded. Please refresh the page and try again.');
+      setCheckoutError('Payment gateway not loaded. Please refresh the page and try again.');
       return;
     }
 
@@ -294,10 +294,10 @@ export default function Checkout() {
               clearCart();
               navigate(`/order-confirmation/${order.id}`);
             } else {
-              setPaymentError('Payment verification failed. Please contact support.');
+              setCheckoutError('Payment verification failed. Please contact support.');
             }
           } catch (err: any) {
-            setPaymentError(err.message || 'Verification error. Please try again.');
+            setCheckoutError(err.message || 'Verification error. Please try again.');
           }
         },
         prefill: {
@@ -308,7 +308,7 @@ export default function Checkout() {
         modal: {
           ondismiss: () => {
             supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
-            setPaymentError('Payment cancelled. Your order has been saved. You can retry payment.');
+            setCheckoutError('Payment cancelled. Your order has been saved. You can retry payment.');
             setLoading(false);
           },
         },
@@ -318,28 +318,29 @@ export default function Checkout() {
       rzp.on('payment.failed', (response: any) => {
         console.error('Payment failed:', response.error);
         supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
-        setPaymentError(response.error?.description || 'Payment failed. Please try again.');
+        setCheckoutError(response.error?.description || 'Payment failed. Please try again.');
         setLoading(false);
       });
       rzp.open();
     } catch (err: any) {
       console.error('Payment error:', err);
-      setPaymentError(err.message || 'Payment failed. Please try again.');
+      setCheckoutError(err.message || 'Payment failed. Please try again.');
       setLoading(false);
     }
   };
 
   const placeOrder = async () => {
+    setCheckoutError(null);
     if (!selectedAddress || !selectedAddress.full_name || !selectedAddress.phone || !selectedAddress.address_line1 || !selectedAddress.pincode) {
-      toast({ title: 'Please select or add a delivery address', variant: 'destructive' });
+      setCheckoutError('Please select or add a delivery address');
       return;
     }
     if (!selectedAddress.state) {
-      toast({ title: 'Address missing state info', description: 'Please update your address with a valid pincode', variant: 'destructive' });
+      setCheckoutError('Address missing state info. Please update your address with a valid pincode.');
       return;
     }
     if (!agreementChecked) {
-      toast({ title: 'Please agree to our policies', description: 'You must accept our Terms of Service, Return Policy and Shipping Policy to proceed', variant: 'destructive' });
+      setCheckoutError('Please agree to our Terms of Service, Return Policy and Shipping Policy to proceed.');
       return;
     }
 
@@ -356,7 +357,7 @@ export default function Checkout() {
 
       if (!verifyResult?.valid) {
         const errMsgs = verifyResult?.errors?.join(', ') || 'Validation failed';
-        toast({ title: 'Order validation failed', description: errMsgs, variant: 'destructive' });
+        setCheckoutError(errMsgs);
         refetch();
         return;
       }
@@ -364,11 +365,7 @@ export default function Checkout() {
       // Check if frontend totals match backend
       const backendTotal = verifyResult.grand_total;
       if (Math.abs(backendTotal - grandTotal) > 1) {
-        toast({
-          title: 'Prices or delivery charges have changed',
-          description: 'Your cart has been refreshed with the latest data. Please review before proceeding.',
-          variant: 'destructive',
-        });
+        setCheckoutError('Prices or delivery charges have changed. Your cart has been refreshed with the latest data. Please review before proceeding.');
         refetch();
         return;
       }
@@ -388,7 +385,7 @@ export default function Checkout() {
       clearCart();
       navigate(`/order-confirmation/${order.id}`);
     } catch (err: any) {
-      toast({ title: 'Order failed', description: err.message, variant: 'destructive' });
+      setCheckoutError(err.message || 'Order failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -400,7 +397,7 @@ export default function Checkout() {
     <div className="container mx-auto px-4 pt-24 pb-8 max-w-4xl">
       <h1 className="text-3xl font-display font-bold mb-8">Checkout</h1>
 
-      {paymentError && (
+      {checkoutError && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -408,10 +405,10 @@ export default function Checkout() {
         >
           <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="font-semibold text-destructive text-sm">Payment Issue</p>
-            <p className="text-sm text-muted-foreground mt-1">{paymentError}</p>
+            <p className="font-semibold text-destructive text-sm">Checkout Issue</p>
+            <p className="text-sm text-muted-foreground mt-1">{checkoutError}</p>
           </div>
-          <button onClick={() => setPaymentError(null)} className="text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={() => setCheckoutError(null)} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-4 w-4" />
           </button>
         </motion.div>
