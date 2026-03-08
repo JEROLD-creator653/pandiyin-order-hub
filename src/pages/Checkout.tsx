@@ -339,38 +339,38 @@ export default function Checkout() {
       return;
     }
 
-    // Pre-payment revalidation: fetch latest prices & stock
-    const productIds = items.map(i => i.product_id);
-    const { data: latestProducts } = await supabase
-      .from('products')
-      .select('id, price, stock_quantity, is_available')
-      .in('id', productIds);
+    // Backend verification: validate prices, stock, and delivery charge server-side
+    try {
+      const { data: verifyResult, error: verifyError } = await supabase.functions.invoke('verify-order', {
+        body: {
+          cart_items: items.map(i => ({ product_id: i.product_id, quantity: i.quantity })),
+          delivery_state: selectedAddress.state,
+        },
+      });
 
-    if (latestProducts) {
-      const unavailable = latestProducts.filter(p => !p.is_available);
-      if (unavailable.length > 0) {
-        toast({ title: 'Some products are no longer available', description: 'Please review your cart', variant: 'destructive' });
+      if (verifyError) throw verifyError;
+
+      if (!verifyResult?.valid) {
+        const errMsgs = verifyResult?.errors?.join(', ') || 'Validation failed';
+        toast({ title: 'Order validation failed', description: errMsgs, variant: 'destructive' });
         refetch();
         return;
       }
-      const outOfStock = items.filter(item => {
-        const latest = latestProducts.find(p => p.id === item.product_id);
-        return latest && item.quantity > latest.stock_quantity;
-      });
-      if (outOfStock.length > 0) {
-        toast({ title: 'Stock has changed', description: 'Some items exceed available stock. Please review your cart.', variant: 'destructive' });
+
+      // Check if frontend totals match backend
+      const backendTotal = verifyResult.grand_total;
+      if (Math.abs(backendTotal - grandTotal) > 1) {
+        toast({
+          title: 'Prices or delivery charges have changed',
+          description: 'Your cart has been refreshed with the latest data. Please review before proceeding.',
+          variant: 'destructive',
+        });
         refetch();
         return;
       }
-      const priceChanged = items.some(item => {
-        const latest = latestProducts.find(p => p.id === item.product_id);
-        return latest && latest.price !== item.product.price;
-      });
-      if (priceChanged) {
-        toast({ title: 'Prices updated', description: 'Product prices have changed. Please review the updated totals before proceeding.', variant: 'destructive' });
-        refetch();
-        return;
-      }
+    } catch (err: any) {
+      console.error('Order verification error:', err);
+      // Continue with order if verification service is unavailable
     }
 
     if (paymentMethod === 'razorpay') {
