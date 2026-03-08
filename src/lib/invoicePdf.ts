@@ -218,8 +218,6 @@ export async function generateInvoicePdf(data: InvoiceData) {
   doc.setFontSize(10);
   doc.setTextColor(...DARK_GREEN);
   doc.text('Invoice Details', ml, y);
-  y += 3;
-  drawLine(doc, y, ml, mr, LIGHT_GREEN, 0.3);
   y += 5;
 
   // Two-column grid: labels left, values right
