@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as ToastPrimitives from "@radix-ui/react-toast";
 import { cva, type VariantProps } from "class-variance-authority";
-import { X, AlertCircle, CheckCircle2, AlertTriangle, Info } from "lucide-react";
+import { X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -28,9 +28,9 @@ const toastVariants = cva(
     variants: {
       variant: {
         default:
-          "border-primary/20 bg-primary text-primary-foreground shadow-[0_8px_30px_-4px_hsl(145_40%_28%/0.4)]",
+          "border-primary/30 bg-secondary text-foreground shadow-[0_8px_24px_-4px_hsl(145_40%_28%/0.15)]",
         destructive:
-          "destructive group border-destructive/30 bg-foreground text-primary-foreground shadow-[0_8px_30px_-4px_hsl(150_20%_12%/0.5)]",
+          "destructive group border-destructive/40 bg-secondary text-foreground shadow-[0_8px_24px_-4px_hsl(0_72%_51%/0.15)]",
       },
     },
     defaultVariants: {
@@ -54,7 +54,7 @@ const ToastAction = React.forwardRef<
   <ToastPrimitives.Action
     ref={ref}
     className={cn(
-      "inline-flex h-8 shrink-0 items-center justify-center rounded-lg border border-primary-foreground/20 bg-primary-foreground/10 px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-foreground/20 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+      "inline-flex h-8 shrink-0 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 px-3 text-sm font-medium text-primary transition-colors hover:bg-primary/20 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
       className,
     )}
     {...props}
@@ -69,7 +69,7 @@ const ToastClose = React.forwardRef<
   <ToastPrimitives.Close
     ref={ref}
     className={cn(
-      "absolute right-3 top-3 rounded-full p-1 text-primary-foreground/60 transition-all hover:text-primary-foreground hover:bg-primary-foreground/10 focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-primary-foreground/30",
+      "absolute right-3 top-3 rounded-full p-1 text-muted-foreground transition-all hover:text-foreground hover:bg-muted focus:opacity-100 focus:outline-none",
       className,
     )}
     toast-close=""
@@ -92,7 +92,7 @@ const ToastDescription = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Description>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>
 >(({ className, ...props }, ref) => (
-  <ToastPrimitives.Description ref={ref} className={cn("text-sm font-sans opacity-90 leading-relaxed", className)} {...props} />
+  <ToastPrimitives.Description ref={ref} className={cn("text-sm text-muted-foreground leading-relaxed", className)} {...props} />
 ));
 ToastDescription.displayName = ToastPrimitives.Description.displayName;
 
@@ -110,8 +110,4 @@ export {
   ToastDescription,
   ToastClose,
   ToastAction,
-  AlertCircle,
-  CheckCircle2,
-  AlertTriangle,
-  Info,
 };

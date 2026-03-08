@@ -21,19 +21,19 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "group toast group-[.toaster]:!rounded-2xl group-[.toaster]:!border-2 group-[.toaster]:!px-5 group-[.toaster]:!py-4 group-[.toaster]:!shadow-2xl group-[.toaster]:!font-sans",
+            "group toast group-[.toaster]:!rounded-2xl group-[.toaster]:!border-2 group-[.toaster]:!px-5 group-[.toaster]:!py-4 group-[.toaster]:!shadow-2xl group-[.toaster]:!font-sans group-[.toaster]:!bg-[hsl(38,40%,90%)] group-[.toaster]:!text-[hsl(150,20%,12%)] group-[.toaster]:!border-[hsl(145,40%,28%,0.3)]",
           title: "group-[.toast]:!font-display group-[.toast]:!text-base group-[.toast]:!font-semibold group-[.toast]:!tracking-tight",
-          description: "group-[.toast]:!text-sm group-[.toast]:!opacity-90 group-[.toast]:!leading-relaxed",
-          actionButton: "group-[.toast]:!rounded-lg group-[.toast]:!font-medium",
+          description: "group-[.toast]:!text-sm group-[.toast]:!text-[hsl(150,10%,45%)] group-[.toast]:!leading-relaxed",
+          actionButton: "group-[.toast]:!rounded-lg group-[.toast]:!font-medium group-[.toast]:!bg-[hsl(145,40%,28%)] group-[.toast]:!text-[hsl(40,33%,96%)]",
           cancelButton: "group-[.toast]:!rounded-lg group-[.toast]:!font-medium",
           error:
-            "group-[.toaster]:!bg-[hsl(150,20%,12%)] group-[.toaster]:!text-[hsl(40,33%,96%)] group-[.toaster]:!border-[hsl(0,72%,51%)] group-[.toaster]:!shadow-[0_8px_30px_-4px_hsl(150,20%,12%,0.5)]",
+            "group-[.toaster]:!bg-[hsl(38,40%,90%)] group-[.toaster]:!text-[hsl(150,20%,12%)] group-[.toaster]:!border-[hsl(0,72%,51%,0.4)] [&_[data-icon]]:!text-[hsl(0,72%,51%)]",
           success:
-            "group-[.toaster]:!bg-[hsl(145,40%,28%)] group-[.toaster]:!text-[hsl(40,33%,96%)] group-[.toaster]:!border-[hsl(145,40%,22%)] group-[.toaster]:!shadow-[0_8px_30px_-4px_hsl(145,40%,28%,0.4)]",
+            "group-[.toaster]:!bg-[hsl(38,40%,90%)] group-[.toaster]:!text-[hsl(150,20%,12%)] group-[.toaster]:!border-[hsl(145,40%,28%,0.4)] [&_[data-icon]]:!text-[hsl(145,40%,28%)]",
           warning:
-            "group-[.toaster]:!bg-[hsl(150,20%,12%)] group-[.toaster]:!text-[hsl(40,33%,96%)] group-[.toaster]:!border-[hsl(38,60%,50%)] group-[.toaster]:!shadow-[0_8px_30px_-4px_hsl(150,20%,12%,0.5)]",
+            "group-[.toaster]:!bg-[hsl(38,40%,90%)] group-[.toaster]:!text-[hsl(150,20%,12%)] group-[.toaster]:!border-[hsl(38,60%,50%,0.5)] [&_[data-icon]]:!text-[hsl(38,60%,50%)]",
           info:
-            "group-[.toaster]:!bg-[hsl(145,40%,28%)] group-[.toaster]:!text-[hsl(40,33%,96%)] group-[.toaster]:!border-[hsl(145,40%,22%)] group-[.toaster]:!shadow-[0_8px_30px_-4px_hsl(145,40%,28%,0.4)]",
+            "group-[.toaster]:!bg-[hsl(38,40%,90%)] group-[.toaster]:!text-[hsl(150,20%,12%)] group-[.toaster]:!border-[hsl(145,40%,28%,0.4)] [&_[data-icon]]:!text-[hsl(145,40%,28%)]",
         },
       }}
       {...props}
