@@ -44,6 +44,7 @@ export default function Checkout() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [agreementChecked, setAgreementChecked] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('razorpay');
+  const MAX_NOTES_LENGTH = 500;
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
@@ -472,7 +473,8 @@ export default function Checkout() {
           <Card>
             <CardHeader><CardTitle className="text-lg">Order Notes</CardTitle></CardHeader>
             <CardContent>
-              <Textarea placeholder="Any special instructions..." value={notes} onChange={e => setNotes(e.target.value)} />
+              <Textarea placeholder="Any special instructions..." value={notes} onChange={e => setNotes(e.target.value.slice(0, MAX_NOTES_LENGTH))} maxLength={MAX_NOTES_LENGTH} />
+              <p className="text-xs text-muted-foreground mt-1">{notes.length}/{MAX_NOTES_LENGTH}</p>
             </CardContent>
           </Card>
         </div>
