@@ -19,6 +19,7 @@ import AddressManager, { Address } from '@/components/AddressManager';
 import { formatPrice } from '@/lib/formatters';
 import { ButtonLoader, Loader } from '@/components/ui/loader';
 import { STATE_ZONES, getChargedWeight, calculateDeliveryCharge, type ShippingZoneConfig } from '@/lib/deliveryCalculations';
+import { generateInvoiceNumber } from '@/lib/invoicePdf';
 
 declare global {
   interface Window {
