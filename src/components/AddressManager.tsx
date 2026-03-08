@@ -304,7 +304,7 @@ export default function AddressManager({
                     onChange={(e) =>
                       setForm((f) => ({ ...f, phone: e.target.value }))
                     }
-                    className="rounded-l-none h-12 text-sm bg-background focus-visible:ring-2 focus-visible:ring-green-700/40 focus-visible:ring-offset-0 outline-none"
+                    className="rounded-l-none h-12 text-sm bg-background"
                     placeholder="6383709933"
                     maxLength={getMaxPhoneLength(countryCode)}
                   />
