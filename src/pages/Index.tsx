@@ -431,11 +431,11 @@ export default function Index() {
                           <Leaf className="h-12 w-12 text-muted-foreground/30" />
                         )}
                       </div>
-                      <CardContent className="p-4 flex-1 flex flex-col">
+                      <CardContent className="p-3 md:p-4 flex-1 flex flex-col">
                         <div>
-                          <p className="text-xs text-muted-foreground mb-1">{(p as any).categories?.name}</p>
-                          <h3 className="font-semibold text-base font-sans line-clamp-2 mb-1.5 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
-                          {p.weight && <p className="text-xs text-muted-foreground mb-2">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
+                          <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">{(p as any).categories?.name}</p>
+                          <h3 className="font-semibold text-sm md:text-base font-sans line-clamp-2 mb-1 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
+                          {p.weight && <p className="text-[10px] md:text-xs text-muted-foreground mb-1 md:mb-2">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
                         </div>
                         <div className="flex items-center justify-between gap-2 mb-3">
                           <div className="flex items-center gap-2">
