@@ -345,6 +345,19 @@ export default function Checkout() {
   return (
     <div className="container mx-auto px-4 pt-24 pb-8 max-w-4xl">
       <h1 className="text-3xl font-display font-bold mb-8">Checkout</h1>
+
+      {paymentError && (
+        <div className="mb-6 border border-destructive/30 bg-destructive/5 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-medium text-destructive text-sm">Payment Issue</p>
+            <p className="text-sm text-muted-foreground mt-1">{paymentError}</p>
+          </div>
+          <button onClick={() => setPaymentError(null)} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-5 gap-8">
         <div className="md:col-span-3 space-y-6">
           <Card>
