@@ -39,7 +39,7 @@ export const GlobalLoader = () => {
                         backdropFilter: 'blur(6px)',
                     }}
                 >
-                    <Loader text="Preparing fresh homemade goodness…" size="lg" className="min-h-0" delay={0} />
+                    <Loader text="Preparing fresh homemade goodness…" size="lg" className="min-h-0 [&>div]:gap-4" delay={0} />
                 </motion.div>
             )}
         </AnimatePresence>
