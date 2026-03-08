@@ -191,9 +191,9 @@ export default function Checkout() {
     if (error) throw error;
 
     const orderItems = items.map(item => {
-      const productGst = productGstMap.get(item.product_id) || {};
-      const itemGstPercentage = (productGst as any)?.gst_percentage || 5;
-      const itemBasePrice = (productGst as any)?.tax_inclusive
+      const p = item.product as any;
+      const itemGstPercentage = p?.gst_percentage || 5;
+      const itemBasePrice = p?.tax_inclusive !== false
         ? item.product.price * 100 / (100 + itemGstPercentage)
         : item.product.price;
       const itemGstAmount = (itemBasePrice * itemGstPercentage / 100) * item.quantity;
@@ -205,9 +205,9 @@ export default function Checkout() {
         quantity: item.quantity,
         total: item.product.price * item.quantity,
         gst_percentage: itemGstPercentage,
-        hsn_code: (productGst as any)?.hsn_code || '',
+        hsn_code: p?.hsn_code || '',
         gst_amount: itemGstAmount,
-        tax_inclusive: (productGst as any)?.tax_inclusive ?? true,
+        tax_inclusive: p?.tax_inclusive ?? true,
         product_base_price: itemBasePrice,
       };
     });
