@@ -83,6 +83,7 @@ export default function AdminOrders() {
   const handleGenerateInvoice = async () => {
     if (!detail) return;
     try {
+      const addr = detail.delivery_address as any;
       const orderDate = new Date(detail.created_at);
       const invoiceData = {
         invoiceNumber: detail.invoice_number || detail.order_number,
