@@ -917,6 +917,10 @@ export type Database = {
         Args: { _coupon_code: string; _order_id: string; _user_id: string }
         Returns: boolean
       }
+      redeem_coupon_atomic: {
+        Args: { _coupon_code: string; _order_id: string; _user_id: string }
+        Returns: boolean
+      }
       validate_coupon: {
         Args: { _coupon_code: string; _order_total: number; _user_id: string }
         Returns: {
