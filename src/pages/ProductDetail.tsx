@@ -151,10 +151,10 @@ export default function ProductDetail() {
 
       {/* Main Content Grid: Product Image + Details */}
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-12">
-          {/* Left Column: Product Image Card (Desktop 2/5, Mobile Full Width) */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8 mb-12">
+          {/* Left Column: Product Image Card */}
           <div className="lg:col-span-2">
-            <div className="sticky top-28 rounded-2xl overflow-hidden border border-muted shadow-sm bg-muted h-[520px] w-full">
+            <div className="sticky top-28 rounded-2xl overflow-hidden border border-muted shadow-sm bg-muted h-[320px] md:h-[520px] w-full">
               {product.image_url ? (
                 <img 
                   src={product.image_url} 
