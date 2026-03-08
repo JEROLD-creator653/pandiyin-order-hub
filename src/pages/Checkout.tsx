@@ -10,7 +10,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,7 +18,7 @@ import { useShippingRegions } from '@/hooks/useShippingRegions';
 import AddressManager, { Address } from '@/components/AddressManager';
 import { formatPrice } from '@/lib/formatters';
 import { ButtonLoader, Loader } from '@/components/ui/loader';
-import { ZONE_GROUPS, STATE_ZONES, getChargedWeight, calculateDeliveryCharge, type ShippingZoneConfig } from '@/lib/deliveryCalculations';
+import { STATE_ZONES, getChargedWeight, calculateDeliveryCharge, type ShippingZoneConfig } from '@/lib/deliveryCalculations';
 
 declare global {
   interface Window {
@@ -47,18 +46,13 @@ export default function Checkout() {
   const [discount, setDiscount] = useState(0);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
-  const [deliveryState, setDeliveryState] = useState<string>('');
   const [notes, setNotes] = useState('');
   const [gstSettings, setGstSettings] = useState({ gst_enabled: false });
   const [productGstMap, setProductGstMap] = useState<Map<string, any>>(new Map());
   const [calculatedGstAmount, setCalculatedGstAmount] = useState(0);
 
-  // Load user's saved state from their last address
-  useEffect(() => {
-    if (selectedAddress?.state) {
-      setDeliveryState(selectedAddress.state);
-    }
-  }, [selectedAddress]);
+  // Derive delivery state from selected address pincode/state
+  const deliveryState = selectedAddress?.state || '';
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -342,8 +336,8 @@ export default function Checkout() {
       toast({ title: 'Please select or add a delivery address', variant: 'destructive' });
       return;
     }
-    if (!deliveryState) {
-      toast({ title: 'Please select your delivery state', variant: 'destructive' });
+    if (!selectedAddress.state) {
+      toast({ title: 'Address missing state info', description: 'Please update your address with a valid pincode', variant: 'destructive' });
       return;
     }
     if (!agreementChecked) {
@@ -403,46 +397,18 @@ export default function Checkout() {
             </CardContent>
           </Card>
 
-          {/* Delivery State Selection */}
-          <Card>
-            <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Truck className="h-5 w-5" /> Delivery State</CardTitle></CardHeader>
-            <CardContent className="space-y-4">
-              <Select value={deliveryState} onValueChange={setDeliveryState}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your delivery state" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ZONE_GROUPS.map(group => (
-                    <SelectGroup key={group.zone}>
-                      <SelectLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</SelectLabel>
-                      {group.states.map(state => (
-                        <SelectItem key={state} value={state}>{state}</SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {!deliveryState && (
-                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5" /> Select state to see delivery cost
-                </p>
-              )}
-
-              {/* Free Delivery Nudge — Tamil Nadu only */}
-              {freeDeliveryNudge && (
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">
-                  <p className="text-sm font-medium text-primary">
-                    🚚 Add {formatPrice(freeDeliveryNudge.remaining)} more for FREE delivery!
-                  </p>
-                  <Progress value={freeDeliveryNudge.progress} className="h-2" />
-                  <p className="text-xs text-muted-foreground">
-                    Free delivery on orders above {formatPrice(freeDeliveryNudge.threshold!)}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          {/* Free Delivery Nudge — Tamil Nadu only */}
+          {freeDeliveryNudge && (
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">
+              <p className="text-sm font-medium text-primary">
+                🚚 Add {formatPrice(freeDeliveryNudge.remaining)} more for FREE delivery!
+              </p>
+              <Progress value={freeDeliveryNudge.progress} className="h-2" />
+              <p className="text-xs text-muted-foreground">
+                Free delivery on orders above {formatPrice(freeDeliveryNudge.threshold!)}
+              </p>
+            </div>
+          )}
 
           <Card>
             <CardHeader><CardTitle className="text-lg">Payment Method</CardTitle></CardHeader>
@@ -598,13 +564,13 @@ export default function Checkout() {
               className="w-full mt-6 rounded-full"
               size="lg"
               onClick={placeOrder}
-              disabled={loading || !agreementChecked || isCartEmpty || !deliveryState}
+              disabled={loading || !agreementChecked || isCartEmpty || !selectedAddress}
             >
               {loading ? <ButtonLoader text="Processing payment..." /> : `Pay Now · ${formatPrice(grandTotal)}`}
             </Button>
 
-            {!deliveryState && (
-              <p className="text-xs text-destructive mt-2 text-center">Please select your delivery state to proceed</p>
+            {!selectedAddress && (
+              <p className="text-xs text-destructive mt-2 text-center">Please add a delivery address to proceed</p>
             )}
 
             <div className="mt-5 flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
