@@ -141,11 +141,11 @@ export default function ProductDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-[100px] md:pb-8">
+    <div className="min-h-screen bg-background pt-20 md:pt-24 pb-[100px] md:pb-8">
       {/* Back Button */}
-      <div className="container mx-auto px-4 mb-8">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+      <div className="container mx-auto px-4 mb-4 md:mb-8">
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-2 md:mb-6 -ml-2">
+          <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
         </Button>
       </div>
 
