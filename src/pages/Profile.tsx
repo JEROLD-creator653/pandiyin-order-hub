@@ -40,21 +40,12 @@ export default function Profile() {
 
   const saveProfile = async () => {
     if (!user) return;
-    // Input validation
-    const sanitizedName = fullName.trim().slice(0, 200);
-    const sanitizedPhone = phone.trim().slice(0, 20);
-    if (!sanitizedName) {
-      toast({ title: 'Name cannot be empty', variant: 'destructive' });
-      return;
-    }
     setSaving(true);
-    const { error } = await supabase.from('profiles').update({ full_name: sanitizedName, phone: sanitizedPhone }).eq('user_id', user.id);
+    const { error } = await supabase.from('profiles').update({ full_name: fullName, phone }).eq('user_id', user.id);
     setSaving(false);
     if (error) {
       toast({ title: 'Failed to update profile', variant: 'destructive' });
     } else {
-      setFullName(sanitizedName);
-      setPhone(sanitizedPhone);
       toast({ title: 'Profile updated successfully!' });
     }
   };

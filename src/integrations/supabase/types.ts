@@ -512,7 +512,6 @@ export type Database = {
       }
       orders: {
         Row: {
-          cart_hash: string | null
           cgst_amount: number | null
           coupon_code: string | null
           created_at: string
@@ -542,7 +541,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          cart_hash?: string | null
           cgst_amount?: number | null
           coupon_code?: string | null
           created_at?: string
@@ -572,7 +570,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          cart_hash?: string | null
           cgst_amount?: number | null
           coupon_code?: string | null
           created_at?: string
@@ -881,39 +878,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      public_banners: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          image_url: string | null
-          is_active: boolean | null
-          link_url: string | null
-          sort_order: number | null
-          subtitle: string | null
-          title: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          image_url?: string | null
-          is_active?: boolean | null
-          link_url?: string | null
-          sort_order?: number | null
-          subtitle?: string | null
-          title?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          image_url?: string | null
-          is_active?: boolean | null
-          link_url?: string | null
-          sort_order?: number | null
-          subtitle?: string | null
-          title?: string | null
-        }
-        Relationships: []
       }
       public_product_reviews: {
         Row: {

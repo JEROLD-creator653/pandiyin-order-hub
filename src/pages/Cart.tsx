@@ -11,7 +11,6 @@ import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import { formatPrice } from '@/lib/formatters';
 import { Loader } from '@/components/ui/loader';
 import { getChargedWeight } from '@/lib/deliveryCalculations';
-import SEOHead from '@/components/SEOHead';
 
 function getPricingInfo(price: number, comparePrice?: number) {
   const hasDiscount = comparePrice && comparePrice > price;

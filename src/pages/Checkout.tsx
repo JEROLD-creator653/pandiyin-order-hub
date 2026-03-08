@@ -159,10 +159,6 @@ export default function Checkout() {
   if (!user) return null;
 
   const createOrder = async () => {
-    // Generate cart hash for idempotency (prevent double-submit)
-    const cartSignature = items.map(i => `${i.product_id}:${i.quantity}`).sort().join('|');
-    const cartHash = btoa(cartSignature + '|' + user!.id + '|' + Date.now().toString(36));
-
     const totalMRP = items.reduce((a, i) => a + ((i.product as any).compare_price || i.product.price) * i.quantity, 0);
     const sellingTotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0);
     const gstType = getGSTType(deliveryState || selectedAddress?.state || '');
@@ -195,11 +191,10 @@ export default function Checkout() {
       payment_method: paymentMethod === 'razorpay' ? 'stripe' as any : 'cod' as any,
       payment_status: 'pending' as any,
       delivery_address: selectedAddress as any,
-      notes: notes ? notes.slice(0, 500) : null,
+      notes: notes || null,
       invoice_number: invoiceNumber,
       invoice_generated: true,
-      cart_hash: cartHash,
-    } as any).select().single();
+    }).select().single();
     if (error) throw error;
 
     const orderItems = items.map(item => {

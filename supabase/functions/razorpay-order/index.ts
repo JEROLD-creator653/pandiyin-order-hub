@@ -77,13 +77,6 @@ serve(async (req) => {
     let totalWeightKg = 0;
 
     for (const item of cart_items) {
-      // Validate quantity is a positive integer
-      if (!Number.isInteger(item.quantity) || item.quantity <= 0 || item.quantity > 100) {
-        return new Response(JSON.stringify({ error: `Invalid quantity` }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
       const product = productMap.get(item.product_id);
       if (!product) {
         return new Response(JSON.stringify({ error: `Product not found: ${item.product_id}` }), {

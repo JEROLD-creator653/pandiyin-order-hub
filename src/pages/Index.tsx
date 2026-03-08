@@ -14,7 +14,6 @@ import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
 import favicon from '@/public/Pandiyin.ico';
 import { formatPrice } from '@/lib/formatters';
-import SEOHead, { schemas } from '@/components/SEOHead';
 
 const BANNER_CACHE_KEY = 'hero_banner_url';
 const BANNER_DATA_CACHE_KEY = 'hero_banners_data';
@@ -285,11 +284,6 @@ export default function Index() {
 
   return (
     <>
-      <SEOHead
-        title="Homemade Foods from Madurai"
-        description="Shop authentic homemade pickles, snacks, spice powders & sweets from Madurai. 100% natural, zero preservatives. Free shipping above ₹799."
-        jsonLd={[schemas.organization(), schemas.website()]}
-      />
       {/* Professional Banner Carousel - Hero Banner */}
       {banners.length > 0 ? (
         <section className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden group pt-16 lg:pt-0" style={{ containIntrinsicSize: '100vw 500px', contentVisibility: 'visible' }}>
