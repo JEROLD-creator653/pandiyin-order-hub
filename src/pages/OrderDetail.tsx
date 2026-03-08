@@ -187,7 +187,7 @@ export default function OrderDetail() {
               )}
               <Separator />
               <div className="flex justify-between text-base"><span className="font-bold">Total</span><span className="font-medium text-primary">{formatPrice(order.total)}</span></div>
-              <div className="flex justify-between text-muted-foreground"><span>Payment</span><span className="capitalize">{order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'}</span></div>
+              <div className="flex justify-between text-muted-foreground"><span>Payment</span><span className="capitalize">{order.payment_mode ? getPaymentModeLabel(order.payment_mode) : (order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online')}</span></div>
               <Separator className="my-2" />
               <Button variant="outline" size="sm" className="w-full gap-2" onClick={handleDownloadInvoice}>
                 <Download className="h-3.5 w-3.5" /> Download Invoice (PDF)
