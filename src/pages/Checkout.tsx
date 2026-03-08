@@ -208,8 +208,9 @@ export default function Checkout() {
   };
 
   const handleRazorpayPayment = async () => {
+    setPaymentError(null);
     if (!window.Razorpay) {
-      toast({ title: 'Payment gateway not loaded', description: 'Please refresh the page and try again', variant: 'destructive' });
+      setPaymentError('Payment gateway not loaded. Please refresh the page and try again.');
       return;
     }
 
