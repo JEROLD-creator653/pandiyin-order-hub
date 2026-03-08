@@ -220,11 +220,16 @@ export default function Checkout() {
     await supabase.from('order_items').insert(orderItems);
 
     if (couponCode && discount > 0) {
-      await supabase.rpc('redeem_coupon' as any, {
+      const { data: redeemed, error: redeemError } = await supabase.rpc('redeem_coupon_atomic' as any, {
         _coupon_code: couponCode.trim().toUpperCase(),
         _user_id: user!.id,
         _order_id: order.id,
       });
+      if (redeemError || redeemed === false) {
+        // Coupon could not be redeemed (race condition / expired) — remove discount from order
+        await supabase.from('orders').update({ discount: 0, total: grandTotal + discount, coupon_code: null }).eq('id', order.id);
+        console.warn('Coupon redemption failed, discount removed from order');
+      }
     }
 
     return order;
