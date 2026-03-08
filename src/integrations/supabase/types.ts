@@ -530,6 +530,7 @@ export type Database = {
           notes: string | null
           order_number: string
           payment_method: Database["public"]["Enums"]["payment_method"]
+          payment_mode: string | null
           payment_status: Database["public"]["Enums"]["payment_status"]
           sgst_amount: number | null
           status: Database["public"]["Enums"]["order_status"]
@@ -558,6 +559,7 @@ export type Database = {
           notes?: string | null
           order_number: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_mode?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           sgst_amount?: number | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -586,6 +588,7 @@ export type Database = {
           notes?: string | null
           order_number?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          payment_mode?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
           sgst_amount?: number | null
           status?: Database["public"]["Enums"]["order_status"]
