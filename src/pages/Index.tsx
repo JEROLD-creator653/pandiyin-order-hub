@@ -424,7 +424,7 @@ export default function Index() {
                 <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="h-full">
                   <Link to={`/products/${p.id}`} className="h-full block">
                     <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col border-0 shadow-sm">
-                      <div className="h-52 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
+                      <div className="h-40 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
                         {p.image_url ? (
                           <img src={p.image_url} alt={p.name} className="w-full h-full object-cover object-center rounded-lg group-hover:scale-105 transition-transform duration-500" />
                         ) : (
