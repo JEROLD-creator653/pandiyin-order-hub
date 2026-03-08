@@ -318,7 +318,7 @@ export async function generateInvoicePdf(data: InvoiceData) {
 
   y = sectionTitle(doc, 'ORDER ITEMS', ml, y);
 
-  const tableHead = [['Sl No', 'Product Description', 'HSN/SAC', 'Qty', 'Unit Price (₹)', 'Total (₹)']];
+  const tableHead = [['Sl No', 'Product Description', 'HSN/SAC', 'Qty', 'Unit Price', 'Total']];
   const tableBody = data.items.map((item, i) => [
     String(i + 1),
     item.name,
