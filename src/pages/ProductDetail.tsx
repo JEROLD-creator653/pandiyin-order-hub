@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Leaf, ShoppingCart, Minus, Plus, ArrowLeft, Star, MessageSquare, Loader2 } from 'lucide-react';
@@ -20,6 +20,7 @@ import ConfirmDialog from '@/components/ConfirmDialog';
 import RelatedProducts from '@/components/RelatedProducts';
 import ProductDescriptionCollapsible from '@/components/ProductDescriptionCollapsible';
 import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
+import SEOHead, { buildProductSchema, buildBreadcrumbSchema } from '@/components/SEOHead';
 import { formatPrice } from '@/lib/formatters';
 import { Loader } from '@/components/ui/loader';
 import { getPricingInfo } from '@/lib/discountCalculations';

@@ -285,6 +285,12 @@ export default function Index() {
 
   return (
     <>
+      <SEOHead
+        title="PANDIYIN - Nature In Pack | Homemade Foods from Madurai"
+        description="Authentic homemade foods from Madurai. Traditional pickles, snacks, spice powders, and sweets. 100% natural, no preservatives. Free shipping above ₹799."
+        ogType="website"
+        jsonLd={[buildOrganizationSchema(), buildWebSiteSchema()]}
+      />
       {/* Professional Banner Carousel - Hero Banner */}
       {banners.length > 0 ? (
         <section className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden group pt-16 lg:pt-0" style={{ containIntrinsicSize: '100vw 500px', contentVisibility: 'visible' }}>
