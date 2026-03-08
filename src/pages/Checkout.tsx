@@ -442,17 +442,25 @@ export default function Checkout() {
             <CardHeader><CardTitle className="text-lg">Payment Method</CardTitle></CardHeader>
             <CardContent>
               <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-                <div className={`flex items-center gap-3 p-3 border rounded-lg ${paymentMethod === 'razorpay' ? 'border-primary bg-primary/5' : ''}`}>
-                  <RadioGroupItem value="razorpay" id="razorpay" />
-                  <Label htmlFor="razorpay" className="flex items-center gap-2 cursor-pointer">
-                    <CreditCard className="h-5 w-5" /> Pay Online (UPI / Cards / Net Banking)
-                  </Label>
+                <div className={`flex items-center justify-between p-4 border rounded-xl transition-all ${paymentMethod === 'razorpay' ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/40'}`}>
+                  <div className="flex items-center gap-3">
+                    <RadioGroupItem value="razorpay" id="razorpay" />
+                    <Label htmlFor="razorpay" className="flex items-center gap-2.5 cursor-pointer text-sm font-medium">
+                      <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10">
+                        <CreditCard className="h-4.5 w-4.5 text-primary" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span>Pay Online</span>
+                        <span className="text-xs font-normal text-muted-foreground">UPI · Cards · Net Banking</span>
+                      </div>
+                    </Label>
+                  </div>
+                  <div className="flex flex-col items-end gap-0.5">
+                    <img src="/razorpay-badge.svg" alt="Razorpay" className="h-4 opacity-60" />
+                    <span className="text-[10px] text-muted-foreground/60">Secured payments</span>
+                  </div>
                 </div>
               </RadioGroup>
-              <div className="flex items-center justify-end gap-1.5 mt-3 pt-3 border-t border-border/50">
-                <span className="text-xs text-muted-foreground">Powered by</span>
-                <img src="/razorpay-badge.svg" alt="Razorpay" className="h-5 opacity-70" />
-              </div>
             </CardContent>
           </Card>
 
