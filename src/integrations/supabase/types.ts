@@ -928,7 +928,6 @@ export type Database = {
           total_amount: number
         }[]
       }
-      check_email_exists: { Args: { _email: string }; Returns: boolean }
       generate_invoice_number: { Args: never; Returns: string }
       get_gst_type_for_state: { Args: { p_state: string }; Returns: string }
       has_role: {
