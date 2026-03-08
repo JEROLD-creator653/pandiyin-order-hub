@@ -48,6 +48,7 @@ export default function Checkout() {
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+  const [couponOpen, setCouponOpen] = useState(false);
   const [gstSettings, setGstSettings] = useState({ gst_enabled: false });
   const [calculatedGstAmount, setCalculatedGstAmount] = useState(0);
 
