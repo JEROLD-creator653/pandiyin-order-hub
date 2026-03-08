@@ -171,6 +171,7 @@ export default function AdminDashboard() {
           )}
         </CardContent>
       </Card>
+      <RevenueExportDialog open={exportOpen} onOpenChange={setExportOpen} />
     </div>
   );
 }
