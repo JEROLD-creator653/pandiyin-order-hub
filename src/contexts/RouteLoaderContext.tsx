@@ -186,25 +186,15 @@ interface GlobalRouteLoaderProps {
   isLoading: boolean;
 }
 
-const LEAVES = [
-  // 3 large leaves
-  { size: 48, x: [0, 8, 14, 5, -10, -14, -7, 0], y: [0, -12, -5, 10, 3, -8, 2, 0], rotate: [0, 10, 20, 14, -8, -18, -6, 0], duration: 6.2, delay: 0, opacity: 0.9 },
-  { size: 42, x: [0, -10, -6, 8, 12, 4, -5, 0], y: [0, 6, -8, -14, 0, 10, 4, 0], rotate: [0, -12, -22, -10, 6, 16, 8, 0], duration: 7.0, delay: 0.3, opacity: 0.85 },
-  { size: 44, x: [0, 6, -4, -12, -8, 6, 10, 0], y: [0, -6, 8, 2, -10, -4, 6, 0], rotate: [0, 14, 8, -10, -20, -6, 12, 0], duration: 5.8, delay: 0.6, opacity: 0.88 },
-  // 2 small accent leaves
-  { size: 24, x: [0, -6, -12, -4, 8, 10, 4, 0], y: [0, 4, -4, -8, 2, 6, 0, 0], rotate: [0, -8, -16, -24, -12, 4, 10, 0], duration: 8.0, delay: 0.2, opacity: 0.5 },
-  { size: 20, x: [0, 10, 6, -4, -10, -6, 2, 0], y: [0, -4, 6, 10, 4, -6, -2, 0], rotate: [0, 18, 28, 16, 4, -8, 6, 0], duration: 9.0, delay: 0.5, opacity: 0.4 },
+const SCATTER_LEAVES = [
+  { size: 44, endX: -60, endY: -50, endRotate: -35, drift: { x: [-2, 4, -3], y: [-3, 2, -1] }, duration: 5.5, delay: 0, opacity: 0.9 },
+  { size: 40, endX: 55, endY: -40, endRotate: 30, drift: { x: [3, -2, 4], y: [2, -4, 1] }, duration: 6.0, delay: 0.1, opacity: 0.85 },
+  { size: 42, endX: 10, endY: 60, endRotate: 45, drift: { x: [-3, 5, -2], y: [1, -2, 3] }, duration: 5.8, delay: 0.2, opacity: 0.88 },
+  { size: 22, endX: -70, endY: 35, endRotate: -50, drift: { x: [2, -3, 1], y: [-2, 3, -1] }, duration: 7.0, delay: 0.15, opacity: 0.5 },
+  { size: 18, endX: 65, endY: 45, endRotate: 55, drift: { x: [-2, 4, -1], y: [3, -1, 2] }, duration: 7.5, delay: 0.25, opacity: 0.4 },
 ];
 
-const LEAF_POSITIONS = [
-  'translate-x-0 translate-y-0',         // center
-  '-translate-x-12 -translate-y-8',      // top-left
-  'translate-x-14 translate-y-6',        // bottom-right
-  '-translate-x-20 translate-y-14',      // far left low (small)
-  'translate-x-18 -translate-y-16',      // far right high (small)
-];
-
-const LeafSVG = ({ size, detailed = true }: { size: number; detailed?: boolean }) => (
+const ScatterLeafSVG = ({ size, detailed = true }: { size: number; detailed?: boolean }) => (
   <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-md">
     <path d="M32 4C32 4 8 20 8 40C8 52 18 60 32 60C46 60 56 52 56 40C56 20 32 4 32 4Z" className="fill-primary/85" />
     <path d="M32 14V52" className="stroke-primary-foreground/30" strokeWidth="1.5" strokeLinecap="round" />
@@ -218,9 +208,6 @@ const LeafSVG = ({ size, detailed = true }: { size: number; detailed?: boolean }
   </svg>
 );
 
-/**
- * Nature-themed multi-leaf loading overlay
- */
 const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
   return (
     <AnimatePresence mode="wait">
@@ -243,20 +230,39 @@ const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
           />
 
           <div className="relative flex flex-col items-center gap-8">
-            <div className="relative w-40 h-40 flex items-center justify-center">
-              {LEAVES.map((leaf, i) => (
+            <div className="relative w-48 h-48 flex items-center justify-center">
+              {SCATTER_LEAVES.map((leaf, i) => (
                 <motion.div
                   key={i}
-                  className={`absolute ${LEAF_POSITIONS[i]}`}
-                  initial={{ scale: 0.5, opacity: 0 }}
-                  animate={{ scale: 1, opacity: leaf.opacity }}
-                  transition={{ duration: 0.5, delay: leaf.delay, ease: "easeOut" }}
+                  className="absolute"
+                  style={{ top: '50%', left: '50%', marginTop: -leaf.size / 2, marginLeft: -leaf.size / 2 }}
+                  initial={{ x: 0, y: 0, scale: 0, opacity: 0, rotate: 0 }}
+                  animate={{
+                    x: leaf.endX,
+                    y: leaf.endY,
+                    scale: 1,
+                    opacity: leaf.opacity,
+                    rotate: leaf.endRotate,
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    delay: leaf.delay,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
                 >
                   <motion.div
-                    animate={{ x: leaf.x, y: leaf.y, rotate: leaf.rotate }}
-                    transition={{ duration: leaf.duration, repeat: Infinity, ease: "easeInOut" }}
+                    animate={{
+                      x: leaf.drift.x,
+                      y: leaf.drift.y,
+                      rotate: [0, leaf.endRotate * 0.15, -leaf.endRotate * 0.1, 0],
+                    }}
+                    transition={{
+                      duration: leaf.duration,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
                   >
-                    <LeafSVG size={leaf.size} detailed={i < 3} />
+                    <ScatterLeafSVG size={leaf.size} detailed={i < 3} />
                   </motion.div>
                 </motion.div>
               ))}
@@ -264,9 +270,9 @@ const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
 
             <motion.p
               className="text-muted-foreground/80 text-sm font-medium tracking-wide"
-              initial={{ opacity: 0, y: 6 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.4 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
             >
               Preparing fresh homemade goodness…
             </motion.p>
