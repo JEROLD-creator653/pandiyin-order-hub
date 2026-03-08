@@ -322,7 +322,7 @@ export async function generateInvoicePdf(data: InvoiceData) {
   const tableBody = data.items.map((item, i) => [
     String(i + 1),
     item.name,
-    item.hsn || '—',
+    item.hsn || '-',
     String(item.quantity),
     formatPrice(item.price),
     formatPrice(item.total),
