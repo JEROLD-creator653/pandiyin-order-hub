@@ -246,7 +246,11 @@ export default function ProductDetail() {
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <span className="text-xs text-muted-foreground ml-2 hidden md:inline">{product.stock_quantity} available</span>
+                    {product.stock_quantity <= 5 ? (
+                      <span className="text-xs font-medium text-destructive ml-2">Only {product.stock_quantity} left in stock!</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground ml-2 hidden md:inline">{product.stock_quantity} available</span>
+                    )}
                   </div>
                   
                   <div className="flex gap-3 pt-2">
