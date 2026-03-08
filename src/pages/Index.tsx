@@ -31,10 +31,10 @@ function getCachedBanners(): Array<{ id: string; title: string; image_url: strin
   return undefined;
 }
 
-// Optimized banner fetch function
+// Optimized banner fetch function — uses public view for universal access
 const fetchBanners = async () => {
   const { data, error } = await supabase
-    .from('banners')
+    .from('public_banners')
     .select('id, title, image_url, link_url')
     .eq('is_active', true)
     .order('sort_order');
