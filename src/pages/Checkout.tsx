@@ -473,7 +473,8 @@ export default function Checkout() {
           <Card>
             <CardHeader><CardTitle className="text-lg">Order Notes</CardTitle></CardHeader>
             <CardContent>
-              <Textarea placeholder="Any special instructions..." value={notes} onChange={e => setNotes(e.target.value)} />
+              <Textarea placeholder="Any special instructions..." value={notes} onChange={e => setNotes(e.target.value.slice(0, MAX_NOTES_LENGTH))} maxLength={MAX_NOTES_LENGTH} />
+              <p className="text-xs text-muted-foreground mt-1">{notes.length}/{MAX_NOTES_LENGTH}</p>
             </CardContent>
           </Card>
         </div>
