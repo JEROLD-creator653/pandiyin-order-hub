@@ -194,17 +194,10 @@ export async function generateInvoicePdf(data: InvoiceData) {
   doc.setFontSize(7.5);
   doc.text(`GSTIN: ${COMPANY.gstin}`, textStartX, y);
 
-  // Right side: TAX INVOICE title + invoice meta
+  // Right side: Invoice meta (right-aligned labels and values)
   const rightCol = mr;
   let ry = 16;
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.setTextColor(...DARK_GREEN);
-  doc.text('TAX INVOICE', rightCol, ry, { align: 'right' });
-  ry += 8;
-
-  // Invoice meta (right-aligned labels and values)
   const metaLabelX = pw - 80;
   const metaValueX = rightCol;
 
@@ -225,9 +218,18 @@ export async function generateInvoicePdf(data: InvoiceData) {
 
   y = Math.max(y, ry) + 5;
 
-  // Header divider — double line
+  // Header divider
   drawLine(doc, y, ml, mr, DARK_GREEN, 0.6);
-  drawLine(doc, y + 1.2, ml, mr, LIGHT_GREEN, 0.3);
+  y += 7;
+
+  // TAX INVOICE banner row (centered, between header and shipping)
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(...DARK_GREEN);
+  doc.text('TAX INVOICE', pw / 2, y, { align: 'center' });
+  y += 5;
+
+  drawLine(doc, y, ml, mr, LIGHT_GREEN, 0.3);
   y += 7;
 
   // ═══════════════════════════════════════════════════════
@@ -273,9 +275,9 @@ export async function generateInvoicePdf(data: InvoiceData) {
 
   const paymentGrid = [
     ['Payment Method', data.paymentMethod],
-    ['Gateway', data.paymentGateway || '—'],
+    ['Gateway', data.paymentGateway || '-'],
     ['Payment Status', data.paymentStatus || 'Pending'],
-    ['Payment ID', data.paymentId || '—'],
+    ['Payment ID', data.paymentId || '-'],
   ];
 
   // Draw 2x2 grid
@@ -316,11 +318,11 @@ export async function generateInvoicePdf(data: InvoiceData) {
 
   y = sectionTitle(doc, 'ORDER ITEMS', ml, y);
 
-  const tableHead = [['Sl No', 'Product Description', 'HSN/SAC', 'Qty', 'Unit Price (₹)', 'Total (₹)']];
+  const tableHead = [['Sl No', 'Product Description', 'HSN/SAC', 'Qty', 'Unit Price', 'Total']];
   const tableBody = data.items.map((item, i) => [
     String(i + 1),
     item.name,
-    item.hsn || '—',
+    item.hsn || '-',
     String(item.quantity),
     formatPrice(item.price),
     formatPrice(item.total),
@@ -393,7 +395,7 @@ export async function generateInvoicePdf(data: InvoiceData) {
   ];
   if (data.discount > 0) {
     const discLabel = data.couponCode ? `Discount (${data.couponCode})` : 'Discount';
-    summaryItems.push({ label: discLabel, value: `– ${formatPrice(data.discount)}`, bold: false });
+    summaryItems.push({ label: discLabel, value: `- ${formatPrice(data.discount)}`, bold: false });
   }
 
   // Draw summary rows
@@ -418,11 +420,6 @@ export async function generateInvoicePdf(data: InvoiceData) {
   doc.text(formatPrice(data.grandTotal), summaryValueX, y, { align: 'right' });
   y += 4;
 
-  // Draw subtle box around summary
-  const boxH = y - summaryStartY + 3;
-  doc.setDrawColor(...LIGHT_GREEN);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(summaryBoxX, summaryStartY - 5, mr - summaryBoxX, boxH, 2, 2);
 
   y += 8;
 

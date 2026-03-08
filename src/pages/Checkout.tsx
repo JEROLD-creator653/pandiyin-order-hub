@@ -104,10 +104,14 @@ export default function Checkout() {
 
   const effectiveDeliveryCharge = deliveryCharge ?? 0;
 
-  // Free delivery nudge for Tamil Nadu
+  // Free delivery nudge for all zones
   const freeDeliveryNudge = useMemo(() => {
-    if (!deliveryState || STATE_ZONES[deliveryState] !== 'local') return null;
-    const threshold = zoneConfig.local.freeAbove;
+    if (!deliveryState) return null;
+    const zone = STATE_ZONES[deliveryState];
+    if (!zone) return null;
+    const config = zoneConfig[zone as keyof ShippingZoneConfig];
+    if (!config) return null;
+    const threshold = config.freeAbove;
     if (!threshold || total >= threshold) return null;
     const remaining = threshold - total;
     const progress = (total / threshold) * 100;
@@ -397,16 +401,20 @@ export default function Checkout() {
       <h1 className="text-3xl font-display font-bold mb-8">Checkout</h1>
 
       {paymentError && (
-        <div className="mb-6 border border-destructive/30 bg-destructive/5 rounded-lg p-4 flex items-start gap-3">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 border border-destructive/30 bg-destructive/5 rounded-xl p-4 flex items-start gap-3 shadow-sm"
+        >
           <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="font-medium text-destructive text-sm">Payment Issue</p>
+            <p className="font-semibold text-destructive text-sm">Payment Issue</p>
             <p className="text-sm text-muted-foreground mt-1">{paymentError}</p>
           </div>
           <button onClick={() => setPaymentError(null)} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-4 w-4" />
           </button>
-        </div>
+        </motion.div>
       )}
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-5 gap-8">
@@ -425,7 +433,7 @@ export default function Checkout() {
             </CardContent>
           </Card>
 
-          {/* Free Delivery Nudge — Tamil Nadu only */}
+          {/* Free Delivery Nudge */}
           {freeDeliveryNudge && (
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">
               <p className="text-sm font-medium text-primary">
