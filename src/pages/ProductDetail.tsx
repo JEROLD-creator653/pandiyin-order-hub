@@ -141,8 +141,50 @@ export default function ProductDetail() {
     <Loader text="Loading product details..." className="min-h-[60vh]" delay={200} />
   );
 
+  const productUrl = `${window.location.origin}/products/${id}`;
+  const plainDescription = product?.description?.replace(/<[^>]*>/g, '').slice(0, 160) || product?.name || '';
+
+  const productJsonLd = useMemo(() => {
+    if (!product) return [];
+    return [
+      buildProductSchema({
+        name: product.name,
+        description: plainDescription,
+        price: product.price,
+        comparePrice: product.compare_price,
+        imageUrl: product.image_url,
+        images: product.images,
+        inStock: product.stock_quantity > 0,
+        category: product.categories?.name,
+        averageRating: stats?.average_rating,
+        reviewCount: stats?.total_reviews,
+        url: productUrl,
+      }),
+      buildBreadcrumbSchema([
+        { name: 'Home', url: window.location.origin },
+        { name: 'Products', url: `${window.location.origin}/products` },
+        ...(product.categories?.name ? [{ name: product.categories.name, url: `${window.location.origin}/products?category=${encodeURIComponent(product.categories.name)}` }] : []),
+        { name: product.name },
+      ]),
+    ];
+  }, [product, stats, productUrl, plainDescription]);
+
   return (
     <div className="min-h-screen bg-background pt-20 md:pt-24 pb-[100px] md:pb-8">
+      {product && (
+        <SEOHead
+          title={`${product.name}${product.categories?.name ? ` - ${product.categories.name}` : ''}`}
+          description={plainDescription || `Buy ${product.name} from PANDIYIN. 100% natural homemade food from Madurai.`}
+          ogType="product"
+          ogImage={product.image_url}
+          productMeta={{
+            price: product.price,
+            currency: 'INR',
+            availability: product.stock_quantity > 0 ? 'in stock' : 'out of stock',
+          }}
+          jsonLd={productJsonLd}
+        />
+      )}
       {/* Back Button */}
       <div className="container mx-auto px-4 mb-4 md:mb-8">
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-2 md:mb-6 -ml-2">
