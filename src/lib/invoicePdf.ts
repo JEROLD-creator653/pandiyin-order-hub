@@ -177,22 +177,22 @@ export async function generateInvoicePdf(data: InvoiceData) {
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(7);
   doc.setTextColor(...GRAY);
-  doc.text(COMPANY.tagline, ml, y);
+  doc.text(COMPANY.tagline, textStartX, y);
   y += 5.5;
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(...DARK_TEXT);
-  doc.text(COMPANY.addressLine1, ml, y); y += 3.5;
-  doc.text(COMPANY.addressLine2, ml, y); y += 3.5;
-  doc.text(COMPANY.addressLine3, ml, y); y += 4;
-  doc.text(`Phone: ${COMPANY.phone}`, ml, y); y += 3.5;
-  doc.text(`Email: ${COMPANY.email}`, ml, y); y += 3.5;
-  doc.text(`Website: ${COMPANY.website}`, ml, y); y += 3.5;
+  doc.text(COMPANY.addressLine1, textStartX, y); y += 3.5;
+  doc.text(COMPANY.addressLine2, textStartX, y); y += 3.5;
+  doc.text(COMPANY.addressLine3, textStartX, y); y += 4;
+  doc.text(`Phone: ${COMPANY.phone}`, textStartX, y); y += 3.5;
+  doc.text(`Email: ${COMPANY.email}`, textStartX, y); y += 3.5;
+  doc.text(`Website: ${COMPANY.website}`, textStartX, y); y += 3.5;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
-  doc.text(`GSTIN: ${COMPANY.gstin}`, ml, y);
+  doc.text(`GSTIN: ${COMPANY.gstin}`, textStartX, y);
 
   // Right side: TAX INVOICE title + invoice meta
   const rightCol = mr;
