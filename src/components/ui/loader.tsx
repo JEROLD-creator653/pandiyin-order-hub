@@ -13,24 +13,13 @@ interface LoaderProps {
     delay?: number; // Delay in ms before showing
 }
 
-const SCATTER_CFG = [
-    { size: 36, endX: -45, endY: -38, endRotate: -30, drift: { x: [-2, 3, -2], y: [-2, 2, -1] }, duration: 5.5, delay: 0, opacity: 0.9 },
-    { size: 30, endX: 42, endY: -30, endRotate: 25, drift: { x: [2, -2, 3], y: [1, -3, 1] }, duration: 6.0, delay: 0.1, opacity: 0.85 },
-    { size: 32, endX: 8, endY: 48, endRotate: 40, drift: { x: [-2, 4, -1], y: [1, -2, 2] }, duration: 5.8, delay: 0.2, opacity: 0.88 },
-    { size: 18, endX: -55, endY: 28, endRotate: -45, drift: { x: [1, -2, 1], y: [-1, 2, -1] }, duration: 7.0, delay: 0.15, opacity: 0.5 },
-    { size: 15, endX: 50, endY: 35, endRotate: 50, drift: { x: [-1, 3, -1], y: [2, -1, 1] }, duration: 7.5, delay: 0.25, opacity: 0.4 },
-];
-
-const InlineLeafSVG = ({ size, detailed = true }: { size: number; detailed?: boolean }) => (
-    <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-md">
-        <path d="M32 4C32 4 8 20 8 40C8 52 18 60 32 60C46 60 56 52 56 40C56 20 32 4 32 4Z" className="fill-primary/85" />
-        <path d="M32 14V52" className="stroke-primary-foreground/30" strokeWidth="1.5" strokeLinecap="round" />
-        {detailed && (
-            <>
-                <path d="M32 24L20 32M32 32L18 40M32 40L22 46" className="stroke-primary-foreground/20" strokeWidth="1" strokeLinecap="round" />
-                <path d="M32 24L44 32M32 32L46 40M32 40L42 46" className="stroke-primary-foreground/20" strokeWidth="1" strokeLinecap="round" />
-            </>
-        )}
+const SmallFallingLeaf = ({ size }: { size: number }) => (
+    <svg width={size} height={Math.round(size * 1.33)} viewBox="0 0 48 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-md">
+        <path d="M24 2C24 2 4 18 4 38C4 50 12 58 24 58C36 58 44 50 44 38C44 18 24 2 24 2Z" className="fill-primary/80" />
+        <path d="M24 10V50" className="stroke-primary-foreground/25" strokeWidth="1.2" strokeLinecap="round" />
+        <path d="M24 20L14 28M24 28L12 36M24 36L16 42" className="stroke-primary-foreground/15" strokeWidth="0.8" strokeLinecap="round" />
+        <path d="M24 20L34 28M24 28L36 36M24 36L32 42" className="stroke-primary-foreground/15" strokeWidth="0.8" strokeLinecap="round" />
+        <path d="M24 54L24 62" className="stroke-primary/60" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
 );
 
@@ -46,8 +35,7 @@ export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProp
 
     if (!show) return null;
 
-    const containerSize = { sm: 'w-24 h-24', md: 'w-32 h-32', lg: 'w-40 h-40' }[size];
-    const scale = { sm: 0.6, md: 0.8, lg: 1 }[size];
+    const leafSize = { sm: 28, md: 36, lg: 44 }[size];
 
     return (
         <div className={cn("flex flex-col items-center justify-center min-h-[50vh] w-full", className)}>
@@ -58,45 +46,38 @@ export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProp
                 transition={{ duration: 0.3 }}
                 className="flex flex-col items-center gap-6"
             >
-                <div className={cn("relative", containerSize)}>
-                    {SCATTER_CFG.map((leaf, i) => (
-                        <motion.div
-                            key={i}
-                            className="absolute"
-                            style={{ top: '50%', left: '50%', marginTop: -leaf.size / 2, marginLeft: -leaf.size / 2 }}
-                            initial={{ x: 0, y: 0, scale: 0, opacity: 0, rotate: 0 }}
-                            animate={{
-                                x: leaf.endX * scale,
-                                y: leaf.endY * scale,
-                                scale: scale,
-                                opacity: leaf.opacity,
-                                rotate: leaf.endRotate,
-                            }}
-                            transition={{
-                                duration: 1.2,
-                                delay: leaf.delay,
-                                ease: [0.22, 1, 0.36, 1],
-                            }}
-                        >
-                            <motion.div
-                                animate={{
-                                    x: leaf.drift.x,
-                                    y: leaf.drift.y,
-                                    rotate: [0, leaf.endRotate * 0.15, -leaf.endRotate * 0.1, 0],
-                                }}
-                                transition={{
-                                    duration: leaf.duration,
-                                    repeat: Infinity,
-                                    ease: "easeInOut",
-                                }}
-                            >
-                                <InlineLeafSVG size={leaf.size} detailed={i < 3} />
-                            </motion.div>
-                        </motion.div>
-                    ))}
-                </div>
+                <motion.div
+                    initial={{ y: -40, opacity: 0, rotate: -15 }}
+                    animate={{ y: 0, opacity: 1, rotate: 0 }}
+                    transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                    <motion.div
+                        animate={{
+                            y: [0, 5, 12, 7, 16, 10, 18, 12, 5, 0],
+                            x: [0, 10, 5, -6, -12, -5, 6, 12, 6, 0],
+                            rotate: [0, 6, 12, 5, -3, -10, -6, 2, 8, 0],
+                        }}
+                        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                        <SmallFallingLeaf size={leafSize} />
+                    </motion.div>
+                </motion.div>
+
+                <motion.div
+                    className="rounded-full bg-foreground/5"
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: leafSize, height: 4, opacity: 1 }}
+                    transition={{ delay: 0.5, duration: 0.4 }}
+                >
+                    <motion.div
+                        className="w-full h-full rounded-full bg-foreground/5"
+                        animate={{ scaleX: [1, 1.1, 0.9, 1] }}
+                        transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                </motion.div>
+
                 {text && (
-                    <p className="text-muted-foreground/80 text-sm font-medium tracking-wide animate-pulse">
+                    <p className="text-muted-foreground/70 text-sm font-medium tracking-wide animate-pulse">
                         {text}
                     </p>
                 )}

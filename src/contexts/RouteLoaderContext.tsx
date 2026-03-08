@@ -186,28 +186,30 @@ interface GlobalRouteLoaderProps {
   isLoading: boolean;
 }
 
-const SCATTER_LEAVES = [
-  { size: 44, endX: -60, endY: -50, endRotate: -35, drift: { x: [-2, 4, -3], y: [-3, 2, -1] }, duration: 5.5, delay: 0, opacity: 0.9 },
-  { size: 40, endX: 55, endY: -40, endRotate: 30, drift: { x: [3, -2, 4], y: [2, -4, 1] }, duration: 6.0, delay: 0.1, opacity: 0.85 },
-  { size: 42, endX: 10, endY: 60, endRotate: 45, drift: { x: [-3, 5, -2], y: [1, -2, 3] }, duration: 5.8, delay: 0.2, opacity: 0.88 },
-  { size: 22, endX: -70, endY: 35, endRotate: -50, drift: { x: [2, -3, 1], y: [-2, 3, -1] }, duration: 7.0, delay: 0.15, opacity: 0.5 },
-  { size: 18, endX: 65, endY: 45, endRotate: 55, drift: { x: [-2, 4, -1], y: [3, -1, 2] }, duration: 7.5, delay: 0.25, opacity: 0.4 },
-];
-
-const ScatterLeafSVG = ({ size, detailed = true }: { size: number; detailed?: boolean }) => (
-  <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-md">
-    <path d="M32 4C32 4 8 20 8 40C8 52 18 60 32 60C46 60 56 52 56 40C56 20 32 4 32 4Z" className="fill-primary/85" />
-    <path d="M32 14V52" className="stroke-primary-foreground/30" strokeWidth="1.5" strokeLinecap="round" />
-    {detailed && (
-      <>
-        <path d="M32 24L20 32M32 32L18 40M32 40L22 46" className="stroke-primary-foreground/20" strokeWidth="1" strokeLinecap="round" />
-        <path d="M32 24L44 32M32 32L46 40M32 40L42 46" className="stroke-primary-foreground/20" strokeWidth="1" strokeLinecap="round" />
-        <path d="M28 16C28 16 16 28 16 38C16 42 20 44 24 42" className="fill-primary-foreground/8" />
-      </>
-    )}
+const FallingLeafSVG = () => (
+  <svg width="48" height="64" viewBox="0 0 48 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-lg">
+    {/* Main leaf body */}
+    <path d="M24 2C24 2 4 18 4 38C4 50 12 58 24 58C36 58 44 50 44 38C44 18 24 2 24 2Z" className="fill-primary/80" />
+    {/* Central vein */}
+    <path d="M24 10V50" className="stroke-primary-foreground/25" strokeWidth="1.2" strokeLinecap="round" />
+    {/* Left veins */}
+    <path d="M24 20L14 28" className="stroke-primary-foreground/15" strokeWidth="0.8" strokeLinecap="round" />
+    <path d="M24 28L12 36" className="stroke-primary-foreground/15" strokeWidth="0.8" strokeLinecap="round" />
+    <path d="M24 36L16 42" className="stroke-primary-foreground/15" strokeWidth="0.8" strokeLinecap="round" />
+    {/* Right veins */}
+    <path d="M24 20L34 28" className="stroke-primary-foreground/15" strokeWidth="0.8" strokeLinecap="round" />
+    <path d="M24 28L36 36" className="stroke-primary-foreground/15" strokeWidth="0.8" strokeLinecap="round" />
+    <path d="M24 36L32 42" className="stroke-primary-foreground/15" strokeWidth="0.8" strokeLinecap="round" />
+    {/* Light highlight */}
+    <path d="M20 12C20 12 10 24 10 34C10 38 14 40 18 38" className="fill-primary-foreground/6" />
+    {/* Stem */}
+    <path d="M24 54L24 62" className="stroke-primary/60" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 );
 
+/**
+ * Single leaf falling animation — gentle sway like autumn
+ */
 const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
   return (
     <AnimatePresence mode="wait">
@@ -217,62 +219,62 @@ const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.4, ease: "easeInOut" }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center"
+          transition={{ duration: 0.35, ease: "easeInOut" }}
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
           style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
         >
+          {/* Soft blurred gradient bg */}
           <div
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(135deg, hsl(var(--background)) 0%, hsl(130 30% 95%) 40%, hsl(90 20% 92%) 70%, hsl(var(--background)) 100%)',
+              background: 'linear-gradient(180deg, hsl(var(--background)) 0%, hsl(130 25% 95%) 50%, hsl(var(--background)) 100%)',
               backdropFilter: 'blur(8px)',
             }}
           />
 
-          <div className="relative flex flex-col items-center gap-8">
-            <div className="relative w-48 h-48 flex items-center justify-center">
-              {SCATTER_LEAVES.map((leaf, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute"
-                  style={{ top: '50%', left: '50%', marginTop: -leaf.size / 2, marginLeft: -leaf.size / 2 }}
-                  initial={{ x: 0, y: 0, scale: 0, opacity: 0, rotate: 0 }}
-                  animate={{
-                    x: leaf.endX,
-                    y: leaf.endY,
-                    scale: 1,
-                    opacity: leaf.opacity,
-                    rotate: leaf.endRotate,
-                  }}
-                  transition={{
-                    duration: 1.2,
-                    delay: leaf.delay,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
-                >
-                  <motion.div
-                    animate={{
-                      x: leaf.drift.x,
-                      y: leaf.drift.y,
-                      rotate: [0, leaf.endRotate * 0.15, -leaf.endRotate * 0.1, 0],
-                    }}
-                    transition={{
-                      duration: leaf.duration,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    <ScatterLeafSVG size={leaf.size} detailed={i < 3} />
-                  </motion.div>
-                </motion.div>
-              ))}
-            </div>
+          <div className="relative flex flex-col items-center gap-10">
+            {/* Falling leaf */}
+            <motion.div
+              initial={{ y: -80, opacity: 0, rotate: -20 }}
+              animate={{ y: 0, opacity: 1, rotate: 0 }}
+              transition={{ duration: 1.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+              <motion.div
+                animate={{
+                  y: [0, 6, 14, 8, 18, 12, 20, 14, 6, 0],
+                  x: [0, 12, 6, -8, -14, -6, 8, 14, 8, 0],
+                  rotate: [0, 8, 14, 6, -4, -12, -8, 2, 10, 0],
+                }}
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <FallingLeafSVG />
+              </motion.div>
+            </motion.div>
 
+            {/* Subtle shadow on "ground" */}
+            <motion.div
+              className="rounded-full bg-foreground/5"
+              initial={{ width: 0, height: 0, opacity: 0 }}
+              animate={{ width: 48, height: 6, opacity: 1 }}
+              transition={{ delay: 0.8, duration: 0.6, ease: "easeOut" }}
+            >
+              <motion.div
+                className="w-full h-full rounded-full bg-foreground/5"
+                animate={{ scaleX: [1, 1.15, 0.9, 1.1, 1] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </motion.div>
+
+            {/* Loading text */}
             <motion.p
-              className="text-muted-foreground/80 text-sm font-medium tracking-wide"
-              initial={{ opacity: 0, y: 8 }}
+              className="text-muted-foreground/70 text-sm font-medium tracking-wide"
+              initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
             >
               Preparing fresh homemade goodness…
             </motion.p>
