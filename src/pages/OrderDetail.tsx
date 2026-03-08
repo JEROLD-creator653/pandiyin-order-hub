@@ -56,7 +56,7 @@ export default function OrderDetail() {
   const isCancelled = order.status === 'cancelled';
   const address = order.delivery_address as any;
 
-  const handleDownloadInvoice = () => {
+  const handleDownloadInvoice = async () => {
     const addr = order.delivery_address as any;
     const invoiceItems: InvoiceItem[] = items.map(i => ({
       name: i.product_name,
