@@ -399,22 +399,11 @@ export default function Checkout() {
     <div className="container mx-auto px-4 pt-20 md:pt-24 pb-8 max-w-4xl">
       <h1 className="text-2xl md:text-3xl font-display font-bold mb-6 md:mb-8">Checkout</h1>
 
-      {checkoutError && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6 border border-destructive/30 bg-destructive/5 rounded-xl p-4 flex items-start gap-3 shadow-sm"
-        >
-          <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <p className="font-semibold text-destructive text-sm">Checkout Issue</p>
-            <p className="text-sm text-muted-foreground mt-1">{checkoutError}</p>
-          </div>
-          <button onClick={() => setCheckoutError(null)} className="text-muted-foreground hover:text-foreground transition-colors">
-            <X className="h-4 w-4" />
-          </button>
-        </motion.div>
-      )}
+      <ErrorModal
+        open={!!checkoutError}
+        onClose={() => setCheckoutError(null)}
+        message={checkoutError || ''}
+      />
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-5 gap-6 md:gap-8">
         <div className="md:col-span-3 space-y-6">
