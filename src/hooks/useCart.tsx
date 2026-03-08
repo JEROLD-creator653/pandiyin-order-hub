@@ -212,13 +212,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 const defaultCartContext: CartContextType = {
   items: [],
   itemCount: 0,
-  subtotal: 0,
-  totalWeight: 0,
-  isLoading: false,
-  addItem: () => {},
+  total: 0,
+  loading: false,
+  addToCart: () => {},
   updateQuantity: () => {},
   removeItem: () => {},
   clearCart: () => {},
+  refetch: () => {},
 };
 
 export function useCart() {
