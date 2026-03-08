@@ -2,6 +2,11 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import "./global-animations.css";
+import loadingGif from "./assets/loading-screen.gif";
+
+// Preload loading GIF into browser cache immediately
+const preloadLoader = new Image();
+preloadLoader.src = loadingGif;
 import { setupPerformanceOptimizations, trackWebVitals } from "./lib/performance";
 
 // Preload hero banner from cache BEFORE React renders
