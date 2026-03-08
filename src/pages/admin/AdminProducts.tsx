@@ -254,63 +254,44 @@ export default function AdminProducts() {
                 </Select>
               </div>
 
-              {/* Stock & Shipping Weight */}
+              {/* Stock & Weight */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">Stock Quantity</label>
                   <Input type="number" value={form.stock_quantity} onChange={e => setForm({ ...form, stock_quantity: e.target.value })} />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Shipping Weight *</label>
+                  <label className="text-sm font-medium mb-2 block">Weight *</label>
                   <div className="flex gap-2">
                     <Input
                       type="number"
                       step="1"
                       placeholder="e.g. 250"
-                      value={form.weight_value}
-                      onChange={e => setForm({ ...form, weight_value: e.target.value })}
+                      value={form.weight}
+                      onChange={e => setForm({ ...form, weight: e.target.value })}
                       className="flex-1"
                     />
-                    <Select value={form.weight_unit} onValueChange={v => setForm({ ...form, weight_unit: v })}>
-                      <SelectTrigger className="w-20"><SelectValue /></SelectTrigger>
+                    <Select value={form.unit} onValueChange={v => setForm({ ...form, unit: v })}>
+                      <SelectTrigger className="w-24"><SelectValue placeholder="Unit" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="g">g</SelectItem>
                         <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="ml">ml</SelectItem>
+                        <SelectItem value="l">l</SelectItem>
+                        <SelectItem value="pcs">pcs</SelectItem>
+                        <SelectItem value="pack">pack</SelectItem>
+                        <SelectItem value="box">box</SelectItem>
+                        <SelectItem value="bottle">bottle</SelectItem>
+                        <SelectItem value="jar">jar</SelectItem>
+                        <SelectItem value="combo">combo</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  {form.weight_value && (
+                  {form.weight && (form.unit === 'g' || form.unit === 'kg') && (
                     <p className="text-[10px] text-muted-foreground mt-1">
-                      = {computeWeightKg(form.weight_value, form.weight_unit).toFixed(3)} kg (used for delivery calculation)
+                      Shipping weight: {computeWeightKg(form.weight, form.unit).toFixed(3)} kg
                     </p>
                   )}
-                </div>
-              </div>
-
-              {/* Display Weight & Unit */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Display Weight</label>
-                  <Input value={form.weight} onChange={e => setForm({ ...form, weight: e.target.value })} placeholder="e.g. 100" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Display Unit</label>
-                  <Select value={form.unit} onValueChange={v => setForm({ ...form, unit: v })}>
-                    <SelectTrigger><SelectValue placeholder="Select unit" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="g">Gram (g)</SelectItem>
-                      <SelectItem value="kg">Kilogram (kg)</SelectItem>
-                      <SelectItem value="ml">Milliliter (ml)</SelectItem>
-                      <SelectItem value="l">Liter (l)</SelectItem>
-                      <SelectItem value="pcs">Pieces (pcs)</SelectItem>
-                      <SelectItem value="pack">Pack</SelectItem>
-                      <SelectItem value="box">Box</SelectItem>
-                      <SelectItem value="bottle">Bottle</SelectItem>
-                      <SelectItem value="jar">Jar</SelectItem>
-                      <SelectItem value="unit">Unit</SelectItem>
-                      <SelectItem value="combo">Combo</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 
