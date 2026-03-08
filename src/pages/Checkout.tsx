@@ -564,7 +564,7 @@ export default function Checkout() {
               className="w-full mt-6 rounded-full"
               size="lg"
               onClick={placeOrder}
-              disabled={loading || !agreementChecked || isCartEmpty || !deliveryState}
+              disabled={loading || !agreementChecked || isCartEmpty || !selectedAddress}
             >
               {loading ? <ButtonLoader text="Processing payment..." /> : `Pay Now · ${formatPrice(grandTotal)}`}
             </Button>
