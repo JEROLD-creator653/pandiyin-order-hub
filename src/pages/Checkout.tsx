@@ -501,13 +501,6 @@ export default function Checkout() {
                     <span>{formatPrice(sellingTotal)}</span>
                   </div>
 
-                  {/* Shipping Weight */}
-                  {chargedWeight > 0 && (
-                    <div className="flex justify-between text-muted-foreground">
-                      <span className="flex items-center gap-1"><Package className="h-3.5 w-3.5" /> Shipping weight</span>
-                      <span>{chargedWeight} kg</span>
-                    </div>
-                  )}
 
                   {/* Delivery charge */}
                   <div className="flex justify-between">
