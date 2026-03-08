@@ -83,14 +83,15 @@ export default function AdminOrders() {
   const handleGenerateInvoice = async () => {
     if (!detail) return;
     try {
-      const addr = detail.delivery_address as any;
+      const orderDate = new Date(detail.created_at);
       const invoiceData = {
         invoiceNumber: detail.invoice_number || detail.order_number,
-        orderNumber: detail.order_number,
-        orderDate: detail.created_at,
+        orderDate: orderDate.toLocaleDateString('en-IN'),
+        orderTime: orderDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
         customerName: addr?.full_name || 'Customer',
-        customerAddress: addr ? `${addr.address_line1}, ${addr.city} - ${addr.pincode}, ${addr.state}` : '',
+        customerAddress: addr ? `${addr.address_line1}, ${addr.city} - ${addr.pincode}` : '',
         customerPhone: addr?.phone || '',
+        customerState: addr?.state || 'Tamil Nadu',
         items: orderItems.map(i => ({
           name: i.product_name,
           hsn: i.hsn_code || '',
@@ -102,9 +103,11 @@ export default function AdminOrders() {
         subtotal: detail.subtotal,
         deliveryCharge: detail.delivery_charge,
         discount: detail.discount,
-        total: detail.total,
-        gstType: detail.gst_type || 'CGST+SGST',
-        paymentMode: detail.payment_mode || detail.payment_method,
+        couponCode: detail.coupon_code || undefined,
+        grandTotal: detail.total,
+        paymentMethod: detail.payment_mode || detail.payment_method || '',
+        paymentGateway: 'Razorpay',
+        paymentStatus: detail.payment_status,
         paymentId: detail.stripe_payment_id || '',
       };
       const doc = await generateInvoicePdf(invoiceData);
