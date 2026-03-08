@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, Settings, Leaf, MapPin, Download, FileText } from 'lucide-react';
+import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, Settings, Leaf, MapPin, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
-import { generateInvoicePdf } from '@/lib/invoicePdf';
+import { generateInvoicePdf, type InvoiceData, type InvoiceItem } from '@/lib/invoicePdf';
 
 const statusSteps = [
   { key: 'pending', label: 'Order Placed', icon: Clock },
@@ -27,13 +27,11 @@ export default function OrderDetail() {
   const navigate = useNavigate();
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
-  const [store, setStore] = useState<any>(null);
 
   useEffect(() => {
     if (!id) return;
     supabase.from('orders').select('*').eq('id', id).maybeSingle().then(({ data }) => setOrder(data));
     supabase.from('order_items').select('*, products(image_url)').eq('order_id', id).then(({ data }) => setItems(data || []));
-    supabase.from('store_settings').select('*').limit(1).maybeSingle().then(({ data }) => setStore(data));
   }, [id]);
 
   if (!order) return (
@@ -46,6 +44,42 @@ export default function OrderDetail() {
   const isCancelled = order.status === 'cancelled';
   const address = order.delivery_address as any;
 
+  const handleDownloadInvoice = () => {
+    const addr = order.delivery_address as any;
+    const invoiceItems: InvoiceItem[] = items.map(i => ({
+      name: i.product_name,
+      hsn: i.hsn_code || '',
+      quantity: i.quantity,
+      price: Number(i.product_price),
+      total: Number(i.total),
+      gstPercentage: Number(i.gst_percentage || 5),
+    }));
+
+    const invoiceData: InvoiceData = {
+      invoiceNumber: order.invoice_number || order.order_number,
+      orderDate: new Date(order.created_at).toLocaleDateString('en-IN', {
+        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
+      }),
+      customerName: addr?.full_name || '',
+      customerAddress: [
+        addr?.address_line1,
+        addr?.address_line2,
+        `${addr?.city || ''}, ${addr?.state || ''} - ${addr?.pincode || ''}`,
+      ].filter(Boolean).join('\n'),
+      customerPhone: `+91 ${addr?.phone || ''}`,
+      items: invoiceItems,
+      subtotal: Number(order.subtotal),
+      deliveryCharge: Number(order.delivery_charge),
+      discount: Number(order.discount),
+      couponCode: order.coupon_code || undefined,
+      grandTotal: Number(order.total),
+      paymentMethod: order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online',
+    };
+
+    const doc = generateInvoicePdf(invoiceData);
+    doc.save(`Invoice-${invoiceData.invoiceNumber}.pdf`);
+  };
+
   return (
     <div className="container mx-auto px-4 pt-24 pb-8 max-w-3xl">
       <Button variant="ghost" size="sm" asChild className="mb-4 gap-1">
@@ -53,7 +87,6 @@ export default function OrderDetail() {
       </Button>
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-        {/* Order header */}
         <div>
           <h1 className="text-2xl font-display font-bold">Order {order.order_number}</h1>
           <p className="text-sm text-muted-foreground">
@@ -75,26 +108,18 @@ export default function OrderDetail() {
               </div>
             ) : (
               <div className="flex items-center justify-between relative">
-                {/* Progress line */}
                 <div className="absolute top-5 left-5 right-5 h-0.5 bg-muted z-0" />
-                <div
-                  className="absolute top-5 left-5 h-0.5 bg-primary z-0 transition-all duration-500"
-                  style={{ width: `calc(${(currentStep / (statusSteps.length - 1)) * 100}% - 40px)` }}
-                />
+                <div className="absolute top-5 left-5 h-0.5 bg-primary z-0 transition-all duration-500" style={{ width: `calc(${(currentStep / (statusSteps.length - 1)) * 100}% - 40px)` }} />
                 {statusSteps.map((step, i) => {
                   const Icon = step.icon;
                   const isCompleted = i <= currentStep;
                   const isCurrent = i === currentStep;
                   return (
                     <div key={step.key} className="flex flex-col items-center z-10 relative">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                        isCompleted ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                      } ${isCurrent ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${isCompleted ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'} ${isCurrent ? 'ring-2 ring-primary ring-offset-2' : ''}`}>
                         <Icon className="h-4 w-4" />
                       </div>
-                      <span className={`text-[10px] mt-2 text-center max-w-[60px] ${isCompleted ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
-                        {step.label}
-                      </span>
+                      <span className={`text-[10px] mt-2 text-center max-w-[60px] ${isCompleted ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>{step.label}</span>
                     </div>
                   );
                 })}
@@ -110,16 +135,8 @@ export default function OrderDetail() {
             {items.map(item => (
               <div
                 key={item.id}
-                onClick={() => {
-                  if (item.product_id) {
-                    navigate(`/products/${item.product_id}`);
-                  } else if (process.env.NODE_ENV === 'development') {
-                    console.warn('Product ID missing for item:', item);
-                  }
-                }}
-                className={`flex items-center gap-3 p-2 -mx-2 rounded-lg transition-colors duration-200 ${
-                  item.product_id ? 'cursor-pointer hover:bg-secondary/40 group' : ''
-                }`}
+                onClick={() => item.product_id && navigate(`/products/${item.product_id}`)}
+                className={`flex items-center gap-3 p-2 -mx-2 rounded-lg transition-colors duration-200 ${item.product_id ? 'cursor-pointer hover:bg-secondary/40 group' : ''}`}
               >
                 <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                   {item.products?.image_url ? (
@@ -138,7 +155,7 @@ export default function OrderDetail() {
           </CardContent>
         </Card>
 
-        {/* Summary + Address side by side on larger screens */}
+        {/* Summary + Address */}
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader><CardTitle className="text-lg">Payment Summary</CardTitle></CardHeader>
@@ -153,47 +170,15 @@ export default function OrderDetail() {
               )}
               {order.discount > 0 && (
                 <div className="bg-green-50 border border-green-200 text-green-800 rounded-lg p-2 text-center -mx-1">
-                  <span className="font-bold text-xs">
-                    🎉 Saved {formatPrice(order.discount)}
-                  </span>
+                  <span className="font-bold text-xs">🎉 Saved {formatPrice(order.discount)}</span>
                 </div>
               )}
               <Separator />
               <div className="flex justify-between text-base"><span className="font-bold">Total</span><span className="font-medium text-primary">{formatPrice(order.total)}</span></div>
               <div className="flex justify-between text-muted-foreground"><span>Payment</span><span className="capitalize">{order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'}</span></div>
               <Separator className="my-2" />
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full gap-2"
-                onClick={() => {
-                  if (!store) return;
-                  const addr = order.delivery_address as any;
-                  const doc = generateInvoicePdf({
-                    storeName: store.store_name,
-                    storeAddress: store.address || '',
-                    storePhone: store.phone || '',
-                    storeEmail: store.email || '',
-                    gstNumber: (store as any).gst_enabled ? (store as any).gst_number : undefined,
-                    orderNumber: order.order_number,
-                    orderDate: new Date(order.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
-                    customerName: addr?.full_name || '',
-                    customerAddress: `${addr?.address_line1 || ''}${addr?.address_line2 ? `, ${addr.address_line2}` : ''}, ${addr?.city || ''}, ${addr?.state || ''} - ${addr?.pincode || ''}`,
-                    customerPhone: `+91 ${addr?.phone || ''}`,
-                    items: items.map(i => ({ name: i.product_name, quantity: i.quantity, price: Number(i.product_price), total: Number(i.total) })),
-                    subtotal: Number(order.subtotal),
-                    deliveryCharge: Number(order.delivery_charge),
-                    discount: Number(order.discount),
-                    couponCode: order.coupon_code || undefined,
-                    total: Number(order.total),
-                    paymentMethod: order.payment_method,
-                    paymentStatus: order.payment_status,
-                  });
-                  doc.save(`Invoice-${order.order_number}.pdf`);
-                }}
-                disabled={!store}
-              >
-                <Download className="h-3.5 w-3.5" /> Download Invoice
+              <Button variant="outline" size="sm" className="w-full gap-2" onClick={handleDownloadInvoice}>
+                <Download className="h-3.5 w-3.5" /> Download Invoice (PDF)
               </Button>
             </CardContent>
           </Card>
@@ -203,10 +188,7 @@ export default function OrderDetail() {
               <CardHeader><CardTitle className="text-lg flex items-center gap-2"><MapPin className="h-4 w-4" /> Delivery Address</CardTitle></CardHeader>
               <CardContent className="text-sm space-y-1">
                 <p className="font-medium">{address.full_name}</p>
-                <p className="text-muted-foreground">
-                  {address.address_line1}
-                  {address.address_line2 ? `, ${address.address_line2}` : ''}
-                </p>
+                <p className="text-muted-foreground">{address.address_line1}{address.address_line2 ? `, ${address.address_line2}` : ''}</p>
                 <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
                 <p className="text-muted-foreground">+91 {address.phone}</p>
               </CardContent>

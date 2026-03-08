@@ -19,6 +19,7 @@ import AddressManager, { Address } from '@/components/AddressManager';
 import { formatPrice } from '@/lib/formatters';
 import { ButtonLoader, Loader } from '@/components/ui/loader';
 import { STATE_ZONES, getChargedWeight, calculateDeliveryCharge, type ShippingZoneConfig } from '@/lib/deliveryCalculations';
+import { generateInvoiceNumber } from '@/lib/invoicePdf';
 
 declare global {
   interface Window {
@@ -174,6 +175,8 @@ export default function Checkout() {
     }
     const avgGstPercentage = total > 0 ? (gstAmount / total) * 100 : 0;
 
+    const invoiceNumber = generateInvoiceNumber();
+
     const { data: order, error } = await supabase.from('orders').insert({
       user_id: user!.id,
       order_number: 'temp',
@@ -193,6 +196,8 @@ export default function Checkout() {
       payment_status: 'pending' as any,
       delivery_address: selectedAddress as any,
       notes: notes || null,
+      invoice_number: invoiceNumber,
+      invoice_generated: true,
     }).select().single();
     if (error) throw error;
 
