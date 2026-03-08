@@ -187,15 +187,15 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-6 items-stretch">
         {/* ── FEATURE 3: Top Selling Products ── */}
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><Package className="h-5 w-5" /> Top Selling Products</CardTitle></CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 flex flex-col min-h-0">
             {loading ? (
               <div className="space-y-3">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}</div>
             ) : data && data.topProducts.length > 0 ? (
-              <div className="overflow-x-auto">
+              <div className="flex flex-col min-h-0 flex-1">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left text-muted-foreground">
@@ -205,22 +205,26 @@ export default function AdminDashboard() {
                       <th className="pb-2 font-medium text-right">Revenue</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {data.topProducts.map((p, i) => (
-                      <tr key={i} className="border-b last:border-0">
-                        <td className="py-2.5 pr-2 truncate max-w-[180px]">
-                          <span className="inline-flex items-center gap-2">
-                            <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">{i + 1}</span>
-                            {p.name}
-                          </span>
-                        </td>
-                        <td className="py-2.5 text-center">{p.totalOrders}</td>
-                        <td className="py-2.5 text-center">{p.totalQty}</td>
-                        <td className="py-2.5 text-right font-medium">{formatPrice(p.revenue)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
                 </table>
+                <div className="overflow-y-auto max-h-[240px] scrollbar-thin">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      {data.topProducts.map((p, i) => (
+                        <tr key={i} className="border-b last:border-0">
+                          <td className="py-2.5 pr-2 truncate max-w-[180px]">
+                            <span className="inline-flex items-center gap-2">
+                              <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">{i + 1}</span>
+                              {p.name}
+                            </span>
+                          </td>
+                          <td className="py-2.5 text-center">{p.totalOrders}</td>
+                          <td className="py-2.5 text-center">{p.totalQty}</td>
+                          <td className="py-2.5 text-right font-medium">{formatPrice(p.revenue)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground py-8 text-center">No product sales data</p>
@@ -229,35 +233,33 @@ export default function AdminDashboard() {
         </Card>
 
         {/* ── FEATURE 6: Order Status Analytics ── */}
-        <Card>
+        <Card className="flex flex-col">
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><PieChart className="h-5 w-5" /> Order Status Breakdown</CardTitle></CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 flex items-center justify-center">
             {loading ? (
               <Skeleton className="h-[250px] w-full rounded-lg" />
             ) : pieData.length > 0 ? (
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <ResponsiveContainer width="100%" height={220}>
-                  <RPieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={85}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
-                      {pieData.map((entry) => (
-                        <Cell key={entry.name} fill={STATUS_COLORS[entry.name] || 'hsl(var(--muted))'} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(v: number) => [v, 'Orders']} />
-                    <Legend
-                      formatter={(value: string) => <span className="text-xs capitalize">{value}</span>}
-                    />
-                  </RPieChart>
-                </ResponsiveContainer>
-              </div>
+              <ResponsiveContainer width="100%" height={280}>
+                <RPieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={55}
+                    outerRadius={90}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
+                    {pieData.map((entry) => (
+                      <Cell key={entry.name} fill={STATUS_COLORS[entry.name] || 'hsl(var(--muted))'} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v: number) => [v, 'Orders']} />
+                  <Legend
+                    formatter={(value: string) => <span className="text-xs capitalize">{value}</span>}
+                  />
+                </RPieChart>
+              </ResponsiveContainer>
             ) : (
               <p className="text-sm text-muted-foreground py-8 text-center">No order data</p>
             )}
