@@ -420,11 +420,6 @@ export async function generateInvoicePdf(data: InvoiceData) {
   doc.text(formatPrice(data.grandTotal), summaryValueX, y, { align: 'right' });
   y += 4;
 
-  // Draw subtle box around summary
-  const boxH = y - summaryStartY + 3;
-  doc.setDrawColor(...LIGHT_GREEN);
-  doc.setLineWidth(0.3);
-  doc.roundedRect(summaryBoxX, summaryStartY - 5, mr - summaryBoxX, boxH, 2, 2);
 
   y += 8;
 
