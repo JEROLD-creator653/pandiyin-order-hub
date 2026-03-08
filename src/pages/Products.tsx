@@ -245,10 +245,10 @@ export default function Products() {
   };
 
   return (
-    <div className="container mx-auto px-4 pt-24 pb-8">
+    <div className="container mx-auto px-4 pt-20 md:pt-24 pb-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-display font-bold">All Products</h1>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 mb-5 md:mb-6">
+        <h1 className="text-2xl md:text-3xl font-display font-bold">All Products</h1>
         <div ref={searchContainerRef} className="relative max-w-sm w-full md:hidden">
           <form onSubmit={e => { e.preventDefault(); setShowSearchSuggestions(false); setSearchParams(s => { if (searchInput) s.set('search', searchInput); else s.delete('search'); return s; }); }}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
