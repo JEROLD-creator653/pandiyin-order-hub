@@ -364,11 +364,7 @@ export default function Checkout() {
       // Check if frontend totals match backend
       const backendTotal = verifyResult.grand_total;
       if (Math.abs(backendTotal - grandTotal) > 1) {
-        toast({
-          title: 'Prices or delivery charges have changed',
-          description: 'Your cart has been refreshed with the latest data. Please review before proceeding.',
-          variant: 'destructive',
-        });
+        setCheckoutError('Prices or delivery charges have changed. Your cart has been refreshed with the latest data. Please review before proceeding.');
         refetch();
         return;
       }
