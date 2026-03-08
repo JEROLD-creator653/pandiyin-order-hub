@@ -580,9 +580,49 @@ export default function Checkout() {
               </div>
             )}
 
-            <div className="mt-4 flex gap-2">
-              <Input placeholder="Coupon code" value={couponCode} onChange={e => setCouponCode(e.target.value)} className="flex-1" />
-              <Button variant="outline" onClick={applyCoupon} size="sm">Apply</Button>
+            {/* Coupon Dropdown */}
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => setCouponOpen(!couponOpen)}
+                className="flex items-center justify-between w-full text-sm font-medium text-primary hover:text-primary/80 transition-colors py-1"
+              >
+                <span className="flex items-center gap-1.5">
+                  <Tag className="h-3.5 w-3.5" />
+                  {discount > 0 ? `Coupon applied (${couponCode})` : 'Apply Coupon'}
+                </span>
+                {couponOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </button>
+              <motion.div
+                initial={false}
+                animate={{ height: couponOpen ? 'auto' : 0, opacity: couponOpen ? 1 : 0 }}
+                transition={{ duration: 0.2, ease: 'easeInOut' }}
+                className="overflow-hidden"
+              >
+                <div className="flex gap-2 pt-2">
+                  <Input
+                    placeholder="Enter coupon code"
+                    value={couponCode}
+                    onChange={e => setCouponCode(e.target.value)}
+                    className="flex-1 h-9 text-sm"
+                    disabled={discount > 0}
+                  />
+                  {discount > 0 ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-9"
+                      onClick={() => { setDiscount(0); setCouponCode(''); }}
+                    >
+                      Remove
+                    </Button>
+                  ) : (
+                    <Button variant="outline" size="sm" className="h-9" onClick={applyCoupon}>
+                      Apply
+                    </Button>
+                  )}
+                </div>
+              </motion.div>
             </div>
 
             <div className="mt-4 flex gap-3 items-start p-3 bg-muted rounded-lg border">
