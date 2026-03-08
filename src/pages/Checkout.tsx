@@ -297,7 +297,7 @@ export default function Checkout() {
               setCheckoutError('Payment verification failed. Please contact support.');
             }
           } catch (err: any) {
-            setPaymentError(err.message || 'Verification error. Please try again.');
+            setCheckoutError(err.message || 'Verification error. Please try again.');
           }
         },
         prefill: {
