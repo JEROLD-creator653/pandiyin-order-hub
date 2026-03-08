@@ -66,11 +66,27 @@ export function CartProvider({ children }: { children: ReactNode }) {
         .filter((item: any) => item.product != null) as CartItem[];
     },
     enabled: !!user,
-    staleTime: 0, // Always refetch — ensures latest product data
+    staleTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
-    refetchInterval: 60_000, // Refetch every 60s as background sync
+    refetchInterval: 30_000, // Refetch every 30s
   });
+
+  // Realtime: auto-refresh cart + product queries when products table changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('product-changes-for-cart')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+        // Invalidate all product-related queries
+        queryClient.invalidateQueries({ queryKey: ['cart'] });
+        queryClient.invalidateQueries({ queryKey: ['products'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // Detect price changes and notify user
   useEffect(() => {
