@@ -660,6 +660,7 @@ export type Database = {
           updated_at: string
           user_id: string | null
           weight: string | null
+          weight_kg: number
         }
         Insert: {
           average_rating?: number | null
@@ -685,6 +686,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           weight?: string | null
+          weight_kg?: number
         }
         Update: {
           average_rating?: number | null
@@ -710,6 +712,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           weight?: string | null
+          weight_kg?: number
         }
         Relationships: [
           {
@@ -755,6 +758,7 @@ export type Database = {
           gst_type: string | null
           id: string
           is_enabled: boolean
+          per_kg_rate: number
           region_key: string
           region_name: string
           sort_order: number
@@ -767,6 +771,7 @@ export type Database = {
           gst_type?: string | null
           id?: string
           is_enabled?: boolean
+          per_kg_rate?: number
           region_key: string
           region_name: string
           sort_order?: number
@@ -779,6 +784,7 @@ export type Database = {
           gst_type?: string | null
           id?: string
           is_enabled?: boolean
+          per_kg_rate?: number
           region_key?: string
           region_name?: string
           sort_order?: number

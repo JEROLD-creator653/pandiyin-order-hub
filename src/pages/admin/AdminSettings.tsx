@@ -37,7 +37,7 @@ export default function AdminSettings() {
 
   const loadRegions = async () => {
     const { data } = await supabase.from('shipping_regions').select('*').order('sort_order');
-    setRegions((data || []).map(r => ({ ...r, base_charge: String(r.base_charge), free_delivery_above: r.free_delivery_above ? String(r.free_delivery_above) : '' })));
+    setRegions((data || []).map((r: any) => ({ ...r, base_charge: String(r.base_charge), free_delivery_above: r.free_delivery_above ? String(r.free_delivery_above) : '', per_kg_rate: String(r.per_kg_rate || 0) })));
   };
 
   const saveStore = async () => {
@@ -65,9 +65,10 @@ export default function AdminSettings() {
   const saveRegion = async (region: any) => {
     await supabase.from('shipping_regions').update({
       base_charge: Number(region.base_charge) || 0,
+      per_kg_rate: Number(region.per_kg_rate) || 0,
       free_delivery_above: region.free_delivery_above ? Number(region.free_delivery_above) : null,
       is_enabled: region.is_enabled,
-    }).eq('id', region.id);
+    } as any).eq('id', region.id);
     toast({ title: `${region.region_name} settings saved` });
   };
 
@@ -160,13 +161,17 @@ export default function AdminSettings() {
                   />
                 </div>
                 {region.is_enabled && region.region_key !== 'international' && (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Per KG Rate (₹)</Label>
+                      <Input type="number" value={region.per_kg_rate} onChange={e => updateRegion(region.id, 'per_kg_rate', e.target.value)} />
+                    </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Base Charge (₹)</Label>
                       <Input type="number" value={region.base_charge} onChange={e => updateRegion(region.id, 'base_charge', e.target.value)} />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs">Free Delivery Above (₹)</Label>
+                      <Label className="text-xs">Free Above (₹)</Label>
                       <Input type="number" value={region.free_delivery_above} onChange={e => updateRegion(region.id, 'free_delivery_above', e.target.value)} placeholder="No limit" />
                     </div>
                   </div>

@@ -14,6 +14,7 @@ interface CartItem {
     price: number;
     image_url: string;
     stock_quantity: number;
+    weight_kg: number;
   };
 }
 
@@ -40,7 +41,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (!user) return [];
       const { data, error } = await supabase
         .from('cart_items')
-        .select('id, product_id, quantity, products(id, name, price, image_url, stock_quantity)')
+        .select('id, product_id, quantity, products(id, name, price, image_url, stock_quantity, weight_kg)')
         .eq('user_id', user.id);
       if (error) throw error;
       return (data || []).map((item: any) => ({

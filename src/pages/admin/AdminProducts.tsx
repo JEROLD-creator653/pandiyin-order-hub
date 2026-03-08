@@ -72,6 +72,7 @@ interface Product {
   is_available: boolean;
   is_featured: boolean;
   weight?: string | number;
+  weight_kg?: number;
   unit?: string;
   gst_percentage?: number;
   hsn_code?: string;
@@ -98,6 +99,7 @@ export default function AdminProducts() {
     category_id: '',
     stock_quantity: '',
     weight: '',
+    weight_kg: '',
     unit: 'g',
     gst_percentage: '5',
     hsn_code: '',
@@ -140,6 +142,7 @@ export default function AdminProducts() {
       category_id: '',
       stock_quantity: '',
       weight: '',
+      weight_kg: '',
       unit: 'g',
       gst_percentage: '5',
       hsn_code: '',
@@ -161,6 +164,7 @@ export default function AdminProducts() {
       category_id: p.category_id || '',
       stock_quantity: String(p.stock_quantity),
       weight: p.weight ? String(p.weight) : '',
+      weight_kg: p.weight_kg ? String(p.weight_kg) : '',
       unit: p.unit || 'g',
       gst_percentage: String(p.gst_percentage || 5),
       hsn_code: p.hsn_code || '',
@@ -206,6 +210,7 @@ export default function AdminProducts() {
           category_id: form.category_id || null,
           stock_quantity: Number(form.stock_quantity),
           weight: form.weight ? String(form.weight) : '',
+          weight_kg: form.weight_kg ? Number(form.weight_kg) : 0,
           unit: form.unit,
           gst_percentage: Number(form.gst_percentage),
           hsn_code: form.hsn_code,
@@ -252,6 +257,7 @@ export default function AdminProducts() {
         category_id: '',
         stock_quantity: '',
         weight: '',
+        weight_kg: '',
         unit: 'g',
         gst_percentage: '5',
         hsn_code: '',
@@ -412,7 +418,7 @@ export default function AdminProducts() {
               </div>
 
               {/* Stock, Weight, Unit */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">
                     Stock Quantity
@@ -425,6 +431,21 @@ export default function AdminProducts() {
                     }
                   />
                 </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Shipping Weight (kg) *
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g. 0.25"
+                    value={form.weight_kg}
+                    onChange={(e) => setForm({ ...form, weight_kg: e.target.value })}
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">Used for delivery charge calculation. Enter in kilograms.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">
                     Weight

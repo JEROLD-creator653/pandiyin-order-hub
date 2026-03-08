@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CreditCard, Banknote, MapPin, ShieldCheck, Truck, Award, AlertCircle, X } from 'lucide-react';
+import { CreditCard, MapPin, ShieldCheck, Truck, Award, AlertCircle, X, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,15 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useShippingRegions } from '@/hooks/useShippingRegions';
 import AddressManager, { Address } from '@/components/AddressManager';
-import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import { formatPrice } from '@/lib/formatters';
 import { ButtonLoader, Loader } from '@/components/ui/loader';
+import { ZONE_GROUPS, STATE_ZONES, getChargedWeight, calculateDeliveryCharge, type ShippingZoneConfig } from '@/lib/deliveryCalculations';
 
 declare global {
   interface Window {
@@ -28,28 +30,35 @@ declare global {
 const RAZORPAY_KEY_ID = 'rzp_test_SOl9lqqJlvN9Ln';
 
 const getGSTType = (state: string): 'cgst_sgst' | 'igst' => {
-  const sameSateStates = ['Tamil Nadu', 'Puducherry'];
-  return sameSateStates.includes(state) ? 'cgst_sgst' : 'igst';
+  const sameStateStates = ['Tamil Nadu', 'Puducherry'];
+  return sameStateStates.includes(state) ? 'cgst_sgst' : 'igst';
 };
 
 export default function Checkout() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { items, total, clearCart } = useCart();
-  const { regions, getDeliveryCharge } = useShippingRegions();
+  const { regions, getDeliveryCharge, getZoneConfig } = useShippingRegions();
   const [loading, setLoading] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [agreementChecked, setAgreementChecked] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('razorpay');
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
-  const [deliveryCharge, setDeliveryCharge] = useState(0);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [deliveryState, setDeliveryState] = useState<string>('');
   const [notes, setNotes] = useState('');
   const [gstSettings, setGstSettings] = useState({ gst_enabled: false });
   const [productGstMap, setProductGstMap] = useState<Map<string, any>>(new Map());
   const [calculatedGstAmount, setCalculatedGstAmount] = useState(0);
+
+  // Load user's saved state from their last address
+  useEffect(() => {
+    if (selectedAddress?.state) {
+      setDeliveryState(selectedAddress.state);
+    }
+  }, [selectedAddress]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -92,14 +101,37 @@ export default function Checkout() {
     fetchProductGst();
   }, [items]);
 
-  useEffect(() => {
-    if (selectedAddress?.state && regions.length > 0) {
-      const charge = getDeliveryCharge(selectedAddress.state, total);
-      setDeliveryCharge(charge);
-    } else {
-      setDeliveryCharge(0);
-    }
-  }, [selectedAddress, regions, total, getDeliveryCharge]);
+  // Weight-based delivery calculation
+  const totalWeightKg = useMemo(() => {
+    return items.reduce((sum, item) => {
+      const wkg = Number((item.product as any).weight_kg) || 0;
+      return sum + wkg * item.quantity;
+    }, 0);
+  }, [items]);
+
+  const chargedWeight = useMemo(() => getChargedWeight(totalWeightKg), [totalWeightKg]);
+
+  const zoneConfig = useMemo(() => getZoneConfig(), [getZoneConfig]);
+
+  const deliveryCharge = useMemo(() => {
+    if (!deliveryState) return null;
+    return calculateDeliveryCharge(deliveryState, totalWeightKg, total, zoneConfig);
+  }, [deliveryState, totalWeightKg, total, zoneConfig]);
+
+  const effectiveDeliveryCharge = deliveryCharge ?? 0;
+
+  // Free delivery nudge for Tamil Nadu
+  const freeDeliveryNudge = useMemo(() => {
+    if (!deliveryState || STATE_ZONES[deliveryState] !== 'local') return null;
+    const threshold = zoneConfig.local.freeAbove;
+    if (!threshold || total >= threshold) return null;
+    const remaining = threshold - total;
+    const progress = (total / threshold) * 100;
+    return { remaining, progress, threshold };
+  }, [deliveryState, total, zoneConfig]);
+
+  const gstAmount = gstSettings.gst_enabled ? calculatedGstAmount : 0;
+  const grandTotal = total - discount + effectiveDeliveryCharge;
 
   const applyCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -130,9 +162,6 @@ export default function Checkout() {
     }
   };
 
-  const gstAmount = gstSettings.gst_enabled ? calculatedGstAmount : 0;
-  const grandTotal = total - discount + deliveryCharge;
-
   if (authLoading) {
     return <Loader text="Preparing secure checkout..." className="min-h-[60vh]" delay={200} />;
   }
@@ -141,7 +170,7 @@ export default function Checkout() {
   const createOrder = async () => {
     const totalMRP = items.reduce((a, i) => a + ((i.product as any).compare_price || i.product.price) * i.quantity, 0);
     const sellingTotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0);
-    const gstType = getGSTType(selectedAddress?.state || '');
+    const gstType = getGSTType(deliveryState || selectedAddress?.state || '');
     let cgstAmount = 0, sgstAmount = 0, igstAmount = 0;
     if (gstType === 'cgst_sgst') {
       cgstAmount = gstAmount / 2;
@@ -155,7 +184,7 @@ export default function Checkout() {
       user_id: user!.id,
       order_number: 'temp',
       subtotal: sellingTotal,
-      delivery_charge: deliveryCharge,
+      delivery_charge: effectiveDeliveryCharge,
       discount: discount,
       total: grandTotal,
       gst_amount: gstAmount,
@@ -164,10 +193,10 @@ export default function Checkout() {
       cgst_amount: cgstAmount,
       sgst_amount: sgstAmount,
       igst_amount: igstAmount,
-      delivery_state: selectedAddress?.state || '',
+      delivery_state: deliveryState || selectedAddress?.state || '',
       coupon_code: couponCode || null,
-      payment_method: paymentMethod === 'razorpay' ? 'stripe' as any : 'cod' as any, // 'stripe' enum reused for online
-      payment_status: paymentMethod === 'razorpay' ? 'pending' : 'pending',
+      payment_method: paymentMethod === 'razorpay' ? 'stripe' as any : 'cod' as any,
+      payment_status: 'pending' as any,
       delivery_address: selectedAddress as any,
       notes: notes || null,
     }).select().single();
@@ -216,7 +245,6 @@ export default function Checkout() {
 
     setLoading(true);
     try {
-      // 1. Create Razorpay order via edge function
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
 
@@ -241,10 +269,8 @@ export default function Checkout() {
       const razorpayOrder = await res.json();
       if (!res.ok) throw new Error(razorpayOrder.error || 'Failed to create payment order');
 
-      // 2. Create our DB order
       const order = await createOrder();
 
-      // 3. Open Razorpay checkout
       const options = {
         key: RAZORPAY_KEY_ID,
         amount: razorpayOrder.amount,
@@ -254,7 +280,6 @@ export default function Checkout() {
         order_id: razorpayOrder.id,
         handler: async (response: any) => {
           try {
-            // 4. Verify payment server-side
             const verifyRes = await fetch(
               `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-verify`,
               {
@@ -273,7 +298,6 @@ export default function Checkout() {
               }
             );
             const verifyData = await verifyRes.json();
-
             if (verifyData.verified) {
               clearCart();
               navigate(`/order-confirmation/${order.id}`);
@@ -281,7 +305,6 @@ export default function Checkout() {
               setPaymentError('Payment verification failed. Please contact support.');
             }
           } catch (err: any) {
-            console.error('Verification error:', err);
             setPaymentError(err.message || 'Verification error. Please try again.');
           }
         },
@@ -292,7 +315,6 @@ export default function Checkout() {
         theme: { color: '#16a34a' },
         modal: {
           ondismiss: () => {
-            // Payment cancelled - update order status
             supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
             setPaymentError('Payment cancelled. Your order has been saved. You can retry payment.');
             setLoading(false);
@@ -320,6 +342,10 @@ export default function Checkout() {
       toast({ title: 'Please select or add a delivery address', variant: 'destructive' });
       return;
     }
+    if (!deliveryState) {
+      toast({ title: 'Please select your delivery state', variant: 'destructive' });
+      return;
+    }
     if (!agreementChecked) {
       toast({ title: 'Please agree to our policies', description: 'You must accept our Terms of Service, Return Policy and Shipping Policy to proceed', variant: 'destructive' });
       return;
@@ -330,7 +356,6 @@ export default function Checkout() {
       return;
     }
 
-    // COD flow (kept but hidden per memory - COD disabled)
     setLoading(true);
     try {
       const order = await createOrder();
@@ -342,6 +367,8 @@ export default function Checkout() {
       setLoading(false);
     }
   };
+
+  const isCartEmpty = items.length === 0;
 
   return (
     <div className="container mx-auto px-4 pt-24 pb-8 max-w-4xl">
@@ -359,6 +386,7 @@ export default function Checkout() {
           </button>
         </div>
       )}
+
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-5 gap-8">
         <div className="md:col-span-3 space-y-6">
           <Card>
@@ -372,6 +400,47 @@ export default function Checkout() {
                   setSelectedAddressId(addr.id || null);
                 }}
               />
+            </CardContent>
+          </Card>
+
+          {/* Delivery State Selection */}
+          <Card>
+            <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Truck className="h-5 w-5" /> Delivery State</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <Select value={deliveryState} onValueChange={setDeliveryState}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your delivery state" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ZONE_GROUPS.map(group => (
+                    <SelectGroup key={group.zone}>
+                      <SelectLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{group.label}</SelectLabel>
+                      {group.states.map(state => (
+                        <SelectItem key={state} value={state}>{state}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {!deliveryState && (
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5" /> Select state to see delivery cost
+                </p>
+              )}
+
+              {/* Free Delivery Nudge — Tamil Nadu only */}
+              {freeDeliveryNudge && (
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 space-y-2">
+                  <p className="text-sm font-medium text-primary">
+                    🚚 Add {formatPrice(freeDeliveryNudge.remaining)} more for FREE delivery!
+                  </p>
+                  <Progress value={freeDeliveryNudge.progress} className="h-2" />
+                  <p className="text-xs text-muted-foreground">
+                    Free delivery on orders above {formatPrice(freeDeliveryNudge.threshold!)}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -437,10 +506,29 @@ export default function Checkout() {
                     <span>Subtotal</span>
                     <span>{formatPrice(sellingTotal)}</span>
                   </div>
+
+                  {/* Shipping Weight */}
+                  {chargedWeight > 0 && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span className="flex items-center gap-1"><Package className="h-3.5 w-3.5" /> Shipping weight</span>
+                      <span>{chargedWeight} kg</span>
+                    </div>
+                  )}
+
+                  {/* Delivery charge */}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Delivery</span>
-                    <span>{deliveryCharge === 0 ? <span className="text-green-600 font-medium">FREE</span> : formatPrice(deliveryCharge)}</span>
+                    <span>
+                      {deliveryCharge === null ? (
+                        <span className="text-muted-foreground">—</span>
+                      ) : deliveryCharge === 0 ? (
+                        <span className="text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full text-xs">FREE</span>
+                      ) : (
+                        formatPrice(deliveryCharge)
+                      )}
+                    </span>
                   </div>
+
                   {discount > 0 && (
                     <div className="flex justify-between text-xs text-green-700 font-semibold">
                       <span>Coupon Discount {couponCode && `(${couponCode})`}</span>
@@ -448,8 +536,8 @@ export default function Checkout() {
                     </div>
                   )}
                   {(hasDiscount || discount > 0) && (
-                    <div className="bg-green-50 border-2 border-green-200 text-green-800 rounded-lg p-3 mt-2 text-center">
-                      <span className="font-bold text-base">
+                    <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mt-2 text-center">
+                      <span className="font-bold text-base text-primary">
                         🎉 You saved {formatPrice(discountAmount + discount)} on this order
                       </span>
                     </div>
@@ -465,16 +553,10 @@ export default function Checkout() {
             )}
 
             <Separator className="my-3" />
-            {(() => {
-              const sellingTotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0);
-              const finalTotal = sellingTotal + deliveryCharge - discount;
-              return (
-                <div className="flex justify-between text-lg font-bold mt-3">
-                  <span>Total Payable</span>
-                  <span className="text-primary">{formatPrice(finalTotal)}</span>
-                </div>
-              );
-            })()}
+            <div className="flex justify-between text-lg font-bold mt-3">
+              <span>Total Payable</span>
+              <span className="text-primary">{formatPrice(grandTotal)}</span>
+            </div>
 
             {selectedAddress && selectedAddress.full_name && (
               <div className="border-t mt-4 pt-3">
@@ -512,9 +594,18 @@ export default function Checkout() {
               </label>
             </div>
 
-            <Button className="w-full mt-6 rounded-full" size="lg" onClick={placeOrder} disabled={loading || !agreementChecked}>
+            <Button
+              className="w-full mt-6 rounded-full"
+              size="lg"
+              onClick={placeOrder}
+              disabled={loading || !agreementChecked || isCartEmpty || !deliveryState}
+            >
               {loading ? <ButtonLoader text="Processing payment..." /> : `Pay Now · ${formatPrice(grandTotal)}`}
             </Button>
+
+            {!deliveryState && (
+              <p className="text-xs text-destructive mt-2 text-center">Please select your delivery state to proceed</p>
+            )}
 
             <div className="mt-5 flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
               <div className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> Secure Checkout</div>
