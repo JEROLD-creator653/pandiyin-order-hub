@@ -491,7 +491,7 @@ export default function AdminProducts() {
                     placeholder="e.g., 190590"
                     value={form.hsn_code}
                     onChange={(e) => setForm({ ...form, hsn_code: e.target.value })}
-                    maxLength="8"
+                    maxLength={8}
                   />
                 </div>
               </div>

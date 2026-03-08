@@ -99,7 +99,7 @@ export function trackWebVitals() {
     const fiobserver = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       entries.forEach((entry) => {
-        console.log('FID:', entry.processingDuration);
+        console.log('FID:', (entry as any).processingDuration);
       });
     });
     fiobserver.observe({ entryTypes: ['first-input'] });

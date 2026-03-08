@@ -78,7 +78,7 @@ class PerformanceMonitor {
       const clsObserver = new PerformanceObserver((entryList) => {
         const entries = entryList.getEntries();
         entries.forEach(entry => {
-          if (!entry.hadRecentInput) {
+          if (!(entry as any).hadRecentInput) {
             clsValue += (entry as any).value;
           }
         });
