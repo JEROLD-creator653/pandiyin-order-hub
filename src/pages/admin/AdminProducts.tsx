@@ -111,26 +111,19 @@ export default function AdminProducts() {
 
   const openEdit = (p: Product) => {
     setEditing(p);
-    // Reverse-compute weight_value from weight_kg
+    // Reverse-compute weight from weight_kg using the stored unit
     const wkg = Number(p.weight_kg) || 0;
-    let weightValue = '';
-    let weightUnit = 'g';
-    if (wkg > 0) {
-      if (wkg >= 1) {
-        weightValue = String(wkg);
-        weightUnit = 'kg';
-      } else {
-        weightValue = String(Math.round(wkg * 1000));
-        weightUnit = 'g';
-      }
+    const unit = p.unit || 'g';
+    let weightDisplay = p.weight ? String(p.weight) : '';
+    if (wkg > 0 && (unit === 'g' || unit === 'kg')) {
+      weightDisplay = unit === 'kg' ? String(wkg) : String(Math.round(wkg * 1000));
     }
     setForm({
       name: p.name, description: p.description || '',
       price: String(p.price), compare_price: p.compare_price ? String(p.compare_price) : '',
       category_id: p.category_id || '', stock_quantity: String(p.stock_quantity),
-      weight: p.weight ? String(p.weight) : '',
-      weight_value: weightValue, weight_unit: weightUnit,
-      unit: p.unit || 'g', gst_percentage: String(p.gst_percentage || 5),
+      weight: weightDisplay, unit,
+      gst_percentage: String(p.gst_percentage || 5),
       hsn_code: p.hsn_code || '', is_available: p.is_available, is_featured: p.is_featured,
     });
     setSelectedFile(null);
