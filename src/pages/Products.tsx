@@ -20,6 +20,7 @@ import { useCart } from '@/hooks/useCart';
 import { SkeletonCard } from '@/components/ui/loader';
 import { getCachedData, setCacheItem } from '@/lib/cacheService';
 import { useRouteLoader } from '@/contexts/RouteLoaderContext';
+import SEOHead from '@/components/SEOHead';
 
 type SortOption = 'newest' | 'price_low' | 'price_high' | 'popularity';
 
