@@ -236,9 +236,7 @@ export default function AdminProducts() {
             price: Number(form.price),
             category_id: form.category_id || undefined,
             stock_quantity: Number(form.stock_quantity) || 0,
-            gst_percentage: Number(form.gst_percentage),
-            hsn_code: form.hsn_code,
-          },
+          } as any,
           user.id
         );
 
