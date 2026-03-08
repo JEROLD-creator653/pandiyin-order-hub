@@ -66,6 +66,11 @@ serve(async (req) => {
     let subtotal = 0;
 
     for (const item of cart_items) {
+      // Validate quantity is a positive integer
+      if (!Number.isInteger(item.quantity) || item.quantity <= 0 || item.quantity > 100) {
+        errors.push(`Invalid quantity for product ${item.product_id}`);
+        continue;
+      }
       const product = productMap.get(item.product_id);
       if (!product) {
         errors.push(`Product ${item.product_id} not found`);

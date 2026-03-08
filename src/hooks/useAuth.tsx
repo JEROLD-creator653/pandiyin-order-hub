@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { lovable } from '@/integrations/lovable/index';
 import type { User, Session } from '@supabase/supabase-js';
 
 interface AuthContextType {
@@ -160,45 +161,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        skipBrowserRedirect: true,
-        queryParams: {
-          access_type: 'offline',
+    try {
+      const result = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+        extraParams: {
           prompt: 'select_account',
         },
-      },
-    });
+      });
 
-    if (error || !data?.url) return { error: error || new Error('No auth URL returned') };
+      if (result.error) {
+        return { error: result.error };
+      }
 
-    // Open Google login in a centered popup
-    const width = 500;
-    const height = 600;
-    const left = window.screenX + (window.innerWidth - width) / 2;
-    const top = window.screenY + (window.innerHeight - height) / 2;
-
-    const popup = window.open(
-      data.url,
-      'googleLogin',
-      `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`
-    );
-
-    if (!popup) return { error: new Error('Popup blocked. Please allow popups for this site.') };
-
-    // Poll until popup closes — session is picked up by onAuthStateChange
-    await new Promise<void>((resolve) => {
-      const timer = setInterval(() => {
-        if (popup.closed) {
-          clearInterval(timer);
-          resolve();
-        }
-      }, 500);
-    });
-
-    return { error: null };
+      // If redirected, the page will navigate away — session is picked up on return
+      return { error: null };
+    } catch (err) {
+      return { error: err instanceof Error ? err : new Error('Google sign-in failed') };
+    }
   };
 
   const signUpWithPhone = async (phone: string, fullName: string) => {
