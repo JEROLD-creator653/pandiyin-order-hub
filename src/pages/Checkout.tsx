@@ -37,7 +37,7 @@ const getGSTType = (state: string): 'cgst_sgst' | 'igst' => {
 export default function Checkout() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { items, total, clearCart } = useCart();
+  const { items, total, clearCart, refetch } = useCart();
   const { regions, getDeliveryCharge, getZoneConfig } = useShippingRegions();
   const [loading, setLoading] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -49,7 +49,6 @@ export default function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
   const [gstSettings, setGstSettings] = useState({ gst_enabled: false });
-  const [productGstMap, setProductGstMap] = useState<Map<string, any>>(new Map());
   const [calculatedGstAmount, setCalculatedGstAmount] = useState(0);
 
   // Derive delivery state from selected address pincode/state
@@ -73,27 +72,17 @@ export default function Checkout() {
 
   useEffect(() => {
     if (items.length === 0) return;
-    const fetchProductGst = async () => {
-      const productIds = items.map(item => item.product_id);
-      const { data: productsData } = await supabase
-        .from('products')
-        .select('id, gst_percentage, hsn_code, tax_inclusive')
-        .in('id', productIds);
-      const gstMap = new Map(productsData?.map(p => [p.id, p]) || []);
-      setProductGstMap(gstMap);
-      let totalGst = 0;
-      items.forEach(item => {
-        const productGst = gstMap.get(item.product_id) || {};
-        const itemGstPercentage = (productGst as any)?.gst_percentage || 5;
-        const itemBasePrice = (productGst as any)?.tax_inclusive
-          ? item.product.price * 100 / (100 + itemGstPercentage)
-          : item.product.price;
-        const itemGstAmount = (itemBasePrice * itemGstPercentage / 100) * item.quantity;
-        totalGst += itemGstAmount;
-      });
-      setCalculatedGstAmount(totalGst);
-    };
-    fetchProductGst();
+    let totalGst = 0;
+    items.forEach(item => {
+      const p = item.product as any;
+      const itemGstPercentage = p?.gst_percentage || 5;
+      const itemBasePrice = p?.tax_inclusive !== false
+        ? item.product.price * 100 / (100 + itemGstPercentage)
+        : item.product.price;
+      const itemGstAmount = (itemBasePrice * itemGstPercentage / 100) * item.quantity;
+      totalGst += itemGstAmount;
+    });
+    setCalculatedGstAmount(totalGst);
   }, [items]);
 
   // Weight-based delivery calculation
@@ -202,9 +191,9 @@ export default function Checkout() {
     if (error) throw error;
 
     const orderItems = items.map(item => {
-      const productGst = productGstMap.get(item.product_id) || {};
-      const itemGstPercentage = (productGst as any)?.gst_percentage || 5;
-      const itemBasePrice = (productGst as any)?.tax_inclusive
+      const p = item.product as any;
+      const itemGstPercentage = p?.gst_percentage || 5;
+      const itemBasePrice = p?.tax_inclusive !== false
         ? item.product.price * 100 / (100 + itemGstPercentage)
         : item.product.price;
       const itemGstAmount = (itemBasePrice * itemGstPercentage / 100) * item.quantity;
@@ -216,9 +205,9 @@ export default function Checkout() {
         quantity: item.quantity,
         total: item.product.price * item.quantity,
         gst_percentage: itemGstPercentage,
-        hsn_code: (productGst as any)?.hsn_code || '',
+        hsn_code: p?.hsn_code || '',
         gst_amount: itemGstAmount,
-        tax_inclusive: (productGst as any)?.tax_inclusive ?? true,
+        tax_inclusive: p?.tax_inclusive ?? true,
         product_base_price: itemBasePrice,
       };
     });
@@ -348,6 +337,40 @@ export default function Checkout() {
     if (!agreementChecked) {
       toast({ title: 'Please agree to our policies', description: 'You must accept our Terms of Service, Return Policy and Shipping Policy to proceed', variant: 'destructive' });
       return;
+    }
+
+    // Pre-payment revalidation: fetch latest prices & stock
+    const productIds = items.map(i => i.product_id);
+    const { data: latestProducts } = await supabase
+      .from('products')
+      .select('id, price, stock_quantity, is_available')
+      .in('id', productIds);
+
+    if (latestProducts) {
+      const unavailable = latestProducts.filter(p => !p.is_available);
+      if (unavailable.length > 0) {
+        toast({ title: 'Some products are no longer available', description: 'Please review your cart', variant: 'destructive' });
+        refetch();
+        return;
+      }
+      const outOfStock = items.filter(item => {
+        const latest = latestProducts.find(p => p.id === item.product_id);
+        return latest && item.quantity > latest.stock_quantity;
+      });
+      if (outOfStock.length > 0) {
+        toast({ title: 'Stock has changed', description: 'Some items exceed available stock. Please review your cart.', variant: 'destructive' });
+        refetch();
+        return;
+      }
+      const priceChanged = items.some(item => {
+        const latest = latestProducts.find(p => p.id === item.product_id);
+        return latest && latest.price !== item.product.price;
+      });
+      if (priceChanged) {
+        toast({ title: 'Prices updated', description: 'Product prices have changed. Please review the updated totals before proceeding.', variant: 'destructive' });
+        refetch();
+        return;
+      }
     }
 
     if (paymentMethod === 'razorpay') {
