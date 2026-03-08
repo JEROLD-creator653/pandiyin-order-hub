@@ -209,38 +209,46 @@ export async function generateInvoicePdf(data: InvoiceData) {
   drawLine(doc, y, ml, mr, DARK_GREEN, 0.6);
   y += 7;
 
-  // TAX INVOICE banner row (centered)
+  // ═══════════════════════════════════════════════════════
+  // SECTION 2 — INVOICE DETAILS
+  // ═══════════════════════════════════════════════════════
+
+  // Section title
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(14);
+  doc.setFontSize(10);
   doc.setTextColor(...DARK_GREEN);
-  doc.text('TAX INVOICE', pw / 2, y, { align: 'center' });
-  y += 6;
+  doc.text('Invoice Details', ml, y);
+  y += 3;
+  drawLine(doc, y, ml, mr, LIGHT_GREEN, 0.3);
+  y += 5;
 
-  // Invoice meta below TAX INVOICE (centered layout)
-  const metaCenterX = pw / 2;
-  const metaSpacing = 4.5;
+  // Two-column grid: labels left, values right
+  const labelX = ml + 4;
+  const valueX = ml + 50;
+  const detailSpacing = 5;
 
-  const drawMetaRow = (label: string, value: string) => {
+  const drawDetailRow = (label: string, value: string) => {
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(8.5);
     doc.setTextColor(...GRAY);
-    doc.text(label, metaCenterX - 2, y, { align: 'right' });
+    doc.text(label, labelX, y);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...DARK_TEXT);
-    doc.text(value, metaCenterX + 2, y);
-    y += metaSpacing;
+    doc.text(`:  ${value}`, valueX, y);
+    y += detailSpacing;
   };
 
-  drawMetaRow('Invoice Number:', data.invoiceNumber);
-  drawMetaRow('Invoice Date:', data.orderDate);
-  drawMetaRow('Invoice Time:', data.orderTime);
+  drawDetailRow('Invoice Title', 'TAX INVOICE');
+  drawDetailRow('Invoice Number', data.invoiceNumber);
+  drawDetailRow('Invoice Date', data.orderDate);
+  drawDetailRow('Invoice Time', data.orderTime);
 
   y += 2;
   drawLine(doc, y, ml, mr, LIGHT_GREEN, 0.3);
   y += 7;
 
   // ═══════════════════════════════════════════════════════
-  // SECTION 2 — SHIPPING ADDRESS
+  // SECTION 3 — SHIPPING ADDRESS
   // ═══════════════════════════════════════════════════════
 
   y = sectionTitle(doc, 'SHIPPING ADDRESS', ml, y);
