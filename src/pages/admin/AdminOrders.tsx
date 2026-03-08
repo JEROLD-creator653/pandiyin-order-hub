@@ -29,6 +29,7 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(false);
   const [detail, setDetail] = useState<any>(null);
   const [orderItems, setOrderItems] = useState<any[]>([]);
+  const [newStatus, setNewStatus] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -36,7 +37,6 @@ export default function AdminOrders() {
       let q = supabase.from('orders').select('*, order_items(*, products(image_url, name))').order('created_at', { ascending: false });
       if (filter !== 'all') q = q.eq('status', filter as any);
       if (debouncedSearch && debouncedSearch.trim() !== '') {
-        // search by order_number (partial) - case-insensitive
         q = q.ilike('order_number', `%${debouncedSearch}%`);
       }
       const { data } = await q;
@@ -47,7 +47,6 @@ export default function AdminOrders() {
   };
   useEffect(() => { load(); }, [filter, debouncedSearch]);
 
-  // Debounce search input
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
     return () => clearTimeout(t);
@@ -56,16 +55,69 @@ export default function AdminOrders() {
   const updateStatus = async (id: string, status: string) => {
     await supabase.from('orders').update({ status } as any).eq('id', id);
     toast({ title: `Order status updated to ${status}` });
-    setDetail(prev => (prev && prev.id === id ? { ...prev, status } : prev));
+    setDetail((prev: any) => (prev && prev.id === id ? { ...prev, status } : prev));
+    setNewStatus(status);
     load();
   };
 
   const viewDetail = (order: any) => {
     setDetail(order);
     setOrderItems(order.order_items || []);
+    setNewStatus(order.status);
   };
 
-  return (
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: `${label} copied` });
+  };
+
+  const copyOrderDetails = () => {
+    if (!detail) return;
+    const addr = detail.delivery_address as any;
+    const items = orderItems.map(i => `${i.product_name} x${i.quantity} — ${formatPrice(i.total)}`).join('\n');
+    const text = `Order: ${detail.order_number}\nDate: ${new Date(detail.created_at).toLocaleDateString('en-IN')}\nStatus: ${detail.status}\n\nItems:\n${items}\n\nSubtotal: ${formatPrice(detail.subtotal)}\nDelivery: ${formatPrice(detail.delivery_charge)}\nTotal: ${formatPrice(detail.total)}${addr ? `\n\nDelivery: ${addr.full_name}, ${addr.address_line1}, ${addr.city} - ${addr.pincode}` : ''}`;
+    navigator.clipboard.writeText(text);
+    toast({ title: 'Order details copied' });
+  };
+
+  const handleGenerateInvoice = async () => {
+    if (!detail) return;
+    try {
+      const addr = detail.delivery_address as any;
+      const invoiceData = {
+        invoiceNumber: detail.invoice_number || detail.order_number,
+        orderNumber: detail.order_number,
+        orderDate: detail.created_at,
+        customerName: addr?.full_name || 'Customer',
+        customerAddress: addr ? `${addr.address_line1}, ${addr.city} - ${addr.pincode}, ${addr.state}` : '',
+        customerPhone: addr?.phone || '',
+        items: orderItems.map(i => ({
+          name: i.product_name,
+          hsn: i.hsn_code || '',
+          quantity: i.quantity,
+          price: i.product_price,
+          total: i.total,
+          gstPercentage: i.product_gst_percentage || 5,
+        })),
+        subtotal: detail.subtotal,
+        deliveryCharge: detail.delivery_charge,
+        discount: detail.discount,
+        total: detail.total,
+        gstType: detail.gst_type || 'CGST+SGST',
+        paymentMode: detail.payment_mode || detail.payment_method,
+        paymentId: detail.stripe_payment_id || '',
+      };
+      const doc = await generateInvoicePdf(invoiceData);
+      doc.save(`Invoice_${detail.order_number}.pdf`);
+      toast({ title: 'Invoice generated' });
+    } catch {
+      toast({ title: 'Failed to generate invoice', variant: 'destructive' });
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3 w-full">
