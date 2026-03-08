@@ -384,7 +384,7 @@ export default function Checkout() {
       clearCart();
       navigate(`/order-confirmation/${order.id}`);
     } catch (err: any) {
-      toast({ title: 'Order failed', description: err.message, variant: 'destructive' });
+      setCheckoutError(err.message || 'Order failed. Please try again.');
     } finally {
       setLoading(false);
     }
