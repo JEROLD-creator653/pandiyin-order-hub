@@ -17,6 +17,7 @@ export default function AdminDashboard() {
   const [lowStock, setLowStock] = useState<any[]>([]);
   const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exportOpen, setExportOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
