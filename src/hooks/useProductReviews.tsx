@@ -128,12 +128,10 @@ export function useProductReviews({
         return;
       }
 
-      // Use user_name directly from product_reviews table
+      // Use user_name directly from product_reviews table (populated on submit)
       const reviewsWithUser = (data || []).map((review: any) => ({
         ...review,
-        user_name: review.user_name && review.user_name !== 'Anonymous' 
-          ? review.user_name 
-          : 'Customer',
+        user_name: review.user_name?.trim() || 'Customer',
         user_email: ''
       }));
 
