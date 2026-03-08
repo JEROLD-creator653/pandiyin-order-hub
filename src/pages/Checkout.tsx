@@ -277,7 +277,7 @@ export default function Checkout() {
               clearCart();
               navigate(`/order-confirmation/${order.id}`);
             } else {
-              toast({ title: 'Payment verification failed', description: 'Please contact support', variant: 'destructive' });
+              setPaymentError('Payment verification failed. Please contact support.');
             }
           } catch (err: any) {
             console.error('Verification error:', err);
