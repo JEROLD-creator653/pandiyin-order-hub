@@ -47,6 +47,12 @@ export default function Checkout() {
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
+  const [gstSettings, setGstSettings] = useState({ gst_enabled: false });
+  const [productGstMap, setProductGstMap] = useState<Map<string, any>>(new Map());
+  const [calculatedGstAmount, setCalculatedGstAmount] = useState(0);
+
+  // Derive delivery state from selected address pincode/state
+  const deliveryState = selectedAddress?.state || '';
 
   useEffect(() => {
     if (!authLoading && !user) {
