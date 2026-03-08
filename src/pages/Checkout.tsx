@@ -396,7 +396,7 @@ export default function Checkout() {
     <div className="container mx-auto px-4 pt-24 pb-8 max-w-4xl">
       <h1 className="text-3xl font-display font-bold mb-8">Checkout</h1>
 
-      {paymentError && (
+      {checkoutError && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
