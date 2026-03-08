@@ -7,7 +7,7 @@ import loadingGif from "./assets/loading-screen.gif";
 // Preload loading GIF into browser cache immediately
 const preloadLoader = new Image();
 preloadLoader.src = loadingGif;
-import { setupPerformanceOptimizations, trackWebVitals } from "./lib/performance";
+import { setupPerformanceOptimizations } from "./lib/performance";
 
 // Preload hero banner from cache BEFORE React renders
 // If the index.html inline script already started the download, reuse that.
