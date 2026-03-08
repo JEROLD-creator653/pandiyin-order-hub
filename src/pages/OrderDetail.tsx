@@ -92,7 +92,7 @@ export default function OrderDetail() {
       paymentId: order.stripe_payment_id || undefined,
     };
 
-    const doc = generateInvoicePdf(invoiceData);
+    const doc = await generateInvoicePdf(invoiceData);
     doc.save(`Invoice-${invoiceData.invoiceNumber}.pdf`);
   };
 
