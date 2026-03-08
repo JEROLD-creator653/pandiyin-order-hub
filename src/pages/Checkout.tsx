@@ -407,7 +407,7 @@ export default function Checkout() {
             <p className="font-semibold text-destructive text-sm">Payment Issue</p>
             <p className="text-sm text-muted-foreground mt-1">{checkoutError}</p>
           </div>
-          <button onClick={() => setPaymentError(null)} className="text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={() => setCheckoutError(null)} className="text-muted-foreground hover:text-foreground transition-colors">
             <X className="h-4 w-4" />
           </button>
         </motion.div>
