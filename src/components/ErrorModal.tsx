@@ -24,15 +24,15 @@ export default function ErrorModal({
 }: ErrorModalProps) {
   return (
     <AlertDialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <AlertDialogContent className="max-w-md border-2 border-destructive/30 bg-secondary text-foreground rounded-2xl shadow-2xl">
+      <AlertDialogContent className="max-w-md border-2 border-[hsl(0,60%,75%)] bg-[hsl(0,80%,95%)] text-foreground rounded-2xl shadow-2xl">
         <AlertDialogHeader className="items-center text-center gap-3">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-destructive/15 border border-destructive/20">
             <AlertCircle className="h-7 w-7 text-destructive" />
           </div>
-          <AlertDialogTitle className="text-lg font-display tracking-tight text-foreground">
+          <AlertDialogTitle className="text-lg font-display tracking-tight text-[hsl(0,50%,30%)]">
             {title}
           </AlertDialogTitle>
-          <AlertDialogDescription className="text-sm text-muted-foreground leading-relaxed">
+          <AlertDialogDescription className="text-sm text-[hsl(0,30%,45%)] leading-relaxed">
             {message}
           </AlertDialogDescription>
         </AlertDialogHeader>
