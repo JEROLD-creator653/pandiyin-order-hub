@@ -5,7 +5,7 @@ import loadingGif from '@/assets/loading-screen.gif';
 
 interface RouteLoaderContextType {
   isLoading: boolean;
-  startRouteLoad: (minDuration?: number) => Promise<void>;
+  startRouteLoad: (minDuration?: number) => void;
   endRouteLoad: () => void;
   forceLoad: (duration: number) => Promise<void>;
   registerDataLoad: (promise: Promise<any>) => Promise<any>;
@@ -31,8 +31,8 @@ interface RouteLoaderProviderProps {
 
 export const RouteLoaderProvider: React.FC<RouteLoaderProviderProps> = ({ 
   children,
-  minLoadDuration = 1200,
-  maxLoadDuration = 1800,
+  minLoadDuration = 800,
+  maxLoadDuration = 1500,
   autoTrigger = true,
   excludePaths = ['/auth']
 }) => {
@@ -40,83 +40,77 @@ export const RouteLoaderProvider: React.FC<RouteLoaderProviderProps> = ({
   const loadingStartTime = useRef<number>(0);
   const minLoadDurationRef = useRef<number>(minLoadDuration);
   const loadingTimeout = useRef<NodeJS.Timeout>();
-  const dataLoadPromises = useRef<Promise<any>[]>([]);
   const maxLoadTimeout = useRef<NodeJS.Timeout>();
+  const isLoadingRef = useRef(false);
 
-  const startRouteLoad = useCallback(async (customMinDuration?: number) => {
+  // Keep ref in sync with state to avoid stale closures
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  }, [isLoading]);
+
+  const clearAllTimers = useCallback(() => {
     if (loadingTimeout.current) clearTimeout(loadingTimeout.current);
     if (maxLoadTimeout.current) clearTimeout(maxLoadTimeout.current);
+  }, []);
+
+  const startRouteLoad = useCallback((customMinDuration?: number) => {
+    clearAllTimers();
 
     setIsLoading(true);
+    isLoadingRef.current = true;
     loadingStartTime.current = Date.now();
     minLoadDurationRef.current = customMinDuration || minLoadDuration;
-    dataLoadPromises.current = [];
 
+    // Hard safety timeout - ALWAYS dismiss after maxLoadDuration
     maxLoadTimeout.current = setTimeout(() => {
       setIsLoading(false);
-      dataLoadPromises.current = [];
+      isLoadingRef.current = false;
     }, maxLoadDuration);
 
-    return new Promise<void>((resolve) => {
-      loadingTimeout.current = setTimeout(() => {
-        const elapsed = Date.now() - loadingStartTime.current;
-        if (elapsed >= minLoadDurationRef.current && dataLoadPromises.current.length === 0) {
-          setIsLoading(false);
-          if (maxLoadTimeout.current) clearTimeout(maxLoadTimeout.current);
-          resolve();
-        }
-      }, minLoadDurationRef.current);
-    });
-  }, [minLoadDuration, maxLoadDuration]);
+    // Auto-dismiss after min duration if no pending data loads
+    loadingTimeout.current = setTimeout(() => {
+      setIsLoading(false);
+      isLoadingRef.current = false;
+      clearAllTimers();
+    }, minLoadDurationRef.current);
+  }, [minLoadDuration, maxLoadDuration, clearAllTimers]);
 
   const endRouteLoad = useCallback(() => {
     const elapsed = Date.now() - loadingStartTime.current;
     
     if (elapsed >= minLoadDurationRef.current) {
-      if (loadingTimeout.current) clearTimeout(loadingTimeout.current);
-      if (maxLoadTimeout.current) clearTimeout(maxLoadTimeout.current);
+      clearAllTimers();
       setIsLoading(false);
-      dataLoadPromises.current = [];
+      isLoadingRef.current = false;
     } else {
       const remaining = minLoadDurationRef.current - elapsed;
-      setTimeout(() => {
+      loadingTimeout.current = setTimeout(() => {
         setIsLoading(false);
-        dataLoadPromises.current = [];
+        isLoadingRef.current = false;
         if (maxLoadTimeout.current) clearTimeout(maxLoadTimeout.current);
       }, remaining);
     }
-  }, []);
+  }, [clearAllTimers]);
 
   const forceLoad = useCallback(async (duration: number) => {
+    clearAllTimers();
     setIsLoading(true);
+    isLoadingRef.current = true;
     loadingStartTime.current = Date.now();
-    minLoadDurationRef.current = duration;
 
     return new Promise<void>((resolve) => {
-      if (loadingTimeout.current) clearTimeout(loadingTimeout.current);
-      if (maxLoadTimeout.current) clearTimeout(maxLoadTimeout.current);
       loadingTimeout.current = setTimeout(() => {
         setIsLoading(false);
-        dataLoadPromises.current = [];
+        isLoadingRef.current = false;
         resolve();
       }, duration);
     });
-  }, []);
+  }, [clearAllTimers]);
 
   const registerDataLoad = useCallback((promise: Promise<any>): Promise<any> => {
-    dataLoadPromises.current.push(promise);
-    promise.finally(() => {
-      dataLoadPromises.current = dataLoadPromises.current.filter(p => p !== promise);
-      
-      const elapsed = Date.now() - loadingStartTime.current;
-      if (elapsed >= minLoadDurationRef.current && dataLoadPromises.current.length === 0 && isLoading) {
-        if (loadingTimeout.current) clearTimeout(loadingTimeout.current);
-        if (maxLoadTimeout.current) clearTimeout(maxLoadTimeout.current);
-        setIsLoading(false);
-      }
-    });
+    // Simply return the promise - loading is managed by timers
     return promise;
-  }, [isLoading]);
+  }, []);
 
   useRouteChangeListener({
     onRouteChangeStart: (path) => {
@@ -130,11 +124,8 @@ export const RouteLoaderProvider: React.FC<RouteLoaderProviderProps> = ({
   });
 
   useEffect(() => {
-    return () => {
-      if (loadingTimeout.current) clearTimeout(loadingTimeout.current);
-      if (maxLoadTimeout.current) clearTimeout(maxLoadTimeout.current);
-    };
-  }, []);
+    return () => clearAllTimers();
+  }, [clearAllTimers]);
 
   const value: RouteLoaderContextType = {
     isLoading,
@@ -164,9 +155,9 @@ const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
           key="route-loader"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.3, ease: 'easeInOut' } }}
+          exit={{ opacity: 0, transition: { duration: 0.2, ease: 'easeInOut' } }}
           className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-background/80 backdrop-blur-md"
-          style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
+          style={{ overscrollBehavior: 'contain' }}
         >
           <div className="flex flex-col items-center gap-3">
             <img
@@ -187,4 +178,3 @@ const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
     </AnimatePresence>
   );
 };
-

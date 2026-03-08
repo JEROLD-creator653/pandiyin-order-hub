@@ -15,7 +15,7 @@ interface RouteChangeListenerOptions {
 export const useRouteChangeListener = ({
   onRouteChangeStart,
   onRouteChangeComplete,
-  minLoadDuration = 2000,
+  minLoadDuration = 800,
   excludePaths = ['/auth'],
 }: RouteChangeListenerOptions) => {
   const location = useLocation();
