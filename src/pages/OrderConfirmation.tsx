@@ -100,18 +100,19 @@ export default function OrderConfirmation() {
       gstPercentage: Number(i.gst_percentage || 5),
     }));
 
+    const orderDate = new Date(order.created_at);
     const invoiceData: InvoiceData = {
       invoiceNumber: order.invoice_number || order.order_number,
-      orderDate: new Date(order.created_at).toLocaleDateString('en-IN', {
-        day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
-      }),
+      orderDate: orderDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+      orderTime: orderDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
       customerName: addr?.full_name || '',
       customerAddress: [
         addr?.address_line1,
         addr?.address_line2,
-        `${addr?.city || ''}, ${addr?.state || ''} - ${addr?.pincode || ''}`,
+        `${addr?.city || ''}, ${addr?.state || ''} – ${addr?.pincode || ''}`,
       ].filter(Boolean).join('\n'),
       customerPhone: `+91 ${addr?.phone || ''}`,
+      customerState: addr?.state || 'Tamil Nadu',
       items: invoiceItems,
       subtotal: Number(order.subtotal),
       deliveryCharge: Number(order.delivery_charge),
