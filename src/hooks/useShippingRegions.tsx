@@ -34,6 +34,18 @@ export function useShippingRegions() {
 
   useEffect(() => { load(); }, []);
 
+  // Realtime: auto-refresh when shipping_regions change
+  useEffect(() => {
+    const channel = supabase
+      .channel('shipping-regions-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'shipping_regions' }, () => {
+        load();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   /** Build a ShippingZoneConfig from the DB regions */
   const getZoneConfig = useCallback((): ShippingZoneConfig => {
     const config: ShippingZoneConfig = {
