@@ -168,11 +168,20 @@ const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
           className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-background"
           style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
         >
-          <img
-            src={loadingGif}
-            alt="Loading"
-            className="w-32 h-32 object-contain"
-          />
+          <div className="flex flex-col items-center gap-3">
+            <img
+              src={loadingGif}
+              alt="Loading"
+              className="w-32 h-32 object-contain"
+            />
+            <motion.p
+              className="text-sm font-medium text-muted-foreground tracking-widest"
+              animate={{ opacity: [0.4, 1, 0.4] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              Loading...
+            </motion.p>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
