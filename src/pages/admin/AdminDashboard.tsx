@@ -88,7 +88,14 @@ export default function AdminDashboard() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Revenue Overview</CardTitle></CardHeader>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Revenue Overview</CardTitle>
+              <Button size="sm" variant="outline" onClick={() => setExportOpen(true)} className="gap-1.5">
+                <Download className="h-4 w-4" /> Export
+              </Button>
+            </div>
+          </CardHeader>
           <CardContent>
             {loading ? (
               <div className="h-[250px] flex items-center justify-center">
