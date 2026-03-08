@@ -84,6 +84,7 @@ export function useProductReviews({
         .from('product_reviews')
         .select(`
           id,
+          user_id,
           product_id,
           rating,
           description,

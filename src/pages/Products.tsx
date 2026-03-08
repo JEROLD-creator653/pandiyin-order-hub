@@ -20,6 +20,7 @@ import { useCart } from '@/hooks/useCart';
 import { SkeletonCard } from '@/components/ui/loader';
 import { getCachedData, setCacheItem } from '@/lib/cacheService';
 import { useRouteLoader } from '@/contexts/RouteLoaderContext';
+import SEOHead from '@/components/SEOHead';
 
 type SortOption = 'newest' | 'price_low' | 'price_high' | 'popularity';
 
@@ -246,7 +247,10 @@ export default function Products() {
 
   return (
     <div className="container mx-auto px-4 pt-20 md:pt-24 pb-8">
-      {/* Header */}
+      <SEOHead
+        title={searchFilter ? `Search: ${searchFilter} - Products` : 'All Products - PANDIYIN'}
+        description="Browse our collection of authentic homemade foods from Madurai. Traditional pickles, snacks, spice powders. 100% natural, no preservatives."
+      />
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 mb-5 md:mb-6">
         <h1 className="text-2xl md:text-3xl font-display font-bold">All Products</h1>
         <div ref={searchContainerRef} className="relative max-w-sm w-full md:hidden">

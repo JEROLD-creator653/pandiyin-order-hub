@@ -11,6 +11,7 @@ import {
   Handshake,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import SEOHead from '@/components/SEOHead';
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -70,6 +71,10 @@ function InfoCard({ icon: Icon, title, children }: InfoCardProps) {
 export default function About() {
   return (
     <div className="container mx-auto px-4 pt-24 pb-20 max-w-5xl">
+      <SEOHead
+        title="About Us - PANDIYIN"
+        description="Learn about PANDIYIN Nature In Pack — authentic homemade foods from Madurai, Tamil Nadu. Traditional recipes, clean ingredients, heritage methods."
+      />
       {/* Hero */}
       <motion.section {...fadeUp} className="text-center mb-24">
         <Leaf className="h-16 w-16 mx-auto text-primary mb-6" aria-hidden="true" />
