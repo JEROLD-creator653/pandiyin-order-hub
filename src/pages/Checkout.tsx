@@ -440,27 +440,30 @@ export default function Checkout() {
 
           <Card>
             <CardHeader><CardTitle className="text-lg">Payment Method</CardTitle></CardHeader>
-            <CardContent>
-              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-                <div className={`flex items-center justify-between p-4 border rounded-xl transition-all ${paymentMethod === 'razorpay' ? 'border-primary bg-primary/5 shadow-sm' : 'border-border hover:border-primary/40'}`}>
-                  <div className="flex items-center gap-3">
-                    <RadioGroupItem value="razorpay" id="razorpay" />
-                    <Label htmlFor="razorpay" className="flex items-center gap-2.5 cursor-pointer text-sm font-medium">
-                      <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-primary/10">
-                        <CreditCard className="h-4.5 w-4.5 text-primary" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span>Pay Online</span>
-                        <span className="text-xs font-normal text-muted-foreground">UPI · Cards · Net Banking</span>
-                      </div>
-                    </Label>
+            <CardContent className="space-y-4">
+              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                <label
+                  htmlFor="razorpay"
+                  className={`flex items-center gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all ${
+                    paymentMethod === 'razorpay'
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/30'
+                  }`}
+                >
+                  <RadioGroupItem value="razorpay" id="razorpay" />
+                  <CreditCard className="h-5 w-5 text-primary shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-foreground">Pay Online</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">UPI · Debit/Credit Cards · Net Banking · Wallets</p>
                   </div>
-                  <div className="flex flex-col items-end gap-0.5">
-                    <img src="/razorpay-badge.svg" alt="Razorpay" className="h-4 opacity-60" />
-                    <span className="text-[10px] text-muted-foreground/60">Secured payments</span>
-                  </div>
-                </div>
+                </label>
               </RadioGroup>
+
+              <div className="flex items-center justify-center gap-2 pt-2 border-t border-border/40">
+                <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground/50" />
+                <span className="text-[11px] text-muted-foreground/60 tracking-wide">Secure payments powered by</span>
+                <img src="/razorpay-badge.svg" alt="Razorpay" className="h-3.5 opacity-50" />
+              </div>
             </CardContent>
           </Card>
 
