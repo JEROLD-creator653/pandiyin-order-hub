@@ -915,6 +915,24 @@ export type Database = {
         }
         Relationships: []
       }
+      public_gst_settings: {
+        Row: {
+          gst_enabled: boolean | null
+          state: string | null
+          supported_gst_rates: number[] | null
+        }
+        Insert: {
+          gst_enabled?: boolean | null
+          state?: string | null
+          supported_gst_rates?: number[] | null
+        }
+        Update: {
+          gst_enabled?: boolean | null
+          state?: string | null
+          supported_gst_rates?: number[] | null
+        }
+        Relationships: []
+      }
       public_product_reviews: {
         Row: {
           created_at: string | null
@@ -949,6 +967,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      public_store_settings: {
+        Row: {
+          gst_enabled: boolean | null
+          gst_inclusive: boolean | null
+          gst_percentage: number | null
+          store_name: string | null
+        }
+        Insert: {
+          gst_enabled?: boolean | null
+          gst_inclusive?: boolean | null
+          gst_percentage?: number | null
+          store_name?: string | null
+        }
+        Update: {
+          gst_enabled?: boolean | null
+          gst_inclusive?: boolean | null
+          gst_percentage?: number | null
+          store_name?: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
