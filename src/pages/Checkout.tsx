@@ -331,7 +331,7 @@ export default function Checkout() {
 
   const placeOrder = async () => {
     if (!selectedAddress || !selectedAddress.full_name || !selectedAddress.phone || !selectedAddress.address_line1 || !selectedAddress.pincode) {
-      toast({ title: 'Please select or add a delivery address', variant: 'destructive' });
+      setCheckoutError('Please select or add a delivery address');
       return;
     }
     if (!selectedAddress.state) {
