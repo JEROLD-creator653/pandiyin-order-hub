@@ -197,12 +197,23 @@ export function useProductReviews({
     }
 
     try {
+      // Fetch the user's profile name to store with the review
+      let userName = 'Customer';
+      const { data: profileData } = await (supabase as any)
+        .from('profiles')
+        .select('full_name')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (profileData?.full_name) {
+        userName = profileData.full_name;
+      }
+
       const payload = {
         user_id: userId,
         product_id: productId,
         rating: reviewData.rating,
-        description: trimmedDescription
-        // Note: user_name will be added once the database column is created
+        description: trimmedDescription,
+        user_name: userName
       };
 
       let error;
