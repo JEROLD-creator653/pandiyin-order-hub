@@ -166,6 +166,8 @@ export default function Auth() {
                     src="/logo.ico"
                     alt="PANDIYIN Logo"
                     className="w-full h-full object-contain"
+                    loading="eager"
+                    fetchPriority="high"
                   />
                 </div>
               </motion.div>
