@@ -37,7 +37,7 @@ const getGSTType = (state: string): 'cgst_sgst' | 'igst' => {
 export default function Checkout() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { items, total, clearCart } = useCart();
+  const { items, total, clearCart, refetch } = useCart();
   const { regions, getDeliveryCharge, getZoneConfig } = useShippingRegions();
   const [loading, setLoading] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
