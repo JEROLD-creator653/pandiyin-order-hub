@@ -13,23 +13,15 @@ interface LoaderProps {
     delay?: number; // Delay in ms before showing
 }
 
-const LOADER_LEAVES = [
-    { size: 36, x: [0, 6, 10, 3, -7, -10, -4, 0], y: [0, -8, -3, 7, 2, -5, 1, 0], rotate: [0, 8, 16, 10, -6, -14, -4, 0], duration: 5.8, delay: 0 },
-    { size: 30, x: [0, -7, -4, 6, 9, 3, -3, 0], y: [0, 4, -6, -10, 0, 7, 3, 0], rotate: [0, -10, -18, -8, 5, 12, 6, 0], duration: 6.5, delay: 0.2 },
-    { size: 32, x: [0, 4, -3, -8, -5, 4, 7, 0], y: [0, -4, 6, 1, -7, -3, 4, 0], rotate: [0, 12, 6, -8, -16, -4, 10, 0], duration: 5.4, delay: 0.4 },
-    { size: 18, x: [0, -5, -9, -3, 6, 8, 3, 0], y: [0, 3, -3, -6, 1, 4, 0, 0], rotate: [0, -6, -12, -20, -10, 3, 8, 0], duration: 7.5, delay: 0.15 },
-    { size: 15, x: [0, 8, 4, -3, -7, -4, 1, 0], y: [0, -3, 4, 7, 3, -4, -1, 0], rotate: [0, 14, 22, 12, 3, -6, 4, 0], duration: 8.2, delay: 0.35 },
+const SCATTER_CFG = [
+    { size: 36, endX: -45, endY: -38, endRotate: -30, drift: { x: [-2, 3, -2], y: [-2, 2, -1] }, duration: 5.5, delay: 0, opacity: 0.9 },
+    { size: 30, endX: 42, endY: -30, endRotate: 25, drift: { x: [2, -2, 3], y: [1, -3, 1] }, duration: 6.0, delay: 0.1, opacity: 0.85 },
+    { size: 32, endX: 8, endY: 48, endRotate: 40, drift: { x: [-2, 4, -1], y: [1, -2, 2] }, duration: 5.8, delay: 0.2, opacity: 0.88 },
+    { size: 18, endX: -55, endY: 28, endRotate: -45, drift: { x: [1, -2, 1], y: [-1, 2, -1] }, duration: 7.0, delay: 0.15, opacity: 0.5 },
+    { size: 15, endX: 50, endY: 35, endRotate: 50, drift: { x: [-1, 3, -1], y: [2, -1, 1] }, duration: 7.5, delay: 0.25, opacity: 0.4 },
 ];
 
-const LOADER_POSITIONS = [
-    { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
-    { top: '28%', left: '32%', transform: 'translate(-50%, -50%)' },
-    { top: '62%', left: '68%', transform: 'translate(-50%, -50%)' },
-    { top: '25%', left: '72%', transform: 'translate(-50%, -50%)' },
-    { top: '72%', left: '30%', transform: 'translate(-50%, -50%)' },
-];
-
-const SmallLeafSVG = ({ size, detailed = true }: { size: number; detailed?: boolean }) => (
+const InlineLeafSVG = ({ size, detailed = true }: { size: number; detailed?: boolean }) => (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="drop-shadow-md">
         <path d="M32 4C32 4 8 20 8 40C8 52 18 60 32 60C46 60 56 52 56 40C56 20 32 4 32 4Z" className="fill-primary/85" />
         <path d="M32 14V52" className="stroke-primary-foreground/30" strokeWidth="1.5" strokeLinecap="round" />
@@ -67,20 +59,38 @@ export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProp
                 className="flex flex-col items-center gap-6"
             >
                 <div className={cn("relative", containerSize)}>
-                    {LOADER_LEAVES.map((leaf, i) => (
+                    {SCATTER_CFG.map((leaf, i) => (
                         <motion.div
                             key={i}
                             className="absolute"
-                            style={{ ...LOADER_POSITIONS[i] }}
-                            initial={{ scale: 0.5, opacity: 0 }}
-                            animate={{ scale: scale, opacity: i < 3 ? 0.9 : 0.45 }}
-                            transition={{ duration: 0.4, delay: leaf.delay, ease: "easeOut" }}
+                            style={{ top: '50%', left: '50%', marginTop: -leaf.size / 2, marginLeft: -leaf.size / 2 }}
+                            initial={{ x: 0, y: 0, scale: 0, opacity: 0, rotate: 0 }}
+                            animate={{
+                                x: leaf.endX * scale,
+                                y: leaf.endY * scale,
+                                scale: scale,
+                                opacity: leaf.opacity,
+                                rotate: leaf.endRotate,
+                            }}
+                            transition={{
+                                duration: 1.2,
+                                delay: leaf.delay,
+                                ease: [0.22, 1, 0.36, 1],
+                            }}
                         >
                             <motion.div
-                                animate={{ x: leaf.x, y: leaf.y, rotate: leaf.rotate }}
-                                transition={{ duration: leaf.duration, repeat: Infinity, ease: "easeInOut" }}
+                                animate={{
+                                    x: leaf.drift.x,
+                                    y: leaf.drift.y,
+                                    rotate: [0, leaf.endRotate * 0.15, -leaf.endRotate * 0.1, 0],
+                                }}
+                                transition={{
+                                    duration: leaf.duration,
+                                    repeat: Infinity,
+                                    ease: "easeInOut",
+                                }}
                             >
-                                <SmallLeafSVG size={leaf.size} detailed={i < 3} />
+                                <InlineLeafSVG size={leaf.size} detailed={i < 3} />
                             </motion.div>
                         </motion.div>
                     ))}
