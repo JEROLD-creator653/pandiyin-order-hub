@@ -599,7 +599,7 @@ export default function Checkout() {
                 transition={{ duration: 0.2, ease: 'easeInOut' }}
                 className="overflow-hidden"
               >
-                <div className="flex gap-2 pt-2">
+                <div className="flex gap-2 pt-2 pb-1">
                   <Input
                     placeholder="Enter coupon code"
                     value={couponCode}
