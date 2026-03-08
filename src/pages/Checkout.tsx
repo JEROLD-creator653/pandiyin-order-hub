@@ -146,7 +146,7 @@ export default function Checkout() {
       toast({ title: `Coupon applied! You save ${formatPrice(disc)}` });
     } catch (err: any) {
       console.error('Coupon validation error:', err);
-      toast({ title: 'Error', description: 'Failed to validate coupon', variant: 'destructive' });
+      setCheckoutError('Failed to validate coupon. Please try again.');
     }
   };
 
