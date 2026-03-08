@@ -57,26 +57,6 @@ export default function AdminSettings() {
     setSaving(false);
   };
 
-  const saveRegion = async (region: any) => {
-    await supabase.from('shipping_regions').update({
-      base_charge: Number(region.base_charge) || 0,
-      per_kg_rate: Number(region.per_kg_rate) || 0,
-      free_delivery_above: region.free_delivery_above ? Number(region.free_delivery_above) : null,
-      is_enabled: region.is_enabled,
-    } as any).eq('id', region.id);
-    toast({ title: `${region.region_name} settings saved` });
-  };
-
-  const updateRegion = (id: string, field: string, value: any) => {
-    setRegions(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
-  };
-
-  const regionIcons: Record<string, any> = {
-    local: MapPin,
-    rest_of_india: Truck,
-    international: Globe,
-  };
-
   return (
     <div className="space-y-6 max-w-2xl">
       {/* Store Information */}
