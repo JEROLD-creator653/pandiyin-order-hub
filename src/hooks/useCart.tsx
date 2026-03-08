@@ -14,6 +14,7 @@ interface CartItem {
     price: number;
     image_url: string;
     stock_quantity: number;
+    weight_kg: number;
   };
 }
 
