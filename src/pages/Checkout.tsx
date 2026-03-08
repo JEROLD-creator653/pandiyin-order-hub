@@ -257,10 +257,10 @@ export default function Checkout() {
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
-            amount: grandTotal,
+            cart_items: items.map(i => ({ product_id: i.product_id, quantity: i.quantity })),
+            delivery_state: selectedAddress?.state || '',
             currency: 'INR',
             receipt: `order_${Date.now()}`,
-            notes: { user_id: user.id },
           }),
         }
       );
