@@ -134,7 +134,13 @@ export default function Cart() {
             
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span>{formatPrice(total)}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span className="text-primary">Calculated at checkout</span></div>
+              {chargedWeight > 0 && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span className="flex items-center gap-1"><Package className="h-3.5 w-3.5" /> Total Weight</span>
+                  <span>{totalWeightKg.toFixed(2)} kg → <span className="font-medium text-foreground">{chargedWeight} kg</span></span>
+                </div>
+              )}
+              <div className="flex justify-between"><span className="text-muted-foreground">Delivery</span><span className="text-muted-foreground text-xs">Calculated at checkout</span></div>
             </div>
             <div className="border-t mt-4 pt-4 flex justify-between text-lg">
               <span className="font-bold">Total</span><span className="font-medium text-primary">{formatPrice(total)}</span>
