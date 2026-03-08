@@ -356,7 +356,7 @@ export default function Checkout() {
 
       if (!verifyResult?.valid) {
         const errMsgs = verifyResult?.errors?.join(', ') || 'Validation failed';
-        toast({ title: 'Order validation failed', description: errMsgs, variant: 'destructive' });
+        setCheckoutError(errMsgs);
         refetch();
         return;
       }
