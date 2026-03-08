@@ -263,17 +263,17 @@ export default function AdminDashboard() {
       {/* ── ROW 2: Orders by State + Order Status Breakdown ── */}
       <div className="grid lg:grid-cols-2 gap-6 items-stretch">
         {/* ── FEATURE 4: State Analytics ── */}
-        <Card className="flex flex-col">
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><MapPin className="h-5 w-5" /> Orders by State</CardTitle></CardHeader>
+        <Card className="flex flex-col border-border/50 shadow-none bg-card/80">
+          <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-2 text-muted-foreground font-medium"><MapPin className="h-4 w-4" /> Orders by State</CardTitle></CardHeader>
           <CardContent className="flex-1 flex items-center justify-center">
             {loading ? (
               <div className="space-y-3 w-full">{[...Array(4)].map((_, i) => <Skeleton key={i} className="h-6 w-full" />)}</div>
             ) : data && data.stateAnalytics.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={data.stateAnalytics.slice(0, 8)} layout="vertical" barSize={18}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                  <YAxis type="category" dataKey="state" fontSize={11} width={100} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <BarChart data={data.stateAnalytics.slice(0, 8)} layout="vertical" barSize={16}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border) / 0.4)" />
+                  <XAxis type="number" fontSize={11} tick={{ fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="state" fontSize={11} width={100} tick={{ fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
                   <Tooltip
                     contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))', background: 'hsl(var(--card))' }}
                     formatter={(v: number, name: string) => [name === 'revenue' ? formatPrice(v) : v, name === 'revenue' ? 'Revenue' : 'Orders']}
