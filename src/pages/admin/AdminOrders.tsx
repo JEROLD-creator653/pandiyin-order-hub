@@ -218,7 +218,7 @@ export default function AdminOrders() {
       </Card>
 
       <Dialog open={!!detail} onOpenChange={() => setDetail(null)}>
-        <DialogContent className="max-w-xl p-0 overflow-hidden rounded-xl shadow-lg border-0">
+        <DialogContent className="max-w-xl p-0 overflow-hidden rounded-xl shadow-lg border-0 max-h-[85vh] overflow-y-auto">
           {detail && (() => {
             const addr = detail.delivery_address as any;
             const orderDate = new Date(detail.created_at);
