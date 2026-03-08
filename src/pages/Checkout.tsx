@@ -281,7 +281,7 @@ export default function Checkout() {
             }
           } catch (err: any) {
             console.error('Verification error:', err);
-            toast({ title: 'Verification error', description: err.message, variant: 'destructive' });
+            setPaymentError(err.message || 'Verification error. Please try again.');
           }
         },
         prefill: {
