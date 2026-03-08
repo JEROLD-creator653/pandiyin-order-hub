@@ -210,6 +210,7 @@ export default function AdminProducts() {
           category_id: form.category_id || null,
           stock_quantity: Number(form.stock_quantity),
           weight: form.weight ? String(form.weight) : '',
+          weight_kg: form.weight_kg ? Number(form.weight_kg) : 0,
           unit: form.unit,
           gst_percentage: Number(form.gst_percentage),
           hsn_code: form.hsn_code,
