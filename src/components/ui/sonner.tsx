@@ -14,16 +14,16 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-card group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-xl group-[.toaster]:rounded-xl group-[.toaster]:backdrop-blur-md group-[.toaster]:px-5 group-[.toaster]:py-4",
+            "group toast group-[.toaster]:bg-card group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-xl group-[.toaster]:rounded-xl group-[.toaster]:px-5 group-[.toaster]:py-4",
           description: "group-[.toast]:text-muted-foreground",
           actionButton: "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground group-[.toast]:rounded-lg",
           cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground group-[.toast]:rounded-lg",
           error:
-            "group-[.toaster]:!bg-destructive/10 group-[.toaster]:!text-destructive group-[.toaster]:!border-destructive/30",
+            "group-[.toaster]:!bg-destructive group-[.toaster]:!text-destructive-foreground group-[.toaster]:!border-destructive",
           success:
-            "group-[.toaster]:!bg-primary/10 group-[.toaster]:!text-primary group-[.toaster]:!border-primary/30",
+            "group-[.toaster]:!bg-primary group-[.toaster]:!text-primary-foreground group-[.toaster]:!border-primary",
           warning:
-            "group-[.toaster]:!bg-accent/15 group-[.toaster]:!text-accent-foreground group-[.toaster]:!border-accent/30",
+            "group-[.toaster]:!bg-accent group-[.toaster]:!text-accent-foreground group-[.toaster]:!border-accent",
         },
       }}
       {...props}
