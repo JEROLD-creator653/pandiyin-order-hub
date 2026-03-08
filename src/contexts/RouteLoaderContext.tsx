@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useRouteChangeListener } from '@/hooks/useRouteChangeListener';
+import loadingGif from '@/assets/loading-screen.gif';
 
 interface RouteLoaderContextType {
   isLoading: boolean;
