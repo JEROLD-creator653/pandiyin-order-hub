@@ -225,8 +225,8 @@ export default function ProductDetail() {
             <div ref={purchaseSectionRef} className="space-y-4 mb-8">
               {product.stock_quantity > 0 ? (
                 <>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium text-muted-foreground">Quantity:</span>
+                  <div className="flex items-center gap-3 md:gap-4 flex-wrap">
+                    <span className="text-sm font-medium text-muted-foreground">Qty:</span>
                     <div className="flex items-center border rounded-lg bg-muted/50">
                       <Button 
                         variant="ghost" 
