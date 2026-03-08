@@ -14,6 +14,7 @@ import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
 import favicon from '@/public/Pandiyin.ico';
 import { formatPrice } from '@/lib/formatters';
+import SEOHead, { schemas } from '@/components/SEOHead';
 
 const BANNER_CACHE_KEY = 'hero_banner_url';
 const BANNER_DATA_CACHE_KEY = 'hero_banners_data';

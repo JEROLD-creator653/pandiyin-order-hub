@@ -23,6 +23,7 @@ import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import { formatPrice } from '@/lib/formatters';
 import { Loader } from '@/components/ui/loader';
 import { getPricingInfo } from '@/lib/discountCalculations';
+import SEOHead, { schemas } from '@/components/SEOHead';
 
 export default function ProductDetail() {
   const { id } = useParams();

@@ -11,6 +11,7 @@ import {
   Handshake,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import SEOHead from '@/components/SEOHead';
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
