@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, MapPin, Pencil, Trash2, Check, Loader2 } from 'lucide-react';
+import { Plus, MapPin, Pencil, Trash2, Check, Loader2, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -259,6 +259,9 @@ export default function AddressManager({
   const selectAddress = (a: Address) => {
     if (onSelect) onSelect(a);
   };
+  const [showAllAddresses, setShowAllAddresses] = useState(false);
+
+  const selectedAddr = addresses.find(a => a.id === selectedId);
 
   return (
     <div className="space-y-3">
@@ -425,89 +428,122 @@ export default function AddressManager({
         </p>
       )}
 
-      <div className="grid gap-2">
-        {addresses.map((a) => {
-          const isSelected = selectedId === a.id;
-          return (
-            <Card
-              key={a.id}
-              className={`cursor-pointer transition-all hover:shadow-md ${
-                selectable ? 'hover:border-primary' : ''
-              } ${isSelected ? 'border-primary ring-1 ring-primary' : ''}`}
-              onClick={() => selectable && selectAddress(a)}
-            >
+      {/* Collapsible address view for checkout (selectable mode) */}
+      {selectable && addresses.length > 0 ? (
+        <div className="space-y-2">
+          {/* Selected address card */}
+          {selectedAddr && (
+            <Card className="border-primary ring-1 ring-primary">
               <CardContent className="p-3 flex items-start gap-3">
-                {selectable && (
-                  <div
-                    className={`mt-1 w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                      isSelected
-                        ? 'border-primary bg-primary'
-                        : 'border-muted-foreground/30'
-                    }`}
-                  >
-                    {isSelected && (
-                      <Check className="h-2.5 w-2.5 text-primary-foreground" />
-                    )}
-                  </div>
-                )}
+                <div className="mt-1 w-4 h-4 rounded-full border-2 border-primary bg-primary flex items-center justify-center flex-shrink-0">
+                  <Check className="h-2.5 w-2.5 text-primary-foreground" />
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium text-sm">
-                      {a.full_name}
-                    </span>
-                    {a.is_default && (
-                      <Badge
-                        variant="secondary"
-                        className="text-[10px] px-1.5 py-0"
-                      >
-                        Default
-                      </Badge>
-                    )}
+                    <span className="font-medium text-sm">{selectedAddr.full_name}</span>
+                    {selectedAddr.is_default && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Default</Badge>}
                   </div>
                   <p className="text-xs text-muted-foreground line-clamp-2">
-                    {a.address_line1}
-                    {a.address_line2 ? `, ${a.address_line2}` : ''}, {a.city} -{' '}
-                    {a.pincode}
+                    {selectedAddr.address_line1}{selectedAddr.address_line2 ? `, ${selectedAddr.address_line2}` : ''}, {selectedAddr.city} - {selectedAddr.pincode}
+                  </p>
+                  <p className="text-xs text-muted-foreground">+91 {selectedAddr.phone}</p>
+                </div>
+                <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(selectedAddr)}>
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Toggle to show other addresses */}
+          {addresses.length > 1 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full text-xs text-muted-foreground hover:text-foreground gap-1.5"
+              onClick={() => setShowAllAddresses(!showAllAddresses)}
+            >
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAllAddresses ? 'rotate-180' : ''}`} />
+              {showAllAddresses ? 'Hide other addresses' : `Change address (${addresses.length - 1} more)`}
+            </Button>
+          )}
+
+          {/* Other addresses - collapsible */}
+          {showAllAddresses && (
+            <div className="grid gap-2 animate-in slide-in-from-top-2 duration-200">
+              {addresses.filter(a => a.id !== selectedId).map((a) => (
+                <Card
+                  key={a.id}
+                  className="cursor-pointer transition-all hover:shadow-md hover:border-primary"
+                  onClick={() => { selectAddress(a); setShowAllAddresses(false); }}
+                >
+                  <CardContent className="p-3 flex items-start gap-3">
+                    <div className="mt-1 w-4 h-4 rounded-full border-2 border-muted-foreground/30 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium text-sm">{a.full_name}</span>
+                        {a.is_default && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Default</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {a.address_line1}{a.address_line2 ? `, ${a.address_line2}` : ''}, {a.city} - {a.pincode}
+                      </p>
+                      <p className="text-xs text-muted-foreground">+91 {a.phone}</p>
+                    </div>
+                    <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                      {!a.is_default && (
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDefault(a.id)} title="Set as default">
+                          <MapPin className="h-3 w-3" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(a)}>
+                        <Pencil className="h-3 w-3" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => remove(a.id)}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Non-selectable: show all */
+        <div className="grid gap-2">
+          {addresses.map((a) => (
+            <Card key={a.id} className="cursor-pointer transition-all hover:shadow-md">
+              <CardContent className="p-3 flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium text-sm">{a.full_name}</span>
+                    {a.is_default && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Default</Badge>}
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {a.address_line1}{a.address_line2 ? `, ${a.address_line2}` : ''}, {a.city} - {a.pincode}
                   </p>
                   <p className="text-xs text-muted-foreground">+91 {a.phone}</p>
                 </div>
-                <div
-                  className="flex gap-1 flex-shrink-0"
-                  onClick={(e) => e.stopPropagation()}
-                >
+                <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                   {!a.is_default && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7"
-                      onClick={() => setDefault(a.id)}
-                      title="Set as default"
-                    >
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDefault(a.id)} title="Set as default">
                       <MapPin className="h-3 w-3" />
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => openEdit(a)}
-                  >
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(a)}>
                     <Pencil className="h-3 w-3" />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-destructive"
-                    onClick={() => remove(a.id)}
-                  >
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => remove(a.id)}>
                     <Trash2 className="h-3 w-3" />
                   </Button>
                 </div>
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

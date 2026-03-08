@@ -316,58 +316,6 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* ── Low Stock + Recent Orders ── */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-5 w-5 text-accent" /> Low Stock Alerts</CardTitle></CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-3"><Skeleton className="h-5 w-full" /><Skeleton className="h-5 w-full" /><Skeleton className="h-5 w-full" /></div>
-            ) : data && data.lowStock.length === 0 ? (
-              <p className="text-sm text-muted-foreground">All products are well stocked.</p>
-            ) : (
-              <div className="space-y-3">
-                {data?.lowStock.map(p => (
-                  <div key={p.id} className="flex items-center justify-between text-sm">
-                    <span className="truncate">{p.name}</span>
-                    <Badge variant={p.stock_quantity === 0 ? 'destructive' : 'secondary'}>{p.stock_quantity} left</Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="lg:col-span-2">
-          <CardHeader><CardTitle className="text-base">Recent Orders</CardTitle></CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-3">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
-            ) : data && data.recentOrders.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No orders in this period.</p>
-            ) : (
-              <div className="space-y-2">
-                {data?.recentOrders.map(o => (
-                  <Link
-                    key={o.id}
-                    to="/admin/orders"
-                    className="flex items-center justify-between py-2.5 border-b last:border-0 hover:bg-muted/40 transition-colors rounded-md px-2 -mx-2"
-                  >
-                    <div>
-                      <p className="text-sm font-mono">{o.order_number}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString()}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-sm">{formatPrice(o.total)}</p>
-                      <Badge variant="secondary" className="capitalize text-xs">{o.status}</Badge>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Export Dialog */}
       <AnalyticsExportDialog
