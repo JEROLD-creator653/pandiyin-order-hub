@@ -91,7 +91,7 @@ export function trackWebVitals() {
     const observer = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       const lastEntry = entries[entries.length - 1];
-      console.log('LCP:', lastEntry.renderTime || lastEntry.loadTime);
+      console.log('LCP:', (lastEntry as any).renderTime || (lastEntry as any).loadTime);
     });
     observer.observe({ entryTypes: ['largest-contentful-paint'] });
 
