@@ -28,6 +28,31 @@ serve(async (req) => {
   }
 
   try {
+    // Authenticate the caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", verified: false }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized", verified: false }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    const userId = claimsData.claims.sub;
+
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, order_id } = await req.json();
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -51,6 +76,24 @@ serve(async (req) => {
     let paymentMode: string | null = null;
 
     if (isValid && order_id) {
+      // Verify order ownership: the order must belong to the authenticated user
+      const supabaseServiceUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const supabaseAdmin = createClient(supabaseServiceUrl, supabaseServiceKey);
+
+      const { data: orderData, error: orderError } = await supabaseAdmin
+        .from("orders")
+        .select("user_id")
+        .eq("id", order_id)
+        .single();
+
+      if (orderError || !orderData || orderData.user_id !== userId) {
+        return new Response(
+          JSON.stringify({ error: "Order not found or not owned by user", verified: false }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       // Fetch payment details from Razorpay to get the method
       if (RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
         try {
@@ -64,7 +107,6 @@ serve(async (req) => {
           );
           if (paymentRes.ok) {
             const paymentData = await paymentRes.json();
-            // method can be: card, upi, netbanking, wallet, emi, bank_transfer
             paymentMode = paymentData.method || null;
           }
         } catch (e) {
@@ -72,11 +114,7 @@ serve(async (req) => {
         }
       }
 
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-
-      await supabase
+      await supabaseAdmin
         .from("orders")
         .update({
           payment_status: "paid",
@@ -93,7 +131,7 @@ serve(async (req) => {
   } catch (err) {
     console.error("Verification error:", err);
     return new Response(
-      JSON.stringify({ error: err.message, verified: false }),
+      JSON.stringify({ error: "Internal server error", verified: false }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
