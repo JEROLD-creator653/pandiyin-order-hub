@@ -395,8 +395,8 @@ export default function Checkout() {
   const isCartEmpty = items.length === 0;
 
   return (
-    <div className="container mx-auto px-4 pt-24 pb-8 max-w-4xl">
-      <h1 className="text-3xl font-display font-bold mb-8">Checkout</h1>
+    <div className="container mx-auto px-4 pt-20 md:pt-24 pb-8 max-w-4xl">
+      <h1 className="text-2xl md:text-3xl font-display font-bold mb-6 md:mb-8">Checkout</h1>
 
       {checkoutError && (
         <motion.div
