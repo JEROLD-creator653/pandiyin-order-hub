@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CreditCard, Banknote, MapPin, ShieldCheck, Truck, Award } from 'lucide-react';
+import { CreditCard, Banknote, MapPin, ShieldCheck, Truck, Award, AlertCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,6 +38,7 @@ export default function Checkout() {
   const { items, total, clearCart } = useCart();
   const { regions, getDeliveryCharge } = useShippingRegions();
   const [loading, setLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const [agreementChecked, setAgreementChecked] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<string>('razorpay');
   const [couponCode, setCouponCode] = useState('');
@@ -207,8 +208,9 @@ export default function Checkout() {
   };
 
   const handleRazorpayPayment = async () => {
+    setPaymentError(null);
     if (!window.Razorpay) {
-      toast({ title: 'Payment gateway not loaded', description: 'Please refresh the page and try again', variant: 'destructive' });
+      setPaymentError('Payment gateway not loaded. Please refresh the page and try again.');
       return;
     }
 
@@ -276,11 +278,11 @@ export default function Checkout() {
               clearCart();
               navigate(`/order-confirmation/${order.id}`);
             } else {
-              toast({ title: 'Payment verification failed', description: 'Please contact support', variant: 'destructive' });
+              setPaymentError('Payment verification failed. Please contact support.');
             }
           } catch (err: any) {
             console.error('Verification error:', err);
-            toast({ title: 'Verification error', description: err.message, variant: 'destructive' });
+            setPaymentError(err.message || 'Verification error. Please try again.');
           }
         },
         prefill: {
@@ -292,7 +294,7 @@ export default function Checkout() {
           ondismiss: () => {
             // Payment cancelled - update order status
             supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
-            toast({ title: 'Payment cancelled', description: 'Your order has been saved. You can retry payment.' });
+            setPaymentError('Payment cancelled. Your order has been saved. You can retry payment.');
             setLoading(false);
           },
         },
@@ -302,13 +304,13 @@ export default function Checkout() {
       rzp.on('payment.failed', (response: any) => {
         console.error('Payment failed:', response.error);
         supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
-        toast({ title: 'Payment failed', description: response.error?.description || 'Please try again', variant: 'destructive' });
+        setPaymentError(response.error?.description || 'Payment failed. Please try again.');
         setLoading(false);
       });
       rzp.open();
     } catch (err: any) {
       console.error('Payment error:', err);
-      toast({ title: 'Payment failed', description: err.message, variant: 'destructive' });
+      setPaymentError(err.message || 'Payment failed. Please try again.');
       setLoading(false);
     }
   };
@@ -344,6 +346,19 @@ export default function Checkout() {
   return (
     <div className="container mx-auto px-4 pt-24 pb-8 max-w-4xl">
       <h1 className="text-3xl font-display font-bold mb-8">Checkout</h1>
+
+      {paymentError && (
+        <div className="mb-6 border border-destructive/30 bg-destructive/5 rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-medium text-destructive text-sm">Payment Issue</p>
+            <p className="text-sm text-muted-foreground mt-1">{paymentError}</p>
+          </div>
+          <button onClick={() => setPaymentError(null)} className="text-muted-foreground hover:text-foreground transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid md:grid-cols-5 gap-8">
         <div className="md:col-span-3 space-y-6">
           <Card>
