@@ -31,34 +31,27 @@ export default function Auth() {
 
     try {
       if (isSignUp) {
-        // Check if email already exists before attempting signup
-        const { data: emailExists, error: checkError } = await supabase
-          .rpc('check_email_exists' as any, { _email: email });
-
-        if (checkError) {
-          console.error('Error checking email:', checkError);
-          // Continue with signup even if check fails
-        } else if (emailExists) {
-          // Email already registered
-          toast({
-            title: "Account already exists",
-            description: "This email is already registered. Redirecting to sign in...",
-            variant: "destructive",
-          });
-          
-          // Wait a moment for user to see the message
-          setTimeout(() => {
-            setIsSignUp(false);
-            setPassword(""); // Clear password for security
-          }, 1500);
-          
-          setLoading(false);
-          return;
-        }
-
-        // Proceed with signup if email doesn't exist
+        // Proceed with signup — duplicate email is handled by the auth system
         const { error } = await signUp(email, password, fullName);
-        if (error) throw error;
+        if (error) {
+          // Handle duplicate email error gracefully
+          if (error.message?.toLowerCase().includes('already registered') || 
+              error.message?.toLowerCase().includes('already been registered') ||
+              error.message?.toLowerCase().includes('user already registered')) {
+            toast({
+              title: "Account already exists",
+              description: "This email is already registered. Please sign in instead.",
+              variant: "destructive",
+            });
+            setTimeout(() => {
+              setIsSignUp(false);
+              setPassword("");
+            }, 1500);
+            setLoading(false);
+            return;
+          }
+          throw error;
+        }
 
         toast({
           title: "Account created!",
