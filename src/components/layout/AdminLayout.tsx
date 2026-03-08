@@ -13,6 +13,7 @@ const navItems = [
   { label: 'Coupons', to: '/admin/coupons', icon: Ticket },
   { label: 'Customers', to: '/admin/customers', icon: Users },
   { label: 'Banners', to: '/admin/banners', icon: Image },
+  { label: 'Shipping', to: '/admin/shipping', icon: Truck },
   { label: 'Settings', to: '/admin/settings', icon: Settings },
 ];
 
