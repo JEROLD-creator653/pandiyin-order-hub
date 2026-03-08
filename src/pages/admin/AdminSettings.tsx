@@ -65,9 +65,10 @@ export default function AdminSettings() {
   const saveRegion = async (region: any) => {
     await supabase.from('shipping_regions').update({
       base_charge: Number(region.base_charge) || 0,
+      per_kg_rate: Number(region.per_kg_rate) || 0,
       free_delivery_above: region.free_delivery_above ? Number(region.free_delivery_above) : null,
       is_enabled: region.is_enabled,
-    }).eq('id', region.id);
+    } as any).eq('id', region.id);
     toast({ title: `${region.region_name} settings saved` });
   };
 
