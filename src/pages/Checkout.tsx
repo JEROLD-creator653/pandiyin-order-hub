@@ -378,7 +378,8 @@ export default function Checkout() {
       }
     } catch (err: any) {
       console.error('Order verification error:', err);
-      // Continue with order if verification service is unavailable
+      setCheckoutError('Unable to verify your order. Please try again.');
+      return;
     }
 
     if (paymentMethod === 'razorpay') {
