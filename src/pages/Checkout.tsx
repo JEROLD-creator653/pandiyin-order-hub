@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CreditCard, MapPin, ShieldCheck, Truck, Award, AlertCircle, X, Package, Tag, ChevronDown, ChevronUp } from 'lucide-react';
+import { CreditCard, MapPin, ShieldCheck, Truck, Award, X, Package, Tag, ChevronDown, ChevronUp } from 'lucide-react';
+import ErrorModal from '@/components/ErrorModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
