@@ -25,8 +25,7 @@ export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProp
 
     if (!show) return null;
 
-    const orbitSize = { sm: 44, md: 58, lg: 70 }[size];
-    const emojiSize = { sm: 'text-xl', md: 'text-3xl', lg: 'text-4xl' }[size];
+    const leafW = { sm: 28, md: 40, lg: 52 }[size];
 
     return (
         <div className={cn("flex flex-col items-center justify-center min-h-[50vh] w-full", className)}>
@@ -35,45 +34,31 @@ export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProp
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.3 }}
-                className="flex flex-col items-center gap-6"
+                className="flex flex-col items-center gap-5"
             >
-                <div className="relative flex items-center justify-center" style={{ width: orbitSize + 28, height: orbitSize + 28, perspective: '500px' }}>
+                {/* Glowing central leaf */}
+                <div className="relative">
                     <motion.div
-                        className="absolute"
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 3.5, repeat: Infinity, ease: "linear" }}
-                        style={{ width: orbitSize, height: orbitSize }}
+                        className="absolute inset-0 rounded-full"
+                        style={{ background: 'hsl(var(--primary) / 0.08)', filter: 'blur(12px)', margin: -12 }}
+                        animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.6, 0.3] }}
+                        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <motion.div
+                        animate={{ rotate: [0, 3, -2, 1, -3, 0] }}
+                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                     >
-                        <motion.div
-                            className="absolute -top-3 left-1/2 -translate-x-1/2"
-                            animate={{ y: [0, 6, 1, 10, 3, 0] }}
-                            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                        >
-                            <motion.div
-                                animate={{ x: [0, 5, -3, 6, -4, 0] }}
-                                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                            >
-                                <motion.div
-                                    animate={{
-                                        rotateX: [0, 12, -8, 16, -4, 0],
-                                        rotateY: [0, 180, 360],
-                                        rotateZ: [0, -6, 4, -10, 6, 0],
-                                    }}
-                                    transition={{
-                                        rotateY: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-                                        rotateX: { duration: 4.5, repeat: Infinity, ease: "easeInOut" },
-                                        rotateZ: { duration: 5.5, repeat: Infinity, ease: "easeInOut" },
-                                    }}
-                                    style={{ transformStyle: 'preserve-3d' }}
-                                >
-                                    <span className={cn(emojiSize, "drop-shadow-xl select-none block")}>🍃</span>
-                                </motion.div>
-                            </motion.div>
-                        </motion.div>
+                        <svg width={leafW} height={leafW} viewBox="0 0 64 64" fill="none">
+                            <path d="M32 4C32 4 6 22 6 40C6 52 16 60 32 60C48 60 58 52 58 40C58 22 32 4 32 4Z" className="fill-primary/85" />
+                            <path d="M32 12V52" className="stroke-primary-foreground/25" strokeWidth="1.5" strokeLinecap="round" />
+                            <path d="M32 22L20 30M32 30L16 38M32 38L22 44" className="stroke-primary-foreground/18" strokeWidth="1" strokeLinecap="round" />
+                            <path d="M32 22L44 30M32 30L48 38M32 38L42 44" className="stroke-primary-foreground/18" strokeWidth="1" strokeLinecap="round" />
+                        </svg>
                     </motion.div>
                 </div>
+
                 {text && (
-                    <p className="text-muted-foreground/70 text-sm font-medium tracking-wide animate-pulse">
+                    <p className="text-muted-foreground/70 text-sm font-medium tracking-widest animate-pulse">
                         {text}
                     </p>
                 )}
