@@ -33,13 +33,17 @@ export default function Cart() {
 
   const chargedWeight = useMemo(() => getChargedWeight(totalWeightKg), [totalWeightKg]);
 
+  const seo = <SEOHead title="Shopping Cart" description="Your shopping cart" noIndex />;
+
   if (!user) {
     return (
+      <>{seo}
       <div className="container mx-auto px-4 pt-24 pb-20 text-center">
         <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
         <h2 className="text-2xl font-display font-bold mb-2">Sign in to view your cart</h2>
         <Button onClick={() => navigate('/auth')} className="mt-4">Sign In</Button>
       </div>
+      </>
     );
   }
 
