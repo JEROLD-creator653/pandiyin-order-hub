@@ -141,20 +141,20 @@ export default function ProductDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-[100px] md:pb-8">
+    <div className="min-h-screen bg-background pt-20 md:pt-24 pb-[100px] md:pb-8">
       {/* Back Button */}
-      <div className="container mx-auto px-4 mb-8">
-        <Button variant="ghost" onClick={() => navigate(-1)} className="mb-6">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
+      <div className="container mx-auto px-4 mb-4 md:mb-8">
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-2 md:mb-6 -ml-2">
+          <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
         </Button>
       </div>
 
       {/* Main Content Grid: Product Image + Details */}
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-12">
-          {/* Left Column: Product Image Card (Desktop 2/5, Mobile Full Width) */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8 mb-12">
+          {/* Left Column: Product Image Card */}
           <div className="lg:col-span-2">
-            <div className="sticky top-28 rounded-2xl overflow-hidden border border-muted shadow-sm bg-muted h-[520px] w-full">
+            <div className="sticky top-28 rounded-2xl overflow-hidden border border-muted shadow-sm bg-muted h-[320px] md:h-[520px] w-full">
               {product.image_url ? (
                 <img 
                   src={product.image_url} 
@@ -175,7 +175,7 @@ export default function ProductDetail() {
             {product.categories?.name && (
               <Badge variant="secondary" className="mb-3 w-fit">{product.categories.name}</Badge>
             )}
-            <h1 className="text-3xl lg:text-4xl font-display font-bold mb-4">{product.name}</h1>
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-bold mb-3 md:mb-4">{product.name}</h1>
             
             {/* Rating Summary */}
             {stats && stats.total_reviews > 0 && stats.average_rating > 0 && (
@@ -193,7 +193,7 @@ export default function ProductDetail() {
               return (
                 <div className="mb-6">
                   <div className="flex items-baseline gap-3 mb-2">
-                    <span className="text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
+                    <span className="text-3xl md:text-4xl font-bold text-primary">{formatPrice(product.price)}</span>
                     {pricing.hasDiscount && (
                       <>
                         <span className="text-lg text-muted-foreground line-through">{formatPrice(pricing.comparePrice)}</span>
@@ -225,23 +225,23 @@ export default function ProductDetail() {
             <div ref={purchaseSectionRef} className="space-y-4 mb-8">
               {product.stock_quantity > 0 ? (
                 <>
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm font-medium text-muted-foreground">Quantity:</span>
+                  <div className="flex items-center gap-3 md:gap-4 flex-wrap">
+                    <span className="text-sm font-medium text-muted-foreground">Qty:</span>
                     <div className="flex items-center border rounded-lg bg-muted/50">
                       <Button 
                         variant="ghost" 
                         size="icon" 
                         onClick={() => setQty(q => Math.max(1, q - 1))}
-                        className="h-9 w-9"
+                        className="h-10 w-10 active:scale-95"
                       >
                         <Minus className="h-4 w-4" />
                       </Button>
-                      <span className="w-12 text-center font-semibold">{qty}</span>
+                      <span className="w-10 text-center font-semibold">{qty}</span>
                       <Button 
                         variant="ghost" 
                         size="icon" 
                         onClick={() => setQty(q => Math.min(product.stock_quantity, q + 1))}
-                        className="h-9 w-9"
+                        className="h-10 w-10 active:scale-95"
                       >
                         <Plus className="h-4 w-4" />
                       </Button>

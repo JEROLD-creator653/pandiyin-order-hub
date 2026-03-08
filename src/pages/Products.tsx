@@ -245,10 +245,10 @@ export default function Products() {
   };
 
   return (
-    <div className="container mx-auto px-4 pt-24 pb-8">
+    <div className="container mx-auto px-4 pt-20 md:pt-24 pb-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-display font-bold">All Products</h1>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 mb-5 md:mb-6">
+        <h1 className="text-2xl md:text-3xl font-display font-bold">All Products</h1>
         <div ref={searchContainerRef} className="relative max-w-sm w-full md:hidden">
           <form onSubmit={e => { e.preventDefault(); setShowSearchSuggestions(false); setSearchParams(s => { if (searchInput) s.set('search', searchInput); else s.delete('search'); return s; }); }}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
@@ -478,23 +478,23 @@ export default function Products() {
             <motion.div key={p.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="h-full">
               <Link to={`/products/${p.id}`} className="h-full block">
                 <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col border-0 shadow-sm">
-                  <div className="h-52 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
+                  <div className="h-40 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
                     {p.image_url ? (
                       <img src={p.image_url} alt={p.name} className="w-full h-full object-cover object-center rounded-lg group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     ) : (
                       <Leaf className="h-12 w-12 text-muted-foreground/30" />
                     )}
                     {p.stock_quantity <= 5 && p.stock_quantity > 0 && (
-                      <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-600 text-white text-xs border-0 shadow-sm">Few Left</Badge>
+                      <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] md:text-xs border-0 shadow-sm">Few Left</Badge>
                     )}
                     {p.stock_quantity === 0 && (
-                      <Badge variant="destructive" className="absolute top-2 right-2 text-xs border-0 shadow-sm">Out of Stock</Badge>
+                      <Badge variant="destructive" className="absolute top-2 right-2 text-[10px] md:text-xs border-0 shadow-sm">Out of Stock</Badge>
                     )}
                   </div>
-                  <CardContent className="p-4 flex-1 flex flex-col">
-                    <p className="text-xs text-muted-foreground mb-0.5">{(p as any).categories?.name}</p>
-                    <h3 className="font-semibold text-base font-sans line-clamp-2 mb-1.5 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
-                    {p.weight && <p className="text-xs text-muted-foreground mb-1">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
+                  <CardContent className="p-3 md:p-4 flex-1 flex flex-col">
+                    <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5">{(p as any).categories?.name}</p>
+                    <h3 className="font-semibold text-sm md:text-base font-sans line-clamp-2 mb-1 md:mb-1.5 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
+                    {p.weight && <p className="text-[10px] md:text-xs text-muted-foreground mb-1">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
                     {Number(p.average_rating) > 0 && (
                       <div className="flex items-center gap-1.5 mb-2">
                         <span className="inline-flex items-center gap-0.5 bg-primary/10 text-primary text-sm sm:text-xs font-semibold px-2 sm:px-1.5 py-0.5 rounded">

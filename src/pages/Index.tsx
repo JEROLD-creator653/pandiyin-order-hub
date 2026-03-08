@@ -413,34 +413,34 @@ export default function Index() {
 
       {/* Featured Products */}
       {featured.length > 0 && (
-        <section className="py-16 bg-secondary/30">
+        <section className="py-10 md:py-16 bg-secondary/30">
           <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-10">
-              <h2 className="text-3xl font-display font-bold">Bestsellers</h2>
-              <Button asChild variant="ghost"><Link to="/products">View All <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
+            <div className="flex items-center justify-between mb-6 md:mb-10">
+              <h2 className="text-2xl md:text-3xl font-display font-bold">Bestsellers</h2>
+              <Button asChild variant="ghost" size="sm"><Link to="/products">View All <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
               {featured.map((p, i) => (
                 <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="h-full">
                   <Link to={`/products/${p.id}`} className="h-full block">
                     <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col border-0 shadow-sm">
-                      <div className="h-52 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
+                      <div className="h-40 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
                         {p.image_url ? (
                           <img src={p.image_url} alt={p.name} className="w-full h-full object-cover object-center rounded-lg group-hover:scale-105 transition-transform duration-500" />
                         ) : (
                           <Leaf className="h-12 w-12 text-muted-foreground/30" />
                         )}
                       </div>
-                      <CardContent className="p-4 flex-1 flex flex-col">
+                      <CardContent className="p-3 md:p-4 flex-1 flex flex-col">
                         <div>
-                          <p className="text-xs text-muted-foreground mb-1">{(p as any).categories?.name}</p>
-                          <h3 className="font-semibold text-base font-sans line-clamp-2 mb-1.5 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
-                          {p.weight && <p className="text-xs text-muted-foreground mb-2">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
+                          <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">{(p as any).categories?.name}</p>
+                          <h3 className="font-semibold text-sm md:text-base font-sans line-clamp-2 mb-1 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
+                          {p.weight && <p className="text-[10px] md:text-xs text-muted-foreground mb-1 md:mb-2">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
                         </div>
-                        <div className="flex items-center justify-between gap-2 mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-lg text-primary">{formatPrice(p.price)}</span>
-                            {p.compare_price && <span className="text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2 md:mb-3">
+                          <div className="flex items-center gap-1.5 md:gap-2">
+                            <span className="font-medium text-base md:text-lg text-primary">{formatPrice(p.price)}</span>
+                            {p.compare_price && <span className="text-xs md:text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
                           </div>
                           {p.average_rating !== null && p.average_rating !== undefined && Number(p.average_rating) > 0 && (
                             <span className="flex items-center gap-1 text-sm font-medium text-slate-600">
