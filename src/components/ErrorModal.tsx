@@ -49,19 +49,19 @@ export default function ErrorModal({
               </button>
 
               {/* Content */}
-              <div className="px-6 pb-6 pt-6 text-center">
+              <div className="px-6 pb-6 pt-6 flex flex-col items-center justify-center text-center">
                 {/* Icon */}
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 ring-4 ring-destructive/5">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10 ring-4 ring-destructive/5">
                   <AlertCircle className="h-8 w-8 text-destructive" />
                 </div>
 
                 {/* Title */}
-                <h3 className="font-display text-xl font-semibold tracking-tight text-foreground mb-2">
+                <h3 className="font-display text-xl font-semibold tracking-tight text-foreground mb-2 text-center">
                   {title}
                 </h3>
 
                 {/* Message */}
-                <p className="text-sm text-muted-foreground leading-relaxed max-w-[300px] mx-auto">
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-[300px] text-center">
                   {message}
                 </p>
 
