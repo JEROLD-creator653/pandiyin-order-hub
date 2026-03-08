@@ -246,6 +246,12 @@ export default function Products() {
   };
 
   return (
+    <>
+    <SEOHead
+      title="All Products - Natural Homemade Foods"
+      description="Browse our collection of authentic homemade pickles, snacks, spice powders & sweets. 100% natural ingredients, no preservatives. Free shipping above ₹799."
+      jsonLd={schemas.breadcrumbs([{ name: 'Home', url: '/' }, { name: 'Products' }])}
+    />
     <div className="container mx-auto px-4 pt-20 md:pt-24 pb-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 md:gap-4 mb-5 md:mb-6">

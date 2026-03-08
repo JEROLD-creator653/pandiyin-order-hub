@@ -70,6 +70,11 @@ function InfoCard({ icon: Icon, title, children }: InfoCardProps) {
 
 export default function About() {
   return (
+    <>
+    <SEOHead
+      title="About Us - Our Story"
+      description="PANDIYIN Nature In Pack brings authentic, homemade foods from Madurai. Learn about our mission, values, and commitment to 100% natural ingredients."
+    />
     <div className="container mx-auto px-4 pt-24 pb-20 max-w-5xl">
       {/* Hero */}
       <motion.section {...fadeUp} className="text-center mb-24">

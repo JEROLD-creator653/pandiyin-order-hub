@@ -141,7 +141,41 @@ export default function ProductDetail() {
     <Loader text="Loading product details..." className="min-h-[60vh]" delay={200} />
   );
 
+  const plainDesc = product.description?.replace(/<[^>]*>/g, '').slice(0, 160) || `Buy ${product.name} online from PANDIYIN. 100% natural, homemade.`;
+
   return (
+    <>
+      <SEOHead
+        title={`${product.name}${product.categories?.name ? ` - ${product.categories.name}` : ''}`}
+        description={plainDesc}
+        ogType="product"
+        ogImage={product.image_url || undefined}
+        product={{
+          price: product.price,
+          currency: 'INR',
+          availability: product.is_available ? 'in stock' : 'out of stock',
+        }}
+        jsonLd={[
+          schemas.product({
+            name: product.name,
+            description: product.description || '',
+            image: product.images?.length ? product.images : (product.image_url ? [product.image_url] : []),
+            price: product.price,
+            comparePrice: product.compare_price,
+            sku: product.id,
+            available: product.is_available,
+            rating: product.average_rating,
+            reviewCount: product.review_count,
+            category: product.categories?.name,
+          }),
+          schemas.breadcrumbs([
+            { name: 'Home', url: '/' },
+            { name: 'Products', url: '/products' },
+            ...(product.categories?.name ? [{ name: product.categories.name, url: `/products?category=${product.category_id}` }] : []),
+            { name: product.name },
+          ]),
+        ]}
+      />
     <div className="min-h-screen bg-background pt-20 md:pt-24 pb-[100px] md:pb-8">
       {/* Back Button */}
       <div className="container mx-auto px-4 mb-4 md:mb-8">
