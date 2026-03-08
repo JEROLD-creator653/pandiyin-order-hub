@@ -25,7 +25,11 @@ export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProp
 
     if (!show) return null;
 
-    const leafW = { sm: 28, md: 40, lg: 52 }[size];
+    const sizeClasses = {
+        sm: 'w-4 h-4',
+        md: 'w-8 h-8',
+        lg: 'w-12 h-12',
+    };
 
     return (
         <div className={cn("flex flex-col items-center justify-center min-h-[50vh] w-full", className)}>
@@ -33,32 +37,22 @@ export const Loader = ({ className, text, size = 'md', delay = 200 }: LoaderProp
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.3 }}
-                className="flex flex-col items-center gap-5"
+                transition={{ duration: 0.25 }}
+                className="flex flex-col items-center gap-4"
             >
-                {/* Glowing central leaf */}
                 <div className="relative">
-                    <motion.div
-                        className="absolute inset-0 rounded-full"
-                        style={{ background: 'hsl(var(--primary) / 0.08)', filter: 'blur(12px)', margin: -12 }}
-                        animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.6, 0.3] }}
-                        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                    <div className={cn("rounded-full border-2 border-primary/20", sizeClasses[size])} />
+                    <div
+                        className={cn(
+                            "absolute top-0 left-0 rounded-full border-2 border-primary border-t-transparent animate-spin",
+                            sizeClasses[size]
+                        )}
                     />
-                    <motion.div
-                        animate={{ rotate: [0, 3, -2, 1, -3, 0] }}
-                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                    >
-                        <svg width={leafW} height={leafW} viewBox="0 0 64 64" fill="none">
-                            <path d="M32 4C32 4 6 22 6 40C6 52 16 60 32 60C48 60 58 52 58 40C58 22 32 4 32 4Z" className="fill-primary/85" />
-                            <path d="M32 12V52" className="stroke-primary-foreground/25" strokeWidth="1.5" strokeLinecap="round" />
-                            <path d="M32 22L20 30M32 30L16 38M32 38L22 44" className="stroke-primary-foreground/18" strokeWidth="1" strokeLinecap="round" />
-                            <path d="M32 22L44 30M32 30L48 38M32 38L42 44" className="stroke-primary-foreground/18" strokeWidth="1" strokeLinecap="round" />
-                        </svg>
-                    </motion.div>
+                    {/* Subtle glow effect */}
+                    <div className={cn("absolute top-0 left-0 rounded-full bg-primary/20 blur-xl", sizeClasses[size])} />
                 </div>
-
                 {text && (
-                    <p className="text-muted-foreground/70 text-sm font-medium tracking-widest animate-pulse">
+                    <p className="text-muted-foreground text-sm font-medium animate-pulse">
                         {text}
                     </p>
                 )}
