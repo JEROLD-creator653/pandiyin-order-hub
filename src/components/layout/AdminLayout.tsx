@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, FolderTree, ShoppingCart, Ticket, Users, Image, Settings, LogOut, ChevronLeft, Menu, Leaf } from 'lucide-react';
+import { LayoutDashboard, Package, FolderTree, ShoppingCart, Ticket, Users, Image, Settings, LogOut, ChevronLeft, Menu, Leaf, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,7 @@ const navItems = [
   { label: 'Coupons', to: '/admin/coupons', icon: Ticket },
   { label: 'Customers', to: '/admin/customers', icon: Users },
   { label: 'Banners', to: '/admin/banners', icon: Image },
+  { label: 'Shipping', to: '/admin/shipping', icon: Truck },
   { label: 'Settings', to: '/admin/settings', icon: Settings },
 ];
 

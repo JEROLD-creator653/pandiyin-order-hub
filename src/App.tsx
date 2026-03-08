@@ -43,6 +43,7 @@ import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminShipping from "./pages/admin/AdminShipping";
 
 // React Query client — ensures fresh data on navigation
 const queryClient = new QueryClient({
@@ -100,6 +101,7 @@ const App = () => (
                   <Route path="customers" element={<AdminCustomers />} />
                   <Route path="banners" element={<AdminBanners />} />
                   <Route path="settings" element={<AdminSettings />} />
+                  <Route path="shipping" element={<AdminShipping />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
