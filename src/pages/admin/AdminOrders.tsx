@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
-import { ChevronRight, Leaf, Search } from 'lucide-react';
+import { ChevronRight, Leaf, Search, Copy, FileText, Printer, ClipboardList } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { formatPrice } from '@/lib/formatters';
 import { TableSkeleton } from '@/components/ui/loader';
+import { generateInvoicePdf } from '@/lib/invoicePdf';
 
 const statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
 const statusColors: Record<string, string> = {
