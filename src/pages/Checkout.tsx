@@ -309,7 +309,7 @@ export default function Checkout() {
       rzp.open();
     } catch (err: any) {
       console.error('Payment error:', err);
-      toast({ title: 'Payment failed', description: err.message, variant: 'destructive' });
+      setPaymentError(err.message || 'Payment failed. Please try again.');
       setLoading(false);
     }
   };
