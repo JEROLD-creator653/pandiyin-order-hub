@@ -303,7 +303,7 @@ export default function Checkout() {
       rzp.on('payment.failed', (response: any) => {
         console.error('Payment failed:', response.error);
         supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
-        toast({ title: 'Payment failed', description: response.error?.description || 'Please try again', variant: 'destructive' });
+        setPaymentError(response.error?.description || 'Payment failed. Please try again.');
         setLoading(false);
       });
       rzp.open();
