@@ -47,18 +47,7 @@ export default function Checkout() {
   const [discount, setDiscount] = useState(0);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
-  const [deliveryState, setDeliveryState] = useState<string>('');
   const [notes, setNotes] = useState('');
-  const [gstSettings, setGstSettings] = useState({ gst_enabled: false });
-  const [productGstMap, setProductGstMap] = useState<Map<string, any>>(new Map());
-  const [calculatedGstAmount, setCalculatedGstAmount] = useState(0);
-
-  // Load user's saved state from their last address
-  useEffect(() => {
-    if (selectedAddress?.state) {
-      setDeliveryState(selectedAddress.state);
-    }
-  }, [selectedAddress]);
 
   useEffect(() => {
     if (!authLoading && !user) {
