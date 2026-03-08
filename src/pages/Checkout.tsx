@@ -569,8 +569,8 @@ export default function Checkout() {
               {loading ? <ButtonLoader text="Processing payment..." /> : `Pay Now · ${formatPrice(grandTotal)}`}
             </Button>
 
-            {!deliveryState && (
-              <p className="text-xs text-destructive mt-2 text-center">Please select your delivery state to proceed</p>
+            {!selectedAddress && (
+              <p className="text-xs text-destructive mt-2 text-center">Please add a delivery address to proceed</p>
             )}
 
             <div className="mt-5 flex items-center justify-center gap-4 text-[10px] text-muted-foreground">
