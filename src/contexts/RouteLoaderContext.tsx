@@ -162,20 +162,16 @@ const GlobalRouteLoader: React.FC<GlobalRouteLoaderProps> = ({ isLoading }) => {
       {isLoading && (
         <motion.div
           key="route-loader"
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.4, ease: 'easeInOut' } }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
+          exit={{ opacity: 0, transition: { duration: 0.3, ease: 'easeInOut' } }}
           className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-background"
           style={{ touchAction: 'none', overscrollBehavior: 'contain' }}
         >
-          <motion.img
+          <img
             src={loadingGif}
             alt="Loading"
             className="w-32 h-32 object-contain"
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
           />
         </motion.div>
       )}
