@@ -418,7 +418,7 @@ export default function AdminProducts() {
               </div>
 
               {/* Stock, Weight, Unit */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">
                     Stock Quantity
@@ -431,6 +431,21 @@ export default function AdminProducts() {
                     }
                   />
                 </div>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Shipping Weight (kg) *
+                  </label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g. 0.25"
+                    value={form.weight_kg}
+                    onChange={(e) => setForm({ ...form, weight_kg: e.target.value })}
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">Used for delivery charge calculation. Enter in kilograms.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-medium mb-2 block">
                     Weight
