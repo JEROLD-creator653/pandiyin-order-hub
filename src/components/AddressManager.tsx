@@ -259,6 +259,9 @@ export default function AddressManager({
   const selectAddress = (a: Address) => {
     if (onSelect) onSelect(a);
   };
+  const [showAllAddresses, setShowAllAddresses] = useState(false);
+
+  const selectedAddr = addresses.find(a => a.id === selectedId);
 
   return (
     <div className="space-y-3">
