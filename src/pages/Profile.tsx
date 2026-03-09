@@ -40,16 +40,30 @@ export default function Profile() {
     }
   }, [user, loading]);
 
+  const queryClient = useQueryClient();
+
   const saveProfile = async () => {
     if (!user) return;
     setSaving(true);
     const { error } = await supabase.from('profiles').update({ full_name: fullName, phone }).eq('user_id', user.id);
-    setSaving(false);
     if (error) {
+      setSaving(false);
       toast({ title: 'Failed to update profile', variant: 'destructive' });
-    } else {
-      toast({ title: 'Profile updated successfully!' });
+      return;
     }
+
+    // Sync the updated name into all existing reviews by this user
+    await (supabase as any)
+      .from('product_reviews')
+      .update({ user_name: fullName })
+      .eq('user_id', user.id);
+
+    // Invalidate all cached data so other pages reflect the change
+    await clearAllCache();
+    queryClient.invalidateQueries();
+
+    setSaving(false);
+    toast({ title: 'Profile updated successfully!' });
   };
 
   // Show loading state while auth is initializing
