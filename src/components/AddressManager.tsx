@@ -132,12 +132,10 @@ export default function AddressManager({
     }
 
     setLocationStatus('Detecting GPS...');
-
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
         setLocationStatus('Fetching address...');
-
         try {
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}&addressdetails=1`,
@@ -146,7 +144,6 @@ export default function AddressManager({
           if (!res.ok) throw new Error('Geocoding failed');
           const data = await res.json();
           const addr = data.address || {};
-
           const pincode = addr.postcode || '';
           setForm((f) => ({
             ...f,
@@ -157,12 +154,9 @@ export default function AddressManager({
             state: addr.state || f.state,
             pincode,
           }));
-
-          // Trigger pincode lookup for consistency with existing data
           if (pincode.length === 6) {
             handlePincodeChange(pincode);
           }
-
           setLocationStatus(null);
           toast({ title: 'Address auto-filled from your location' });
         } catch {
@@ -172,10 +166,21 @@ export default function AddressManager({
       },
       (error) => {
         setLocationStatus(null);
-        const msg = error.code === error.PERMISSION_DENIED
-          ? 'Location permission denied. Please enable it in browser settings.'
-          : 'Unable to detect location. Please enter address manually.';
-        toast({ title: 'Location error', description: msg, variant: 'destructive' });
+        let msg;
+        if (error.code === error.PERMISSION_DENIED) {
+          msg = `Location permission denied.\n\nTroubleshooting:\n- Reload the page after allowing location.\n- Make sure your browser shows a location icon in the address bar.\n- Click the lock icon next to the URL and set Location to "Allow".\n- If using Chrome, check Settings > Privacy and Security > Site Settings > Location.\n- Ensure the site is served over HTTPS.`;
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          msg = 'Location unavailable. Please check your device settings or try again.';
+        } else if (error.code === error.TIMEOUT) {
+          msg = 'Location request timed out. Please try again.';
+        } else {
+          msg = 'Unable to detect location. Please enter address manually.';
+        }
+        toast({
+          title: 'Location error',
+          description: msg,
+          variant: 'destructive',
+        });
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
