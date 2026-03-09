@@ -26,7 +26,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-background overflow-x-hidden w-full max-w-[100vw]">
       {/* Sidebar */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 border-r border-sidebar-border",
@@ -80,7 +80,7 @@ export default function AdminLayout() {
             {navItems.find(i => i.to === location.pathname || (i.to !== '/admin' && location.pathname.startsWith(i.to)))?.label || 'Admin'}
           </h2>
         </header>
-        <main className="flex-1 p-4 md:p-6">
+        <main className="flex-1 p-4 md:p-6 overflow-x-auto max-w-full">
           <Outlet />
         </main>
       </div>
