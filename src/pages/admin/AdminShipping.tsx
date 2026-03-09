@@ -201,6 +201,15 @@ export default function AdminShipping() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Sticky Save Button */}
+      <div className="sticky bottom-4 z-10 flex sm:justify-end mt-4">
+        <div className="bg-background/80 backdrop-blur-md p-2 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/50 w-full sm:w-auto">
+          <Button onClick={saveAll} disabled={saving} size="lg" className="w-full sm:w-auto font-medium">
+            {saving ? <ButtonLoader text="Saving..." /> : <><Save className="h-5 w-5 mr-2" /> Save Changes</>}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
