@@ -97,9 +97,6 @@ export default function AdminShipping() {
             <p className="text-sm text-muted-foreground">Configure delivery zones, rates per kg, and free delivery thresholds</p>
           </div>
         </div>
-        <Button onClick={saveAll} disabled={saving}>
-          {saving ? <ButtonLoader text="Saving..." /> : <><Save className="h-4 w-4 mr-2" /> Save Changes</>}
-        </Button>
       </div>
 
       {/* How it works */}
