@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { clearAllCache } from '@/lib/cacheService';
 import AddressManager from '@/components/AddressManager';
 import { Loader } from '@/components/ui/loader';
 
