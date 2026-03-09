@@ -48,7 +48,8 @@ export default function AdminSettings() {
     if (error) {
       toast({ title: 'Failed to save settings', description: error.message, variant: 'destructive' });
     } else {
-      await queryClient.invalidateQueries({ queryKey: ['store_settings'] });
+      await clearAllCache();
+      await queryClient.invalidateQueries();
       toast({ title: 'Store settings saved' });
     }
     setSaving(false);
