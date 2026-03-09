@@ -438,6 +438,12 @@ export default function Index() {
                         ) : (
                           <Leaf className="h-12 w-12 text-muted-foreground/30" />
                         )}
+                        {p.stock_quantity <= 5 && p.stock_quantity > 0 && (
+                          <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] md:text-xs border-0 shadow-sm">Few Left</Badge>
+                        )}
+                        {p.stock_quantity === 0 && (
+                          <Badge variant="destructive" className="absolute top-2 right-2 text-[10px] md:text-xs border-0 shadow-sm">Out of Stock</Badge>
+                        )}
                       </div>
                       <CardContent className="p-3 md:p-4 flex-1 flex flex-col">
                         <div>
