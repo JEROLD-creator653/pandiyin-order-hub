@@ -28,7 +28,7 @@ declare global {
   }
 }
 
-const RAZORPAY_KEY_ID = 'rzp_test_SOl9lqqJlvN9Ln';
+// Razorpay key is fetched from the server — never hardcode secrets or keys in frontend
 
 const getGSTType = (state: string): 'cgst_sgst' | 'igst' => {
   const sameStateStates = ['Tamil Nadu', 'Puducherry'];
