@@ -26,7 +26,7 @@ export default function AdminLayout() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex bg-background overflow-x-hidden w-full max-w-[100vw]">
+    <div className="min-h-screen flex bg-background w-full max-w-[100vw]">
       {/* Sidebar */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 border-r border-sidebar-border",
