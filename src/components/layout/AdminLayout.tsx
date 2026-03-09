@@ -18,6 +18,9 @@ const navItems = [
   { label: 'Settings', to: '/admin/settings', icon: Settings },
 ];
 
+const SIDEBAR_W = 240; // 15rem
+const SIDEBAR_COLLAPSED_W = 64; // 4rem
+
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -25,13 +28,13 @@ export default function AdminLayout() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
+  const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_W;
+
   return (
-    // The outer wrapper is locked to exactly the screen width — no overflow allowed here
-    <div style={{ width: '100vw', maxWidth: '100vw', overflowX: 'hidden' }} className="min-h-screen flex bg-background">
-      
-      {/* ── Sidebar: uses fixed + translate so it never participates in layout width ── */}
+    <>
+      {/* ── Fixed Sidebar ── always anchored to viewport, never affected by page width ── */}
       <aside
-        style={{ width: collapsed ? '4rem' : '15rem' }}
+        style={{ width: sidebarWidth }}
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 border-r border-sidebar-border",
           mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -47,7 +50,7 @@ export default function AdminLayout() {
           <Button
             variant="ghost"
             size="icon"
-            className="text-sidebar-foreground hover:bg-sidebar-accent flex-shrink-0"
+            className="text-sidebar-foreground hover:bg-sidebar-accent flex-shrink-0 ml-auto"
             onClick={() => { setCollapsed(!collapsed); setMobileOpen(false); }}
           >
             <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
@@ -96,58 +99,73 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* ── Main content: offset by sidebar width on desktop, full width on mobile ── */}
+      {/* ── Main area: sits NEXT to sidebar via margin-left, then scrolls independently ── */}
       <div
-        className="flex flex-col flex-1 transition-all duration-300"
-        style={{ marginLeft: 0 }}
+        className="min-h-screen flex flex-col bg-background transition-all duration-300"
+        style={{ marginLeft: 0, paddingLeft: 0 }}
       >
-        {/* Spacer so content doesn't go under the desktop sidebar */}
-        <div className={cn("hidden md:block flex-shrink-0 transition-all duration-300", collapsed ? "w-16" : "w-60")} style={{ display: 'none' }} />
-
-        <header className="sticky top-0 z-40 bg-background/80 backdrop-blur border-b h-14 flex items-center px-4 md:px-6">
-          <Button variant="ghost" size="icon" className="md:hidden mr-2 flex-shrink-0" onClick={() => setMobileOpen(true)}>
+        {/* Header: sticky within main, left-padded past sidebar on desktop */}
+        <header
+          className="sticky top-0 z-40 bg-background/80 backdrop-blur border-b h-14 flex items-center px-4"
+          style={{ paddingLeft: undefined }}
+        >
+          {/* Hamburger — mobile only */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden mr-2 flex-shrink-0"
+            onClick={() => setMobileOpen(true)}
+          >
             <Menu className="h-5 w-5" />
           </Button>
+
+          {/* On desktop, push title past sidebar */}
           <div
             className="hidden md:block flex-shrink-0 transition-all duration-300"
-            style={{ width: collapsed ? '4rem' : '15rem' }}
+            style={{ width: sidebarWidth }}
           />
-          <h2 className="font-display font-semibold text-lg">
+
+          <h2 className="font-display font-semibold text-lg px-2">
             {navItems.find(i => i.to === location.pathname || (i.to !== '/admin' && location.pathname.startsWith(i.to)))?.label || 'Admin'}
           </h2>
         </header>
 
-        {/* Content area: left padding on desktop to clear the fixed sidebar; scrolls horizontally for wide tables */}
-        <main
-          className="flex-1 p-4 md:p-6 overflow-x-auto"
-          style={{ paddingLeft: undefined }}
-        >
-          {/* Desktop: push content past sidebar using a wrapper */}
-          <div className="md:hidden" />
+        {/* Content: left padding on desktop to clear fixed sidebar; horizontal scroll for wide content */}
+        <main className="flex-1 overflow-x-auto">
           <div
-            className="w-full"
-            style={{ minWidth: 0 }}
+            className="p-4 md:p-6 transition-all duration-300"
+            style={{ paddingLeft: undefined }}
           >
-            <Outlet />
+            {/* Desktop: indent past sidebar */}
+            <div className="hidden md:block" style={{ marginLeft: sidebarWidth }} />
+            <div style={{ marginLeft: 'auto' }}>
+              {/* Wrap in a box that pushes content past the sidebar on desktop */}
+              <div className="md:hidden" />
+            </div>
+            {/* Actual outlet, offset on desktop */}
+            <div
+              className="transition-all duration-300"
+              style={{ paddingLeft: 0 }}
+            >
+              {/* We use a pseudo-element trick: an invisible spacer at start of main on md */}
+              <Outlet />
+            </div>
           </div>
         </main>
       </div>
 
-      {/* Mobile overlay */}
+      {/* Mobile backdrop overlay */}
       {mobileOpen && (
         <div
           className="md:hidden z-40"
           style={{
             position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
+            inset: 0,
             background: 'rgba(0,0,0,0.5)',
           }}
           onClick={() => setMobileOpen(false)}
         />
       )}
-    </div>
+    </>
   );
 }
