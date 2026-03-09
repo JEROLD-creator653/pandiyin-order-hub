@@ -240,10 +240,10 @@ export default function Checkout() {
     setCheckoutError(null);
     if (!window.Razorpay) {
       setCheckoutError('Payment gateway not loaded. Please refresh the page and try again.');
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
@@ -356,6 +356,8 @@ export default function Checkout() {
       return;
     }
 
+    setLoading(true);
+
     // Backend verification: validate prices, stock, and delivery charge server-side
     try {
       const { data: verifyResult, error: verifyError } = await supabase.functions.invoke('verify-order', {
@@ -370,6 +372,7 @@ export default function Checkout() {
       if (!verifyResult?.valid) {
         const errMsgs = verifyResult?.errors?.join(', ') || 'Validation failed';
         setCheckoutError(errMsgs);
+        setLoading(false);
         refetch();
         return;
       }
@@ -378,12 +381,14 @@ export default function Checkout() {
       const backendTotal = verifyResult.grand_total;
       if (Math.abs(backendTotal - grandTotal) > 1) {
         setCheckoutError('Prices or delivery charges have changed. Your cart has been refreshed with the latest data. Please review before proceeding.');
+        setLoading(false);
         refetch();
         return;
       }
     } catch (err: any) {
       console.error('Order verification error:', err);
       setCheckoutError('Unable to verify your order. Please try again.');
+      setLoading(false);
       return;
     }
 
