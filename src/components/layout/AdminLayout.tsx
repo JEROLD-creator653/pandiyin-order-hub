@@ -18,9 +18,6 @@ const navItems = [
   { label: 'Settings', to: '/admin/settings', icon: Settings },
 ];
 
-const SIDEBAR_W = 240; // 15rem
-const SIDEBAR_COLLAPSED_W = 64; // 4rem
-
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -28,17 +25,32 @@ export default function AdminLayout() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
-  const sidebarWidth = collapsed ? SIDEBAR_COLLAPSED_W : SIDEBAR_W;
+  // Key insight: sidebar is fixed, so main content uses margin-left to avoid being under it.
+  // On mobile: sidebar is off-canvas, main content takes full width.
+  // The wrapper uses 100vw so it never grows with page content → sidebar stays stable.
+  const sidebarPx = collapsed ? 64 : 240;
 
   return (
-    <>
-      {/* ── Fixed Sidebar ── always anchored to viewport, never affected by page width ── */}
+    <div
+      style={{
+        // Lock the layout to the visual viewport width — prevents page-level zoom-out
+        // from making fixed elements appear smaller
+        width: '100vw',
+        maxWidth: '100vw',
+        overflowX: 'clip', // clip prevents scrollbar but allows children to overflow visually
+        minHeight: '100vh',
+        position: 'relative',
+      }}
+      className="flex bg-background"
+    >
+      {/* ── Fixed Sidebar ──────────────────────────────────────────────────── */}
       <aside
-        style={{ width: sidebarWidth }}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar text-sidebar-foreground transition-all duration-300 border-r border-sidebar-border",
+          "fixed inset-y-0 left-0 z-50 flex flex-col bg-sidebar text-sidebar-foreground",
+          "transition-all duration-300 border-r border-sidebar-border",
           mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
+        style={{ width: sidebarPx }}
       >
         <div className="flex items-center justify-between p-4 border-b border-sidebar-border">
           {!collapsed && (
@@ -59,7 +71,9 @@ export default function AdminLayout() {
 
         <nav className="flex-1 py-4 space-y-1 px-2 overflow-y-auto">
           {navItems.map(item => {
-            const active = location.pathname === item.to || (item.to !== '/admin' && location.pathname.startsWith(item.to));
+            const active =
+              location.pathname === item.to ||
+              (item.to !== '/admin' && location.pathname.startsWith(item.to));
             return (
               <Link
                 key={item.to}
@@ -99,73 +113,68 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* ── Main area: sits NEXT to sidebar via margin-left, then scrolls independently ── */}
+      {/* ── Content column (offset by sidebar on desktop) ───────────────────── */}
       <div
-        className="min-h-screen flex flex-col bg-background transition-all duration-300"
-        style={{ marginLeft: 0, paddingLeft: 0 }}
+        className="flex flex-col flex-1 min-w-0 transition-all duration-300"
+        style={{ marginLeft: 0 }}
       >
-        {/* Header: sticky within main, left-padded past sidebar on desktop */}
+        {/* Sticky header */}
         <header
-          className="sticky top-0 z-40 bg-background/80 backdrop-blur border-b h-14 flex items-center px-4"
-          style={{ paddingLeft: undefined }}
+          className="sticky top-0 z-40 bg-background/80 backdrop-blur border-b h-14 flex items-center gap-2"
+          style={{ paddingLeft: 16, paddingRight: 24 }}
         >
           {/* Hamburger — mobile only */}
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden mr-2 flex-shrink-0"
+            className="md:hidden flex-shrink-0"
             onClick={() => setMobileOpen(true)}
           >
             <Menu className="h-5 w-5" />
           </Button>
 
-          {/* On desktop, push title past sidebar */}
+          {/* Desktop: invisible spacer to push title past the fixed sidebar */}
           <div
             className="hidden md:block flex-shrink-0 transition-all duration-300"
-            style={{ width: sidebarWidth }}
+            style={{ width: sidebarPx }}
           />
 
-          <h2 className="font-display font-semibold text-lg px-2">
-            {navItems.find(i => i.to === location.pathname || (i.to !== '/admin' && location.pathname.startsWith(i.to)))?.label || 'Admin'}
+          <h2 className="font-display font-semibold text-lg truncate">
+            {navItems.find(
+              i => i.to === location.pathname ||
+              (i.to !== '/admin' && location.pathname.startsWith(i.to))
+            )?.label || 'Admin'}
           </h2>
         </header>
 
-        {/* Content: left padding on desktop to clear fixed sidebar; horizontal scroll for wide content */}
-        <main className="flex-1 overflow-x-auto">
+        {/* Main scrollable area */}
+        <div className="flex flex-1">
+          {/* Desktop: spacer that holds the sidebar gap so content doesn't slide under it */}
           <div
-            className="p-4 md:p-6 transition-all duration-300"
-            style={{ paddingLeft: undefined }}
-          >
-            {/* Desktop: indent past sidebar */}
-            <div className="hidden md:block" style={{ marginLeft: sidebarWidth }} />
-            <div style={{ marginLeft: 'auto' }}>
-              {/* Wrap in a box that pushes content past the sidebar on desktop */}
-              <div className="md:hidden" />
-            </div>
-            {/* Actual outlet, offset on desktop */}
-            <div
-              className="transition-all duration-300"
-              style={{ paddingLeft: 0 }}
-            >
-              {/* We use a pseudo-element trick: an invisible spacer at start of main on md */}
-              <Outlet />
-            </div>
-          </div>
-        </main>
+            className="hidden md:block flex-shrink-0 transition-all duration-300"
+            style={{ width: sidebarPx }}
+          />
+
+          {/* Page content — can scroll horizontally for wide tables */}
+          <main className="flex-1 min-w-0 p-4 md:p-6 overflow-x-auto">
+            <Outlet />
+          </main>
+        </div>
       </div>
 
-      {/* Mobile backdrop overlay */}
+      {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="md:hidden z-40"
+          className="md:hidden"
           style={{
             position: 'fixed',
             inset: 0,
+            zIndex: 40,
             background: 'rgba(0,0,0,0.5)',
           }}
           onClick={() => setMobileOpen(false)}
         />
       )}
-    </>
+    </div>
   );
 }
