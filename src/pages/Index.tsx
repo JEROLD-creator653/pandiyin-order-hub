@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Leaf, Truck, ShieldCheck, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CartReminderPopup } from '@/components/CartReminderPopup';
 import TrustBadges from '@/components/TrustBadges';
@@ -436,6 +437,12 @@ export default function Index() {
                           <img src={p.image_url} alt={p.name} className="w-full h-full object-cover object-center rounded-lg group-hover:scale-105 transition-transform duration-500" />
                         ) : (
                           <Leaf className="h-12 w-12 text-muted-foreground/30" />
+                        )}
+                        {p.stock_quantity <= 5 && p.stock_quantity > 0 && (
+                          <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] md:text-xs border-0 shadow-sm">Few Left</Badge>
+                        )}
+                        {p.stock_quantity === 0 && (
+                          <Badge variant="destructive" className="absolute top-2 right-2 text-[10px] md:text-xs border-0 shadow-sm">Out of Stock</Badge>
                         )}
                       </div>
                       <CardContent className="p-3 md:p-4 flex-1 flex flex-col">
