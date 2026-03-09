@@ -28,12 +28,13 @@ export default function TrustBadges() {
           display: flex;
           align-items: center;
           width: max-content;
-          gap: 30px;
+          gap: calc((100vw - 3 * 220px) / 3);
           height: 100%;
           will-change: transform;
           -webkit-backface-visibility: hidden;
           backface-visibility: hidden;
-          animation: trust-marquee 25s linear infinite;
+          animation: trust-marquee 30s linear infinite;
+          padding: 0 calc((100vw - 3 * 220px) / 6);
         }
 
         .trust-badge {
@@ -69,6 +70,10 @@ export default function TrustBadges() {
         }
 
         @media (max-width: 768px) {
+          .trust-track {
+            gap: calc((100vw - 3 * 160px) / 3);
+            padding: 0 calc((100vw - 3 * 160px) / 6);
+          }
           .trust-badge-logo {
             width: 70px;
             height: 70px;

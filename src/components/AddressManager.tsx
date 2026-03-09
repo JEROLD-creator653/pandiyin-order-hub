@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Plus, MapPin, Pencil, Trash2, Check, Loader2, ChevronDown } from 'lucide-react';
+import { Plus, MapPin, Pencil, Trash2, Check, Loader2, ChevronDown, LocateFixed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -61,6 +61,7 @@ export default function AddressManager({
   const [form, setForm] = useState(emptyForm);
   const [countryCode, setCountryCode] = useState('+91');
   const [pincodeLoading, setPincodeLoading] = useState(false);
+  const [locationStatus, setLocationStatus] = useState<string | null>(null);
   const pincodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const load = async () => {
@@ -123,6 +124,62 @@ export default function AddressManager({
       setPincodeLoading(false);
     }, 300);
   }, []);
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast({ title: 'Geolocation not supported', description: 'Your browser does not support location access.', variant: 'destructive' });
+      return;
+    }
+
+    setLocationStatus('Detecting GPS...');
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocationStatus('Fetching address...');
+
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}&addressdetails=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          if (!res.ok) throw new Error('Geocoding failed');
+          const data = await res.json();
+          const addr = data.address || {};
+
+          const pincode = addr.postcode || '';
+          setForm((f) => ({
+            ...f,
+            address_line1: [addr.road, addr.neighbourhood, addr.hamlet].filter(Boolean).join(', ') || f.address_line1,
+            area: addr.suburb || addr.village || addr.hamlet || f.area,
+            city: addr.city || addr.town || addr.county || f.city,
+            district: addr.state_district || addr.county || f.district,
+            state: addr.state || f.state,
+            pincode,
+          }));
+
+          // Trigger pincode lookup for consistency with existing data
+          if (pincode.length === 6) {
+            handlePincodeChange(pincode);
+          }
+
+          setLocationStatus(null);
+          toast({ title: 'Address auto-filled from your location' });
+        } catch {
+          setLocationStatus(null);
+          toast({ title: 'Unable to fetch address', description: 'Please enter address manually.', variant: 'destructive' });
+        }
+      },
+      (error) => {
+        setLocationStatus(null);
+        const msg = error.code === error.PERMISSION_DENIED
+          ? 'Location permission denied. Please enable it in browser settings.'
+          : 'Unable to detect location. Please enter address manually.';
+        toast({ title: 'Location error', description: msg, variant: 'destructive' });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
 
   const openNew = () => {
     setEditing(null);
@@ -285,6 +342,21 @@ export default function AddressManager({
               <DialogTitle>{editing ? 'Edit Address' : 'Add Address'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
+              {/* Use Current Location */}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full gap-2 text-sm"
+                onClick={handleUseCurrentLocation}
+                disabled={!!locationStatus}
+              >
+                {locationStatus ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> {locationStatus}</>
+                ) : (
+                  <><LocateFixed className="h-4 w-4" /> Use Current Location</>
+                )}
+              </Button>
+
               <div className="space-y-1">
                 <Label className="text-xs">Full Name *</Label>
                 <Input
