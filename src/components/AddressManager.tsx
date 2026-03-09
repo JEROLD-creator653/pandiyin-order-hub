@@ -131,6 +131,15 @@ export default function AddressManager({
       return;
     }
 
+    // Check if site is served over HTTPS
+    if (window.location.protocol !== 'https:') {
+      toast({
+        title: 'Location requires HTTPS',
+        description: 'Geolocation only works on secure (HTTPS) sites. Please access this site using https://.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setLocationStatus('Detecting GPS...');
     navigator.geolocation.getCurrentPosition(
       async (position) => {
