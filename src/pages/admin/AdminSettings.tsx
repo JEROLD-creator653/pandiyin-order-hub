@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { clearAllCache } from '@/lib/cacheService';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -47,7 +48,8 @@ export default function AdminSettings() {
     if (error) {
       toast({ title: 'Failed to save settings', description: error.message, variant: 'destructive' });
     } else {
-      await queryClient.invalidateQueries({ queryKey: ['store_settings'] });
+      await clearAllCache();
+      await queryClient.invalidateQueries();
       toast({ title: 'Store settings saved' });
     }
     setSaving(false);
