@@ -80,7 +80,7 @@ export default function AdminLayout() {
             {navItems.find(i => i.to === location.pathname || (i.to !== '/admin' && location.pathname.startsWith(i.to)))?.label || 'Admin'}
           </h2>
         </header>
-        <main className="flex-1 p-4 md:p-6">
+        <main className="flex-1 p-4 md:p-6 overflow-x-auto max-w-full">
           <Outlet />
         </main>
       </div>
