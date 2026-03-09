@@ -12,18 +12,28 @@ export default function TrustBadges() {
 
   return (
     <>
-      {/* CSS Marquee Animation */}
+      {/* CSS Marquee Animation — pure CSS, GPU-accelerated */}
       <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+        @keyframes trust-marquee {
+          0% {
+            transform: translate3d(0, 0, 0);
+          }
+          100% {
+            transform: translate3d(-50%, 0, 0);
+          }
         }
-        
-        .marquee-track {
-          animation: marquee 24s linear infinite;
+
+        .trust-marquee-track {
+          display: flex;
+          width: max-content;
+          gap: 180px;
+          will-change: transform;
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+          animation: trust-marquee 25s linear infinite;
         }
-        
-        .marquee-track:hover {
+
+        .trust-marquee-track:hover {
           animation-play-state: paused;
         }
 
@@ -31,9 +41,7 @@ export default function TrustBadges() {
           transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
 
-        /* Remove white space from logos */
         .badge-logo-no-whitespace {
-          /* Scale image to fill container and minimize white space */
           object-fit: contain;
           transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
           animation: glitter 3s ease-in-out infinite;
@@ -43,60 +51,52 @@ export default function TrustBadges() {
           0%, 100% { filter: brightness(100%) drop-shadow(0 0 0 transparent); }
           50% { filter: brightness(120%) drop-shadow(0 0 5px rgba(255,255,255,0.6)); }
         }
-        
+
         @media (max-width: 768px) {
           .badge-logo-container-mobile {
             width: 70px !important;
             height: 70px !important;
           }
-          
+
           .badge-logo-mobile {
             width: 70px !important;
             height: 70px !important;
           }
-          
+
           .badge-text-mobile {
             font-size: 13px !important;
           }
-          
-          .marquee-gap-mobile {
+
+          .trust-marquee-track {
             gap: 160px !important;
           }
         }
 
         @media (min-width: 1024px) {
-          .marquee-gap-desktop {
+          .trust-marquee-track {
             gap: 220px !important;
           }
         }
       `}</style>
-      
+
       {/* Marquee Strip */}
-      <section 
+      <section
         className="relative overflow-hidden w-full"
-        style={{ 
+        style={{
           background: '#FFFFFF',
           height: '100px',
         }}
       >
         <div className="flex items-center h-full">
-          <div 
-            className="marquee-track marquee-gap-mobile marquee-gap-desktop flex items-center"
-            style={{
-              width: 'max-content',
-              gap: '180px',
-            }}
-          >
+          <div className="trust-marquee-track" style={{ alignItems: 'center' }}>
             {duplicatedBadges.map((badge, index) => (
               <div
                 key={index}
                 className="flex items-center whitespace-nowrap"
-                style={{
-                  gap: '16px',
-                }}
+                style={{ gap: '16px' }}
               >
-                {/* Badge Logo - Lazy loaded with dimensions */}
-                <div 
+                {/* Badge Logo */}
+                <div
                   className="flex-shrink-0 badge-logo-container-mobile badge-lift rounded-full overflow-hidden"
                   style={{
                     width: '95px',
@@ -109,8 +109,8 @@ export default function TrustBadges() {
                     margin: 0,
                   }}
                 >
-                  <img 
-                    src={badge.logo} 
+                  <img
+                    src={badge.logo}
                     alt={badge.text}
                     width={95}
                     height={95}
@@ -126,9 +126,9 @@ export default function TrustBadges() {
                     }}
                   />
                 </div>
-                
+
                 {/* Text */}
-                <span 
+                <span
                   className="font-medium badge-text-mobile"
                   style={{
                     fontSize: '15px',
