@@ -28,7 +28,7 @@ declare global {
   }
 }
 
-const RAZORPAY_KEY_ID = 'rzp_test_SOl9lqqJlvN9Ln';
+// Razorpay key is fetched from the server — never hardcode secrets or keys in frontend
 
 const getGSTType = (state: string): 'cgst_sgst' | 'igst' => {
   const sameStateStates = ['Tamil Nadu', 'Puducherry'];
@@ -269,10 +269,14 @@ export default function Checkout() {
       const razorpayOrder = await res.json();
       if (!res.ok) throw new Error(razorpayOrder.error || 'Failed to create payment order');
 
+      // Get the public key from server response — never hardcode it
+      const razorpayKeyId = razorpayOrder.key_id;
+      if (!razorpayKeyId) throw new Error('Payment gateway configuration error');
+
       const order = await createOrder();
 
       const options = {
-        key: RAZORPAY_KEY_ID,
+        key: razorpayKeyId,
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         name: 'PANDIYIN Nature In Pack',

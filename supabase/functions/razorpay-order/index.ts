@@ -7,6 +7,23 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Simple in-memory rate limiter per user
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX = 10; // max 10 requests per minute per user
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(userId);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count++;
+  return true;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -40,6 +57,14 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
+    // Rate limiting
+    if (!checkRateLimit(userId)) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+        status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { cart_items, delivery_state, currency = "INR", receipt, notes } = await req.json();
 
     // Validate inputs
@@ -49,11 +74,33 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (cart_items.length > 50) {
+      return new Response(JSON.stringify({ error: "Too many items in cart" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (!delivery_state || typeof delivery_state !== "string") {
       return new Response(JSON.stringify({ error: "Delivery state is required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Validate cart item structure
+    for (const item of cart_items) {
+      if (!item.product_id || typeof item.product_id !== "string") {
+        return new Response(JSON.stringify({ error: "Invalid product ID" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (!Number.isInteger(item.quantity) || item.quantity <= 0 || item.quantity > 100) {
+        return new Response(JSON.stringify({ error: "Invalid quantity" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Server-side price calculation — never trust client amount
@@ -138,12 +185,17 @@ serve(async (req) => {
       });
     }
 
-    // Create Razorpay order with server-calculated amount
-    const RAZORPAY_KEY_ID = Deno.env.get("RAZORPAY_KEY_ID") || "rzp_test_SOl9lqqJlvN9Ln";
+    // Get Razorpay keys from environment ONLY — no hardcoded fallbacks
+    const RAZORPAY_KEY_ID = Deno.env.get("RAZORPAY_KEY_ID");
     const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
 
+    if (!RAZORPAY_KEY_ID) {
+      console.error("RAZORPAY_KEY_ID not configured");
+      throw new Error("Payment gateway not configured");
+    }
     if (!RAZORPAY_KEY_SECRET) {
-      throw new Error("Razorpay key secret not configured");
+      console.error("RAZORPAY_KEY_SECRET not configured");
+      throw new Error("Payment gateway not configured");
     }
 
     const auth = btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`);
@@ -171,8 +223,32 @@ serve(async (req) => {
       );
     }
 
+    // Log order creation event
+    try {
+      await adminClient.from("payment_logs").insert({
+        user_id: userId,
+        event_type: "order_created",
+        razorpay_order_id: razorpayOrder.id,
+        amount: serverTotal,
+        currency,
+        metadata: {
+          subtotal,
+          delivery_charge: deliveryCharge,
+          delivery_state: delivery_state,
+          items_count: cart_items.length,
+        },
+        ip_address: req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || null,
+      });
+    } catch (logErr) {
+      console.error("Failed to log payment event:", logErr);
+      // Don't fail the request for logging errors
+    }
+
     return new Response(JSON.stringify({
-      ...razorpayOrder,
+      id: razorpayOrder.id,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+      key_id: RAZORPAY_KEY_ID, // Return public key so frontend doesn't need to hardcode it
       server_total: serverTotal,
       server_subtotal: subtotal,
       server_delivery_charge: deliveryCharge,
