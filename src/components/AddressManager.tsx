@@ -139,36 +139,78 @@ export default function AddressManager({
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude, accuracy } = position.coords;
-          console.log('[GEO] Success! Lat:', latitude, 'Lon:', longitude, 'Accuracy:', accuracy);
+          console.log('[GEO] Success! Lat:', latitude, 'Lon:', longitude, 'Accuracy:', accuracy, 'm');
           setLocationStatus('Fetching address...');
           
           try {
-            const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&zoom=18`;
-            console.log('[GEO] Fetching Nominatim:', nominatimUrl);
+            // Use Google Maps Geocoding API for maximum accuracy
+            const GPLACES_API_KEY = 'AIzaSyDtR8J4iTqgR9lyfDN-Qk18jijAvc0CEC8';
+            const googleUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GPLACES_API_KEY}&language=en&result_type=street_address|sublocality|postal_code`;
+            console.log('[GEO] Fetching Google Geocoding API...');
             
-            const res = await fetch(nominatimUrl, {
-              headers: {
-                'Accept-Language': 'en',
-                'User-Agent': 'PandiyinNatureInPack/1.0',
-              },
-            });
-            
-            console.log('[GEO] Nominatim response status:', res.status);
+            const res = await fetch(googleUrl);
+            console.log('[GEO] Google response status:', res.status);
             
             if (!res.ok) {
-              throw new Error(`Geocoding HTTP ${res.status}`);
+              throw new Error(`Google Geocoding HTTP ${res.status}`);
             }
             
             const data = await res.json();
-            console.log('[GEO] Nominatim data:', JSON.stringify(data.address));
+            console.log('[GEO] Google status:', data.status, 'Results:', data.results?.length);
             
-            const addr = data.address || {};
-            const pincode = addr.postcode || '';
-            const addressLine1 = [addr.road, addr.neighbourhood, addr.hamlet].filter(Boolean).join(', ');
-            const area = addr.suburb || addr.village || addr.hamlet || '';
-            const city = addr.city || addr.town || addr.county || '';
-            const district = addr.state_district || addr.county || '';
-            const state = addr.state || '';
+            if (data.status !== 'OK' || !data.results?.length) {
+              throw new Error(`Google Geocoding returned: ${data.status}`);
+            }
+
+            // Parse address components from the most accurate result
+            const result = data.results[0];
+            const components = result.address_components || [];
+            console.log('[GEO] Google formatted_address:', result.formatted_address);
+            console.log('[GEO] Google components:', JSON.stringify(components));
+
+            const getComponent = (type: string): string => {
+              const comp = components.find((c: any) => c.types.includes(type));
+              return comp?.long_name || '';
+            };
+
+            const getShortComponent = (type: string): string => {
+              const comp = components.find((c: any) => c.types.includes(type));
+              return comp?.short_name || '';
+            };
+
+            // Extract precise address fields
+            const streetNumber = getComponent('street_number');
+            const route = getComponent('route');
+            const premise = getComponent('premise');
+            const subpremise = getComponent('subpremise');
+            const neighborhood = getComponent('neighborhood');
+            const sublocalityL2 = getComponent('sublocality_level_2');
+            const sublocalityL1 = getComponent('sublocality_level_1');
+            const locality = getComponent('locality');
+            const adminArea2 = getComponent('administrative_area_level_2');
+            const adminArea1 = getComponent('administrative_area_level_1');
+            const postalCode = getComponent('postal_code');
+
+            // Build address_line1 from street-level components
+            const addressParts = [subpremise, premise, streetNumber, route].filter(Boolean);
+            const addressLine1 = addressParts.length > 0 ? addressParts.join(', ') : (neighborhood || sublocalityL2 || '');
+            
+            // Area: sublocality or neighborhood
+            const area = sublocalityL1 || neighborhood || sublocalityL2 || '';
+            
+            // City: locality (e.g., "Chennai", "Madurai")
+            const city = locality || adminArea2 || '';
+            
+            // District
+            const district = adminArea2 || '';
+            
+            // State
+            const state = adminArea1 || '';
+            
+            // Pincode
+            const pincode = postalCode || '';
+
+            console.log('[GEO] Parsed → address_line1:', addressLine1, '| area:', area, '| city:', city, '| district:', district, '| state:', state, '| pincode:', pincode);
 
             setForm((f) => ({
               ...f,
@@ -180,15 +222,40 @@ export default function AddressManager({
               pincode: pincode || f.pincode,
             }));
 
-            // Also trigger pincode lookup for more accurate city/area data
+            // Also trigger pincode lookup for even more granular area data
             if (pincode && pincode.length === 6) {
               handlePincodeChange(pincode);
             }
 
             setLocationStatus(null);
-            toast({ title: 'Address auto-filled from your location' });
+            toast({ title: '📍 Address detected', description: 'Your location has been auto-filled. You can edit any field.' });
           } catch (fetchError) {
-            console.error('[GEO] Nominatim fetch error:', fetchError);
+            console.error('[GEO] Google Geocoding error:', fetchError);
+            
+            // Fallback to Nominatim if Google fails
+            try {
+              console.log('[GEO] Falling back to Nominatim...');
+              const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&zoom=18`;
+              const res2 = await fetch(nominatimUrl, { headers: { 'User-Agent': 'PandiyinNatureInPack/1.0' } });
+              if (res2.ok) {
+                const data2 = await res2.json();
+                const addr = data2.address || {};
+                setForm((f) => ({
+                  ...f,
+                  address_line1: [addr.road, addr.neighbourhood, addr.hamlet].filter(Boolean).join(', ') || f.address_line1,
+                  area: addr.suburb || addr.village || addr.hamlet || f.area,
+                  city: addr.city || addr.town || addr.county || f.city,
+                  district: addr.state_district || addr.county || f.district,
+                  state: addr.state || f.state,
+                  pincode: addr.postcode || f.pincode,
+                }));
+                if (addr.postcode?.length === 6) handlePincodeChange(addr.postcode);
+                setLocationStatus(null);
+                toast({ title: '📍 Address detected (approximate)', description: 'Location auto-filled. Please verify the details.' });
+                return;
+              }
+            } catch (_) { /* fallback also failed */ }
+            
             setLocationStatus(null);
             toast({
               title: 'Unable to fetch address',
