@@ -131,16 +131,7 @@ export default function AddressManager({
       return;
     }
 
-    // Check if site is served over HTTPS
-    if (window.location.protocol !== 'https:') {
-      toast({
-        title: 'Location requires HTTPS',
-        description: 'Geolocation only works on secure (HTTPS) sites. Please access this site using https://.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    setLocationStatus('Detecting GPS...');
+    setLocationStatus('Detecting location...');
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
@@ -170,26 +161,24 @@ export default function AddressManager({
           toast({ title: 'Address auto-filled from your location' });
         } catch {
           setLocationStatus(null);
-          toast({ title: 'Unable to fetch address', description: 'Please enter address manually.', variant: 'destructive' });
+          toast({ title: 'Unable to fetch address from your location', description: 'Please enter address manually.' });
         }
       },
       (error) => {
         setLocationStatus(null);
-        let msg;
+        let title = 'Location error';
+        let description = 'Unable to detect your location. Please enter address manually.';
         if (error.code === error.PERMISSION_DENIED) {
-          msg = `Location permission denied.\n\nTroubleshooting:\n- Reload the page after allowing location.\n- Make sure your browser shows a location icon in the address bar.\n- Click the lock icon next to the URL and set Location to "Allow".\n- If using Chrome, check Settings > Privacy and Security > Site Settings > Location.\n- Ensure the site is served over HTTPS.`;
+          title = 'Location access denied';
+          description = 'Please allow location permission to detect your address automatically.';
         } else if (error.code === error.POSITION_UNAVAILABLE) {
-          msg = 'Location unavailable. Please check your device settings or try again.';
+          title = 'Location unavailable';
+          description = 'Unable to detect your location. Please try again.';
         } else if (error.code === error.TIMEOUT) {
-          msg = 'Location request timed out. Please try again.';
-        } else {
-          msg = 'Unable to detect location. Please enter address manually.';
+          title = 'Request timed out';
+          description = 'Location request timed out. Please try again.';
         }
-        toast({
-          title: 'Location error',
-          description: msg,
-          variant: 'destructive',
-        });
+        toast({ title, description, variant: 'destructive' });
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
@@ -357,19 +346,24 @@ export default function AddressManager({
             </DialogHeader>
             <div className="space-y-3">
               {/* Use Current Location */}
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full gap-2 text-sm"
-                onClick={handleUseCurrentLocation}
-                disabled={!!locationStatus}
-              >
-                {locationStatus ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> {locationStatus}</>
-                ) : (
-                  <><LocateFixed className="h-4 w-4" /> Use Current Location</>
-                )}
-              </Button>
+              <div className="space-y-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2 text-sm border-primary/30 hover:bg-primary/5"
+                  onClick={handleUseCurrentLocation}
+                  disabled={!!locationStatus}
+                >
+                  {locationStatus ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> {locationStatus}</>
+                  ) : (
+                    <><LocateFixed className="h-4 w-4 text-primary" /> 📍 Use Current Location</>
+                  )}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  Allow location access to automatically fill your delivery address.
+                </p>
+              </div>
 
               <div className="space-y-1">
                 <Label className="text-xs">Full Name *</Label>
