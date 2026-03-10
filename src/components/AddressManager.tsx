@@ -131,111 +131,57 @@ export default function AddressManager({
       return;
     }
 
-    setLocationStatus('Detecting GPS...');
-    console.log('[GEO] Starting geolocation request...');
-    console.log('[GEO] Protocol:', window.location.protocol, 'Host:', window.location.host);
-
-    try {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude, accuracy } = position.coords;
-          console.log('[GEO] Success! Lat:', latitude, 'Lon:', longitude, 'Accuracy:', accuracy);
-          setLocationStatus('Fetching address...');
-          
-          try {
-            const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&zoom=18`;
-            console.log('[GEO] Fetching Nominatim:', nominatimUrl);
-            
-            const res = await fetch(nominatimUrl, {
-              headers: {
-                'Accept-Language': 'en',
-                'User-Agent': 'PandiyinNatureInPack/1.0',
-              },
-            });
-            
-            console.log('[GEO] Nominatim response status:', res.status);
-            
-            if (!res.ok) {
-              throw new Error(`Geocoding HTTP ${res.status}`);
-            }
-            
-            const data = await res.json();
-            console.log('[GEO] Nominatim data:', JSON.stringify(data.address));
-            
-            const addr = data.address || {};
-            const pincode = addr.postcode || '';
-            const addressLine1 = [addr.road, addr.neighbourhood, addr.hamlet].filter(Boolean).join(', ');
-            const area = addr.suburb || addr.village || addr.hamlet || '';
-            const city = addr.city || addr.town || addr.county || '';
-            const district = addr.state_district || addr.county || '';
-            const state = addr.state || '';
-
-            setForm((f) => ({
-              ...f,
-              address_line1: addressLine1 || f.address_line1,
-              area: area || f.area,
-              city: city || f.city,
-              district: district || f.district,
-              state: state || f.state,
-              pincode: pincode || f.pincode,
-            }));
-
-            // Also trigger pincode lookup for more accurate city/area data
-            if (pincode && pincode.length === 6) {
-              handlePincodeChange(pincode);
-            }
-
-            setLocationStatus(null);
-            toast({ title: 'Address auto-filled from your location' });
-          } catch (fetchError) {
-            console.error('[GEO] Nominatim fetch error:', fetchError);
-            setLocationStatus(null);
-            toast({
-              title: 'Unable to fetch address',
-              description: 'GPS detected but address lookup failed. Please enter address manually.',
-              variant: 'destructive',
-            });
+    setLocationStatus('Detecting location...');
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setLocationStatus('Fetching address...');
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}&addressdetails=1`,
+            { headers: { 'Accept-Language': 'en' } }
+          );
+          if (!res.ok) throw new Error('Geocoding failed');
+          const data = await res.json();
+          const addr = data.address || {};
+          const pincode = addr.postcode || '';
+          setForm((f) => ({
+            ...f,
+            address_line1: [addr.road, addr.neighbourhood, addr.hamlet].filter(Boolean).join(', ') || f.address_line1,
+            area: addr.suburb || addr.village || addr.hamlet || f.area,
+            city: addr.city || addr.town || addr.county || f.city,
+            district: addr.state_district || addr.county || f.district,
+            state: addr.state || f.state,
+            pincode,
+          }));
+          if (pincode.length === 6) {
+            handlePincodeChange(pincode);
           }
-        },
-        (error) => {
-          console.error('[GEO] Geolocation error - Code:', error.code, 'Message:', error.message);
           setLocationStatus(null);
-          
-          let title = 'Location error';
-          let description = 'Unable to detect your location. Please enter address manually.';
-          
-          switch (error.code) {
-            case 1: // PERMISSION_DENIED
-              title = 'Location access denied';
-              description = 'Please allow location permission in your browser settings and try again.';
-              break;
-            case 2: // POSITION_UNAVAILABLE
-              title = 'Location unavailable';
-              description = 'Unable to detect your location. Please check GPS is enabled and try again.';
-              break;
-            case 3: // TIMEOUT
-              title = 'Location timed out';
-              description = 'Location request timed out. Please try again or enter address manually.';
-              break;
-          }
-          
-          toast({ title, description, variant: 'destructive' });
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 0,
+          toast({ title: 'Address auto-filled from your location' });
+        } catch {
+          setLocationStatus(null);
+          toast({ title: 'Unable to fetch address from your location', description: 'Please enter address manually.' });
         }
-      );
-    } catch (e) {
-      console.error('[GEO] Unexpected error calling getCurrentPosition:', e);
-      setLocationStatus(null);
-      toast({
-        title: 'Location error',
-        description: 'An unexpected error occurred. Please enter address manually.',
-        variant: 'destructive',
-      });
-    }
+      },
+      (error) => {
+        setLocationStatus(null);
+        let title = 'Location error';
+        let description = 'Unable to detect your location. Please enter address manually.';
+        if (error.code === error.PERMISSION_DENIED) {
+          title = 'Location access denied';
+          description = 'Please allow location permission to detect your address automatically.';
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          title = 'Location unavailable';
+          description = 'Unable to detect your location. Please try again.';
+        } else if (error.code === error.TIMEOUT) {
+          title = 'Request timed out';
+          description = 'Location request timed out. Please try again.';
+        }
+        toast({ title, description, variant: 'destructive' });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
   const openNew = () => {
