@@ -226,22 +226,18 @@ export default function LocationPickerMap({
     const startLng = (initialLatitude && initialLongitude) ? initialLongitude : 78.1198;
     const startZoom = (initialLatitude && initialLongitude) ? 17 : 14;
 
-    const isMobile = window.innerWidth < 640;
-
     const map = L.map(mapContainerRef.current, {
       center: [startLat, startLng],
       zoom: startZoom,
       zoomControl: false,
       attributionControl: false,
-      // tap: true is required for reliable touch-tap on mobile inside modals
-      tap: true,
-      tapTolerance: 15,
-    } as L.MapOptions & { tap?: boolean; tapTolerance?: number });
+      tap: false, // Fix issues with tap/click on mobile inside modals
+    } as L.MapOptions & { tap?: boolean });
 
     L.control.attribution({ position: 'bottomleft' }).addTo(map);
-
-    // Only show zoom control on non-mobile
-    if (!isMobile) {
+    
+    // Only show zoom control if not on a very small screen
+    if (window.innerWidth > 640) {
       L.control.zoom({ position: 'topright' }).addTo(map);
     }
 
@@ -290,11 +286,14 @@ export default function LocationPickerMap({
       resizeObserver.observe(mapContainerRef.current);
     }
 
-    // Force resize at multiple intervals to handle slow modal animations on mobile
-    const t1 = setTimeout(() => { if (mapRef.current) map.invalidateSize(); }, 100);
-    const t2 = setTimeout(() => { if (mapRef.current) map.invalidateSize(); }, 300);
-    const t3 = setTimeout(() => { if (mapRef.current) map.invalidateSize(); }, 600);
-    const t4 = setTimeout(() => { if (mapRef.current) map.invalidateSize(); }, 1200);
+    // Also force a resize after modal animation frames
+    const timeout1 = setTimeout(() => {
+      if (mapRef.current) map.invalidateSize();
+    }, 150);
+    
+    const timeout2 = setTimeout(() => {
+      if (mapRef.current) map.invalidateSize();
+    }, 400);
 
     // If we have saved coordinates, reverse-geocode them on load
     if (initialLatitude && initialLongitude) {
@@ -305,10 +304,8 @@ export default function LocationPickerMap({
     }
 
     return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-      clearTimeout(t4);
+      clearTimeout(timeout1);
+      clearTimeout(timeout2);
       resizeObserver.disconnect();
       map.remove();
       mapRef.current = null;
@@ -319,27 +316,34 @@ export default function LocationPickerMap({
 
   return (
     <div className="space-y-2">
-      {/* GPS status bar — only shown while detecting */}
-      {gpsStatus && (
-        <div className="w-full flex items-center justify-center gap-2 py-1.5 text-xs text-muted-foreground">
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-          {gpsStatus}
-        </div>
-      )}
+      {/* Re-detect GPS button */}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={detectGPS}
+        disabled={!!gpsStatus}
+        className="w-full gap-2 text-sm border-primary/30 hover:bg-primary/5"
+      >
+        {gpsStatus ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {gpsStatus}
+          </>
+        ) : (
+          <>
+            <LocateFixed className="h-4 w-4 text-primary" />
+             Use Current Location
+          </>
+        )}
+      </Button>
 
-      {/* Map container */}
-      <div className="relative rounded-xl overflow-hidden border border-border/60 shadow-md">
-        {/* The actual Leaflet map */}
+      {/* Map */}
+      <div className="relative rounded-lg overflow-hidden border border-border/60 shadow-sm transition-all duration-300">
         <div
           ref={mapContainerRef}
-          className="w-full"
-          style={{
-            height: 'clamp(220px, 45vw, 300px)',
-            background: '#e8ede8',
-            zIndex: 0,
-            /* Prevent the dialog scroll from stealing touch events during map pan */
-            touchAction: 'none',
-          }}
+          className="w-full h-[250px] md:h-[300px] touch-none"
+          style={{ background: '#f0f4f3', zIndex: 0 }}
         />
 
         {/* Geocoding spinner overlay */}
@@ -355,18 +359,6 @@ export default function LocationPickerMap({
           </div>
         )}
 
-        {/* Re-centre / re-detect GPS — floating button inside map (bottom-right) */}
-        <button
-          type="button"
-          onClick={detectGPS}
-          disabled={!!gpsStatus}
-          title="Re-detect GPS"
-          className="absolute bottom-10 right-2 z-[450] bg-white dark:bg-background rounded-full p-2 shadow-md border border-border/60 hover:bg-primary/5 transition-colors disabled:opacity-50"
-          style={{ zIndex: 450 }}
-        >
-          <LocateFixed className="h-4 w-4 text-primary" />
-        </button>
-
         {/* Drag hint */}
         <div
           className="absolute bottom-1.5 left-1/2 -translate-x-1/2 bg-background/85 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-sm flex items-center gap-1 text-[10px] text-muted-foreground"
@@ -377,23 +369,16 @@ export default function LocationPickerMap({
         </div>
       </div>
 
-      {/* Leaflet z-index + animation fixes inside dialog */}
+      {/* Leaflet z-index fixes inside dialog */}
       <style>{`
         @keyframes lpulse {
-          0%   { transform: scale(0.5); opacity: 1; }
+          0% { transform: scale(0.5); opacity: 1; }
           80%, 100% { transform: scale(2); opacity: 0; }
         }
         .leaflet-pulsing-marker { background: transparent !important; border: none !important; }
-        /* Keep leaflet layers below dialog overlay (z-index 50+) but above normal content */
-        .leaflet-pane         { z-index: 1 !important; }
-        .leaflet-tile-pane    { z-index: 1 !important; }
-        .leaflet-overlay-pane { z-index: 2 !important; }
-        .leaflet-marker-pane  { z-index: 3 !important; }
-        .leaflet-top,
-        .leaflet-bottom       { z-index: 4 !important; }
-        .leaflet-control      { z-index: 4 !important; }
-        /* Prevent rubber-band scroll on iOS from swallowing map touches */
-        .leaflet-container    { touch-action: none; }
+        .leaflet-pane { z-index: 1 !important; }
+        .leaflet-top, .leaflet-bottom { z-index: 2 !important; }
+        .leaflet-control { z-index: 2 !important; }
       `}</style>
     </div>
   );
