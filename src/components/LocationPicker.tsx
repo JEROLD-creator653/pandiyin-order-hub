@@ -286,14 +286,13 @@ export default function LocationPickerMap({
       resizeObserver.observe(mapContainerRef.current);
     }
 
-    // Also force a resize after modal animation frames
-    const timeout1 = setTimeout(() => {
-      if (mapRef.current) map.invalidateSize();
-    }, 150);
-    
-    const timeout2 = setTimeout(() => {
-      if (mapRef.current) map.invalidateSize();
-    }, 400);
+    // Force resize after modal animation frames at multiple intervals
+    // Mobile modals can take longer to finish CSS transitions
+    const timeouts = [100, 250, 500, 800].map((ms) =>
+      setTimeout(() => {
+        if (mapRef.current) map.invalidateSize();
+      }, ms)
+    );
 
     // If we have saved coordinates, reverse-geocode them on load
     if (initialLatitude && initialLongitude) {
@@ -304,8 +303,7 @@ export default function LocationPickerMap({
     }
 
     return () => {
-      clearTimeout(timeout1);
-      clearTimeout(timeout2);
+      timeouts.forEach(clearTimeout);
       resizeObserver.disconnect();
       map.remove();
       mapRef.current = null;
@@ -369,16 +367,31 @@ export default function LocationPickerMap({
         </div>
       </div>
 
-      {/* Leaflet z-index fixes inside dialog */}
+      {/* Leaflet fixes: Tailwind preflight + z-index inside dialog */}
       <style>{`
         @keyframes lpulse {
           0% { transform: scale(0.5); opacity: 1; }
           80%, 100% { transform: scale(2); opacity: 0; }
         }
         .leaflet-pulsing-marker { background: transparent !important; border: none !important; }
+
+        /* Fix: Tailwind preflight sets img { display: block; max-width: 100%; height: auto; }
+           which crushes Leaflet tile dimensions to 0 on mobile. Override explicitly: */
+        .leaflet-container img,
+        .leaflet-tile-pane img,
+        .leaflet-tile {
+          max-width: none !important;
+          max-height: none !important;
+        }
+
+        /* z-index layering inside modal dialog */
+        .leaflet-container { z-index: 0; }
         .leaflet-pane { z-index: 1 !important; }
-        .leaflet-top, .leaflet-bottom { z-index: 2 !important; }
-        .leaflet-control { z-index: 2 !important; }
+        .leaflet-tile-pane { z-index: 200 !important; }
+        .leaflet-overlay-pane { z-index: 400 !important; }
+        .leaflet-marker-pane { z-index: 600 !important; }
+        .leaflet-top, .leaflet-bottom { z-index: 1000 !important; }
+        .leaflet-control { z-index: 1000 !important; }
       `}</style>
     </div>
   );
