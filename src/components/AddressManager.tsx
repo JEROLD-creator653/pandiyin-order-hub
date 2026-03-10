@@ -394,15 +394,15 @@ export default function AddressManager({
               <Plus className="h-3 w-3" /> Add New
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-hidden p-0">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-hidden p-0 rounded-lg">
             <div
-              className="overflow-y-auto p-6 scrollbar-hide"
+              className="overflow-y-auto pt-6 px-6 pb-6 scrollbar-hide"
               style={{ maxHeight: '90vh', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-            <DialogHeader>
+            <DialogHeader className="pr-8">
               <DialogTitle>{editing ? 'Edit Address' : 'Add Address'}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-3">
+            <div className="space-y-3 mt-3">
               {/* Use Current Location */}
               <div className="space-y-1">
                 <Button
