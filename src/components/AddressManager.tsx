@@ -394,7 +394,11 @@ export default function AddressManager({
               <Plus className="h-3 w-3" /> Add New
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto scrollbar-hide">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-hidden p-0">
+            <div
+              className="overflow-y-auto p-6 scrollbar-hide"
+              style={{ maxHeight: '90vh', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
             <DialogHeader>
               <DialogTitle>{editing ? 'Edit Address' : 'Add Address'}</DialogTitle>
             </DialogHeader>
@@ -551,6 +555,7 @@ export default function AddressManager({
               <Button onClick={save} className="w-full">
                 {editing ? 'Update' : 'Save'} Address
               </Button>
+            </div>
             </div>
           </DialogContent>
         </Dialog>
