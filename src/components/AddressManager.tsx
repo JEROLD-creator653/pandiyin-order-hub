@@ -399,7 +399,7 @@ export default function AddressManager({
               className="overflow-y-auto pt-6 px-6 pb-6 scrollbar-hide"
               style={{ maxHeight: '90vh', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-            <DialogHeader className="pr-8">
+            <DialogHeader className="text-center pr-8">
               <DialogTitle>{editing ? 'Edit Address' : 'Add Address'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3 mt-3">
