@@ -394,7 +394,7 @@ export default function AddressManager({
               <Plus className="h-3 w-3" /> Add New
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto scrollbar-hide">
             <DialogHeader>
               <DialogTitle>{editing ? 'Edit Address' : 'Add Address'}</DialogTitle>
             </DialogHeader>
