@@ -231,10 +231,15 @@ export default function LocationPickerMap({
       zoom: startZoom,
       zoomControl: false,
       attributionControl: false,
-    });
+      tap: false, // Fix issues with tap/click on mobile inside modals
+    } as L.MapOptions & { tap?: boolean });
 
     L.control.attribution({ position: 'bottomleft' }).addTo(map);
-    L.control.zoom({ position: 'topright' }).addTo(map);
+    
+    // Only show zoom control if not on a very small screen
+    if (window.innerWidth > 640) {
+      L.control.zoom({ position: 'topright' }).addTo(map);
+    }
 
     // OpenStreetMap standard tiles
     L.tileLayer(
@@ -270,6 +275,26 @@ export default function LocationPickerMap({
     mapRef.current = map;
     markerRef.current = marker;
 
+    // Fix map rendering issues inside modals/dialogs
+    // Use ResizeObserver to automatically resize map when container dimension changes
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapRef.current) {
+        map.invalidateSize();
+      }
+    });
+    if (mapContainerRef.current) {
+      resizeObserver.observe(mapContainerRef.current);
+    }
+
+    // Also force a resize after modal animation frames
+    const timeout1 = setTimeout(() => {
+      if (mapRef.current) map.invalidateSize();
+    }, 150);
+    
+    const timeout2 = setTimeout(() => {
+      if (mapRef.current) map.invalidateSize();
+    }, 400);
+
     // If we have saved coordinates, reverse-geocode them on load
     if (initialLatitude && initialLongitude) {
       placeMarkerAndGeocode(startLat, startLng);
@@ -279,6 +304,9 @@ export default function LocationPickerMap({
     }
 
     return () => {
+      clearTimeout(timeout1);
+      clearTimeout(timeout2);
+      resizeObserver.disconnect();
       map.remove();
       mapRef.current = null;
       markerRef.current = null;
@@ -311,10 +339,10 @@ export default function LocationPickerMap({
       </Button>
 
       {/* Map */}
-      <div className="relative rounded-lg overflow-hidden border border-border/60 shadow-sm">
+      <div className="relative rounded-lg overflow-hidden border border-border/60 shadow-sm transition-all duration-300">
         <div
           ref={mapContainerRef}
-          className="w-full h-[220px]"
+          className="w-full h-[250px] md:h-[300px] touch-none"
           style={{ background: '#f0f4f3', zIndex: 0 }}
         />
 

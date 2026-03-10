@@ -65,7 +65,7 @@ serve(async (req) => {
       });
     }
 
-    const { cart_items, delivery_state, currency = "INR", receipt, notes } = await req.json();
+    const { cart_items, delivery_state, currency = "INR", receipt, notes, coupon_code } = await req.json();
 
     // Validate inputs
     if (!cart_items || !Array.isArray(cart_items) || cart_items.length === 0) {
@@ -176,7 +176,27 @@ serve(async (req) => {
       deliveryCharge = chargedWeight * perKgRate;
     }
 
-    const serverTotal = subtotal + deliveryCharge;
+    let discount = 0;
+    if (coupon_code && typeof coupon_code === 'string') {
+      const { data: couponData, error: couponErr } = await adminClient.rpc('validate_coupon', {
+        _coupon_code: coupon_code.toUpperCase(),
+        _user_id: userId,
+        _order_total: subtotal
+      });
+      if (!couponErr && couponData && couponData.length > 0 && couponData[0].is_valid) {
+        const validation = couponData[0];
+        discount = validation.discount_type === 'percentage'
+          ? (subtotal * Number(validation.discount_value)) / 100
+          : Number(validation.discount_value);
+      } else if (couponErr || !couponData || couponData.length === 0 || !couponData[0].is_valid) {
+        return new Response(JSON.stringify({ error: couponData?.[0]?.error_message || "Invalid coupon" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    const serverTotal = subtotal + deliveryCharge - discount;
 
     if (serverTotal <= 0) {
       return new Response(JSON.stringify({ error: "Invalid order total" }), {
@@ -252,6 +272,7 @@ serve(async (req) => {
       server_total: serverTotal,
       server_subtotal: subtotal,
       server_delivery_charge: deliveryCharge,
+      server_discount: discount,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

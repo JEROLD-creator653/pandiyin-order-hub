@@ -73,10 +73,10 @@ export default function AdminOrderDetail() {
       lines.push('Delivery Address:');
       lines.push(addr.full_name || '');
       if (addr.phone) lines.push(`Phone: ${addr.phone}`);
-      lines.push(addr.address_line1 || '');
-      if (addr.address_line2) lines.push(addr.address_line2);
-      lines.push(`${addr.city}${addr.district ? `, ${addr.district}` : ''} – ${addr.pincode}`);
-      lines.push(addr.state || '');
+      lines.push(addr.flatNumber ? `${addr.flatNumber}, ${addr.address_line1}` : addr.address_line1 || '');
+      if (addr.address_line2) lines.push(`${addr.address_line2},`);
+      lines.push(`${addr.city} – ${addr.pincode},`);
+      lines.push(`${addr.state}, ${addr.country || 'India'}.`);
       lines.push('');
     }
 
@@ -99,7 +99,12 @@ export default function AdminOrderDetail() {
         orderDate: orderDate.toLocaleDateString('en-IN'),
         orderTime: orderDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
         customerName: addr?.full_name || 'Customer',
-        customerAddress: addr ? `${addr.address_line1}, ${addr.city} - ${addr.pincode}` : '',
+        customerAddress: addr ? [
+          addr.flatNumber ? `${addr.flatNumber}, ${addr.address_line1}` : addr.address_line1,
+          addr.address_line2 ? `${addr.address_line2},` : null,
+          `${addr.city} – ${addr.pincode},`,
+          `${addr.state}, ${addr.country || 'India'}.`,
+        ].filter(Boolean).join('\n') : '',
         customerPhone: addr?.phone || '',
         customerState: addr?.state || 'Tamil Nadu',
         items: orderItems.map(i => ({
@@ -225,10 +230,12 @@ export default function AdminOrderDetail() {
               <div className="bg-muted/50 rounded-lg p-3.5 text-sm space-y-0.5">
                 <p className="font-semibold text-foreground">{addr.full_name}</p>
                 {addr.phone && <p className="text-muted-foreground">Phone: {addr.phone}</p>}
-                <p className="text-foreground">{addr.address_line1}</p>
-                {addr.address_line2 && <p className="text-foreground">{addr.address_line2}</p>}
-                <p className="text-foreground">{addr.city}{addr.district ? `, ${addr.district}` : ''} – {addr.pincode}</p>
-                <p className="text-foreground">{addr.state}</p>
+                <p className="text-foreground">
+                  {addr.flatNumber ? `${addr.flatNumber}, ` : ''}{addr.address_line1}
+                </p>
+                {addr.address_line2 && <p className="text-foreground">{addr.address_line2},</p>}
+                <p className="text-foreground">{addr.city} – {addr.pincode},</p>
+                <p className="text-foreground">{addr.state}, {addr.country || 'India'}.</p>
               </div>
             </div>
             <Separator />

@@ -260,6 +260,7 @@ export default function Checkout() {
           body: JSON.stringify({
             cart_items: items.map(i => ({ product_id: i.product_id, quantity: i.quantity })),
             delivery_state: selectedAddress?.state || '',
+            coupon_code: couponCode,
             currency: 'INR',
             receipt: `order_${Date.now()}`,
           }),
@@ -364,6 +365,7 @@ export default function Checkout() {
         body: {
           cart_items: items.map(i => ({ product_id: i.product_id, quantity: i.quantity })),
           delivery_state: selectedAddress.state,
+          coupon_code: couponCode,
         },
       });
 
@@ -577,13 +579,15 @@ export default function Checkout() {
               <div className="border-t mt-4 pt-3">
                 <div className="flex items-center gap-2 mb-1">
                   <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span className="text-xs font-semibold">Deliver to</span>
+                  <span className="text-xs font-semibold">Deliver to {selectedAddress.full_name}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {selectedAddress.full_name}, {selectedAddress.flatNumber ? `${selectedAddress.flatNumber}, ` : ''}{selectedAddress.address_line1}
-                  {selectedAddress.address_line2 ? `, ${selectedAddress.address_line2}` : ''}, {selectedAddress.city} - {selectedAddress.pincode}
+                  {selectedAddress.flatNumber ? `${selectedAddress.flatNumber}, ` : ''}{selectedAddress.address_line1}
                 </p>
-                <p className="text-xs text-muted-foreground">{selectedAddress.phone}</p>
+                {selectedAddress.address_line2 && <p className="text-xs text-muted-foreground">{selectedAddress.address_line2},</p>}
+                <p className="text-xs text-muted-foreground">{selectedAddress.city} - {selectedAddress.pincode},</p>
+                <p className="text-xs text-muted-foreground">{selectedAddress.state}, {selectedAddress.country || 'India'}.</p>
+                <p className="text-xs text-muted-foreground mt-1">+91 {selectedAddress.phone}</p>
               </div>
             )}
 

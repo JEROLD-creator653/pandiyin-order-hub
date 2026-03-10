@@ -37,7 +37,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { cart_items, delivery_state } = await req.json();
+    const { cart_items, delivery_state, coupon_code } = await req.json();
 
     if (!cart_items || !Array.isArray(cart_items) || cart_items.length === 0) {
       return new Response(JSON.stringify({ error: 'Cart is empty' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -133,7 +133,27 @@ serve(async (req) => {
       }
     }
 
-    const grandTotal = subtotal + deliveryCharge;
+    let discount = 0;
+    if (coupon_code && typeof coupon_code === 'string') {
+      const { data: couponData, error: couponErr } = await adminClient.rpc('validate_coupon', {
+        _coupon_code: coupon_code.toUpperCase(),
+        _user_id: user.id,
+        _order_total: subtotal
+      });
+      if (!couponErr && couponData && couponData.length > 0 && couponData[0].is_valid) {
+        const validation = couponData[0];
+        discount = validation.discount_type === 'percentage'
+          ? (subtotal * Number(validation.discount_value)) / 100
+          : Number(validation.discount_value);
+      } else if (couponErr || !couponData || couponData.length === 0 || !couponData[0].is_valid) {
+        return new Response(JSON.stringify({
+          valid: false,
+          errors: [couponData?.[0]?.error_message || 'Invalid coupon']
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+
+    const grandTotal = subtotal - discount + deliveryCharge;
 
     return new Response(JSON.stringify({
       valid: true,
@@ -142,6 +162,7 @@ serve(async (req) => {
       charged_weight: chargedWeight,
       delivery_zone: zone,
       delivery_charge: deliveryCharge,
+      discount: discount,
       grand_total: grandTotal,
       items: verifiedItems,
     }), {

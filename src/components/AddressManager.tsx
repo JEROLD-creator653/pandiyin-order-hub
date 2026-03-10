@@ -371,7 +371,7 @@ export default function AddressManager({
               {showMap && dialogOpen && (
                 <Suspense
                   fallback={
-                    <div className="h-[280px] rounded-lg bg-muted/50 flex items-center justify-center">
+                    <div className="h-[250px] md:h-[300px] rounded-lg bg-muted/50 flex items-center justify-center">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         Loading map...
@@ -445,63 +445,14 @@ export default function AddressManager({
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label className="text-xs">Pincode *</Label>
-                <div className="relative">
-                  <Input
-                    value={form.pincode}
-                    onChange={(e) => handlePincodeChange(e.target.value)}
-                    maxLength={6}
-                    placeholder="625001"
-                  />
-                  {pincodeLoading && (
-                    <Loader2 className="h-3 w-3 animate-spin absolute right-2 top-3 text-muted-foreground" />
-                  )}
-                </div>
-              </div>
-
-              {/* Area / Village */}
-              <div className="space-y-1">
-                <Label className="text-xs">Area / Village</Label>
-                <div className="relative">
-                  <Input
-                    value={form.area}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, area: e.target.value }))
-                    }
-                    disabled={pincodeLoading}
-                  />
-                  {pincodeLoading && (
-                    <Loader2 className="h-3 w-3 animate-spin absolute right-2 top-3 text-muted-foreground" />
-                  )}
-                </div>
-              </div>
-
               {/* City / Taluk */}
               <div className="space-y-1">
-                <Label className="text-xs">City / Taluk</Label>
+                <Label className="text-xs">City</Label>
                 <div className="relative">
                   <Input
                     value={form.city}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, city: e.target.value }))
-                    }
-                    disabled={pincodeLoading}
-                  />
-                  {pincodeLoading && (
-                    <Loader2 className="h-3 w-3 animate-spin absolute right-2 top-3 text-muted-foreground" />
-                  )}
-                </div>
-              </div>
-
-              {/* District */}
-              <div className="space-y-1">
-                <Label className="text-xs">District</Label>
-                <div className="relative">
-                  <Input
-                    value={form.district}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, district: e.target.value }))
                     }
                     disabled={pincodeLoading}
                   />
@@ -526,6 +477,40 @@ export default function AddressManager({
                     <Loader2 className="h-3 w-3 animate-spin absolute right-2 top-3 text-muted-foreground" />
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Pincode *</Label>
+                <div className="relative">
+                  <Input
+                    value={form.pincode}
+                    onChange={(e) => handlePincodeChange(e.target.value)}
+                    maxLength={6}
+                    placeholder="625001"
+                  />
+                  {pincodeLoading && (
+                    <Loader2 className="h-3 w-3 animate-spin absolute right-2 top-3 text-muted-foreground" />
+                  )}
+                </div>
+              </div>
+
+              {/* Country */}
+              <div className="space-y-1">
+                <Label className="text-xs">Country</Label>
+                <div className="relative">
+                  <Input
+                    value={form.country}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, country: e.target.value }))
+                    }
+                    disabled={pincodeLoading}
+                  />
+                </div>
+              </div>
+
+              <div className="hidden">
+                <Input type="hidden" value={form.area} />
+                <Input type="hidden" value={form.district} />
               </div>
 
               {/* Hidden fields for delivery precision */}
@@ -569,10 +554,17 @@ export default function AddressManager({
                       <span className="font-medium text-sm">{selectedAddr.full_name}</span>
                       {selectedAddr.is_default && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Default</Badge>}
                     </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2">
-                      {selectedAddr.flatNumber ? `${selectedAddr.flatNumber}, ` : ''}{selectedAddr.address_line1}{selectedAddr.address_line2 ? `, ${selectedAddr.address_line2}` : ''}, {selectedAddr.city} - {selectedAddr.pincode}
+                    <p className="text-xs text-muted-foreground">
+                      {selectedAddr.flatNumber ? `${selectedAddr.flatNumber}, ` : ''}{selectedAddr.address_line1}
                     </p>
-                    <p className="text-xs text-muted-foreground">+91 {selectedAddr.phone}</p>
+                    {selectedAddr.address_line2 && <p className="text-xs text-muted-foreground">{selectedAddr.address_line2},</p>}
+                    <p className="text-xs text-muted-foreground">
+                      {selectedAddr.city} - {selectedAddr.pincode},
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedAddr.state}, {selectedAddr.country || 'India'},
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">+91 {selectedAddr.phone}</p>
                   </div>
                   <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                     <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(selectedAddr)}>
@@ -599,10 +591,17 @@ export default function AddressManager({
                           <span className="font-medium text-sm">{a.full_name}</span>
                           {a.is_default && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Default</Badge>}
                         </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2">
-                          {a.flatNumber ? `${a.flatNumber}, ` : ''}{a.address_line1}{a.address_line2 ? `, ${a.address_line2}` : ''}, {a.city} - {a.pincode}
+                        <p className="text-xs text-muted-foreground">
+                          {a.flatNumber ? `${a.flatNumber}, ` : ''}{a.address_line1}
                         </p>
-                        <p className="text-xs text-muted-foreground">+91 {a.phone}</p>
+                        {a.address_line2 && <p className="text-xs text-muted-foreground">{a.address_line2},</p>}
+                        <p className="text-xs text-muted-foreground">
+                          {a.city} - {a.pincode},
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {a.state}, {a.country || 'India'}.
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">+91 {a.phone}</p>
                       </div>
                       <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                         {!a.is_default && (
@@ -647,10 +646,17 @@ export default function AddressManager({
                     <span className="font-medium text-sm">{a.full_name}</span>
                     {a.is_default && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Default</Badge>}
                   </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {a.flatNumber ? `${a.flatNumber}, ` : ''}{a.address_line1}{a.address_line2 ? `, ${a.address_line2}` : ''}, {a.city} - {a.pincode}
+                  <p className="text-xs text-muted-foreground">
+                    {a.flatNumber ? `${a.flatNumber}, ` : ''}{a.address_line1}
                   </p>
-                  <p className="text-xs text-muted-foreground">+91 {a.phone}</p>
+                  {a.address_line2 && <p className="text-xs text-muted-foreground">{a.address_line2},</p>}
+                  <p className="text-xs text-muted-foreground">
+                    {a.city} - {a.pincode},
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {a.state}, {a.country || 'India'}.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">+91 {a.phone}</p>
                 </div>
                 <div className="flex gap-1 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
                   {!a.is_default && (

@@ -107,9 +107,10 @@ export default function OrderConfirmation() {
       orderTime: orderDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }),
       customerName: addr?.full_name || '',
       customerAddress: [
-        addr?.address_line1,
-        addr?.address_line2,
-        `${addr?.city || ''}, ${addr?.state || ''} – ${addr?.pincode || ''}`,
+        addr?.flatNumber ? `${addr.flatNumber}, ${addr.address_line1}` : addr?.address_line1,
+        addr?.address_line2 ? `${addr.address_line2},` : null,
+        `${addr?.city || ''} – ${addr?.pincode || ''},`,
+        `${addr?.state || 'Tamil Nadu'}, ${addr?.country || 'India'}.`
       ].filter(Boolean).join('\n'),
       customerPhone: `+91 ${addr?.phone || ''}`,
       customerState: addr?.state || 'Tamil Nadu',
@@ -155,8 +156,12 @@ export default function OrderConfirmation() {
               {address?.full_name && (
                 <div className="text-xs">
                   <p className="font-medium">{address.full_name}</p>
-                  <p className="text-muted-foreground">{address.address_line1}{address.address_line2 ? `, ${address.address_line2}` : ''}</p>
-                  <p className="text-muted-foreground">{address.city}, {address.state} - {address.pincode}</p>
+                  <p className="text-muted-foreground">
+                    {address.flatNumber ? `${address.flatNumber}, ` : ''}{address.address_line1}
+                  </p>
+                  {address.address_line2 && <p className="text-muted-foreground">{address.address_line2},</p>}
+                  <p className="text-muted-foreground">{address.city} - {address.pincode},</p>
+                  <p className="text-muted-foreground">{address.state}, {address.country || 'India'}.</p>
                 </div>
               )}
 
