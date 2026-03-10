@@ -346,19 +346,24 @@ export default function AddressManager({
             </DialogHeader>
             <div className="space-y-3">
               {/* Use Current Location */}
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full gap-2 text-sm"
-                onClick={handleUseCurrentLocation}
-                disabled={!!locationStatus}
-              >
-                {locationStatus ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> {locationStatus}</>
-                ) : (
-                  <><LocateFixed className="h-4 w-4" /> Use Current Location</>
-                )}
-              </Button>
+              <div className="space-y-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full gap-2 text-sm border-primary/30 hover:bg-primary/5"
+                  onClick={handleUseCurrentLocation}
+                  disabled={!!locationStatus}
+                >
+                  {locationStatus ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> {locationStatus}</>
+                  ) : (
+                    <><LocateFixed className="h-4 w-4 text-primary" /> 📍 Use Current Location</>
+                  )}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center">
+                  Allow location access to automatically fill your delivery address.
+                </p>
+              </div>
 
               <div className="space-y-1">
                 <Label className="text-xs">Full Name *</Label>
