@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, lazy, Suspense, useMemo } from 'react';
 import { Plus, MapPin, Pencil, Trash2, Check, Loader2, ChevronDown, LocateFixed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,10 +17,15 @@ import {
   debounce,
 } from '@/lib/addressHelpers';
 
+// Lazy load the map to avoid bundle bloat
+const LocationPickerMap = lazy(() => import('./LocationPicker'));
+import type { LocationData } from './LocationPicker';
+
 export interface Address {
   id: string;
   full_name: string;
   phone: string;
+  flatNumber?: string | null;
   address_line1: string;
   address_line2: string | null;
   area?: string | null;
@@ -29,6 +34,10 @@ export interface Address {
   state: string;
   pincode: string;
   is_default: boolean;
+  country?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  display_name?: string | null;
 }
 
 interface AddressManagerProps {
@@ -40,6 +49,7 @@ interface AddressManagerProps {
 const emptyForm = {
   full_name: '',
   phone: '',
+  flatNumber: '',
   address_line1: '',
   address_line2: '',
   area: '',
@@ -47,6 +57,10 @@ const emptyForm = {
   district: '',
   state: 'Tamil Nadu',
   pincode: '',
+  country: 'India',
+  latitude: null as number | null,
+  longitude: null as number | null,
+  display_name: '',
 };
 
 export default function AddressManager({
@@ -61,8 +75,13 @@ export default function AddressManager({
   const [form, setForm] = useState(emptyForm);
   const [countryCode, setCountryCode] = useState('+91');
   const [pincodeLoading, setPincodeLoading] = useState(false);
-  const [locationStatus, setLocationStatus] = useState<string | null>(null);
   const pincodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Track whether the map pin just updated the form — skip pincode API to preserve precision
+  const pinUpdatedByMapRef = useRef(false);
+  // Map is hidden by default; shown when user clicks "Use Current Location" or editing with coords
+  const [showMap, setShowMap] = useState(false);
+  // Triggers GPS detection when "Use Current Location" is clicked
+  const [triggerGPS, setTriggerGPS] = useState(false);
 
   const load = async () => {
     if (!user) return;
@@ -85,13 +104,19 @@ export default function AddressManager({
     }
   }, [selectable, onSelect, addresses, selectedId]);
 
-  // Debounced pincode lookup
+  // Debounced pincode lookup — skips if the map pin just set the pincode
   const handlePincodeChange = useCallback((pincode: string) => {
     setForm((f) => ({ ...f, pincode }));
 
     // Clear previous timeout
     if (pincodeTimeoutRef.current) {
       clearTimeout(pincodeTimeoutRef.current);
+    }
+
+    // If the map pin just updated the form, skip pincode API to keep precise data
+    if (pinUpdatedByMapRef.current) {
+      pinUpdatedByMapRef.current = false;
+      return;
     }
 
     // Only fetch if exactly 6 digits
@@ -125,123 +150,34 @@ export default function AddressManager({
     }, 300);
   }, []);
 
-  const handleUseCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      toast({ title: 'Geolocation not supported', description: 'Your browser does not support location access.', variant: 'destructive' });
-      return;
-    }
-
-    setLocationStatus('Detecting GPS...');
-    console.log('[GEO] Starting geolocation request...');
-    console.log('[GEO] Protocol:', window.location.protocol, 'Host:', window.location.host);
-
-    try {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude, accuracy } = position.coords;
-          console.log('[GEO] Success! Lat:', latitude, 'Lon:', longitude, 'Accuracy:', accuracy);
-          setLocationStatus('Fetching address...');
-          
-          try {
-            const nominatimUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1&zoom=18`;
-            console.log('[GEO] Fetching Nominatim:', nominatimUrl);
-            
-            const res = await fetch(nominatimUrl, {
-              headers: {
-                'Accept-Language': 'en',
-                'User-Agent': 'PandiyinNatureInPack/1.0',
-              },
-            });
-            
-            console.log('[GEO] Nominatim response status:', res.status);
-            
-            if (!res.ok) {
-              throw new Error(`Geocoding HTTP ${res.status}`);
-            }
-            
-            const data = await res.json();
-            console.log('[GEO] Nominatim data:', JSON.stringify(data.address));
-            
-            const addr = data.address || {};
-            const pincode = addr.postcode || '';
-            const addressLine1 = [addr.road, addr.neighbourhood, addr.hamlet].filter(Boolean).join(', ');
-            const area = addr.suburb || addr.village || addr.hamlet || '';
-            const city = addr.city || addr.town || addr.county || '';
-            const district = addr.state_district || addr.county || '';
-            const state = addr.state || '';
-
-            setForm((f) => ({
-              ...f,
-              address_line1: addressLine1 || f.address_line1,
-              area: area || f.area,
-              city: city || f.city,
-              district: district || f.district,
-              state: state || f.state,
-              pincode: pincode || f.pincode,
-            }));
-
-            // Also trigger pincode lookup for more accurate city/area data
-            if (pincode && pincode.length === 6) {
-              handlePincodeChange(pincode);
-            }
-
-            setLocationStatus(null);
-            toast({ title: 'Address auto-filled from your location' });
-          } catch (fetchError) {
-            console.error('[GEO] Nominatim fetch error:', fetchError);
-            setLocationStatus(null);
-            toast({
-              title: 'Unable to fetch address',
-              description: 'GPS detected but address lookup failed. Please enter address manually.',
-              variant: 'destructive',
-            });
-          }
-        },
-        (error) => {
-          console.error('[GEO] Geolocation error - Code:', error.code, 'Message:', error.message);
-          setLocationStatus(null);
-          
-          let title = 'Location error';
-          let description = 'Unable to detect your location. Please enter address manually.';
-          
-          switch (error.code) {
-            case 1: // PERMISSION_DENIED
-              title = 'Location access denied';
-              description = 'Please allow location permission in your browser settings and try again.';
-              break;
-            case 2: // POSITION_UNAVAILABLE
-              title = 'Location unavailable';
-              description = 'Unable to detect your location. Please check GPS is enabled and try again.';
-              break;
-            case 3: // TIMEOUT
-              title = 'Location timed out';
-              description = 'Location request timed out. Please try again or enter address manually.';
-              break;
-          }
-          
-          toast({ title, description, variant: 'destructive' });
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 15000,
-          maximumAge: 0,
-        }
-      );
-    } catch (e) {
-      console.error('[GEO] Unexpected error calling getCurrentPosition:', e);
-      setLocationStatus(null);
-      toast({
-        title: 'Location error',
-        description: 'An unexpected error occurred. Please enter address manually.',
-        variant: 'destructive',
-      });
-    }
-  };
+  // Pin-based address detection: when the map pin moves, update all address fields
+  const handleLocationChange = useCallback((data: LocationData) => {
+    console.log('[ADDR] Pin location changed → updating form fields');
+    // Mark that this update came from the map pin — prevents pincode API from overwriting
+    pinUpdatedByMapRef.current = true;
+    setForm((f) => ({
+      ...f,
+      flatNumber: data.flatNumber || f.flatNumber,
+      address_line1: data.address_line1 || f.address_line1,
+      address_line2: data.address_line2 || f.address_line2,
+      area: data.area || f.area,
+      city: data.city || f.city,
+      district: data.district || f.district,
+      state: data.state || f.state,
+      pincode: data.pincode || f.pincode,
+      country: data.country || f.country,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      display_name: data.display_name,
+    }));
+  }, []);
 
   const openNew = () => {
     setEditing(null);
     setForm(emptyForm);
     setCountryCode('+91');
+    setShowMap(false);
+    setTriggerGPS(false);
     setDialogOpen(true);
   };
 
@@ -257,6 +193,7 @@ export default function AddressManager({
     setForm({
       full_name: a.full_name,
       phone: phoneNumber, // Store only digits, no country code
+      flatNumber: a.flatNumber || '',
       address_line1: a.address_line1,
       address_line2: a.address_line2 || '',
       area: a.area || '',
@@ -264,8 +201,15 @@ export default function AddressManager({
       district: a.district || '',
       state: a.state,
       pincode: a.pincode,
+      country: a.country || 'India',
+      latitude: a.latitude || null,
+      longitude: a.longitude || null,
+      display_name: a.display_name || '',
     });
 
+    // Show map if the address already has stored coordinates
+    setShowMap(!!(a.latitude && a.longitude));
+    setTriggerGPS(false);
     setDialogOpen(true);
   };
 
@@ -274,6 +218,7 @@ export default function AddressManager({
       !user ||
       !form.full_name ||
       !form.phone ||
+      !form.flatNumber ||
       !form.address_line1 ||
       !form.pincode
     ) {
@@ -299,6 +244,7 @@ export default function AddressManager({
     const payload = {
       full_name: form.full_name,
       phone: phoneDigitsOnly, // Only digits, no country code
+      flatNumber: form.flatNumber,
       address_line1: form.address_line1,
       address_line2: form.address_line2,
       area: form.area || null,
@@ -306,6 +252,10 @@ export default function AddressManager({
       district: form.district || null,
       state: form.state,
       pincode: form.pincode,
+      country: form.country,
+      latitude: form.latitude,
+      longitude: form.longitude,
+      display_name: form.display_name,
       user_id: user.id,
       is_default: addresses.length === 0,
     };
@@ -403,25 +353,40 @@ export default function AddressManager({
               <DialogTitle>{editing ? 'Edit Address' : 'Add Address'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3 mt-3">
-              {/* Use Current Location */}
-              <div className="space-y-1">
+              {/* Use Current Location button — reveals map + triggers GPS */}
+              {!showMap && (
                 <Button
                   type="button"
                   variant="outline"
+                  size="sm"
+                  onClick={() => { setShowMap(true); setTriggerGPS(true); }}
                   className="w-full gap-2 text-sm border-primary/30 hover:bg-primary/5"
-                  onClick={handleUseCurrentLocation}
-                  disabled={!!locationStatus}
                 >
-                  {locationStatus ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> {locationStatus}</>
-                  ) : (
-                    <><LocateFixed className="h-4 w-4 text-primary" /> 📍 Use Current Location</>
-                  )}
+                  <LocateFixed className="h-4 w-4 text-primary" />
+                   Use Current Location
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  Allow location access to automatically fill your delivery address.
-                </p>
-              </div>
+              )}
+
+              {/* Pin-based Location Picker — shown after clicking Use Current Location */}
+              {showMap && dialogOpen && (
+                <Suspense
+                  fallback={
+                    <div className="h-[280px] rounded-lg bg-muted/50 flex items-center justify-center">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Loading map...
+                      </div>
+                    </div>
+                  }
+                >
+                  <LocationPickerMap
+                    onLocationChange={handleLocationChange}
+                    autoDetectGPS={triggerGPS}
+                    initialLatitude={form.latitude}
+                    initialLongitude={form.longitude}
+                  />
+                </Suspense>
+              )}
 
               <div className="space-y-1">
                 <Label className="text-xs">Full Name *</Label>
@@ -447,6 +412,17 @@ export default function AddressManager({
                     maxLength={getMaxPhoneLength(countryCode)}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs">Flat / House Number *</Label>
+                <Input
+                  value={form.flatNumber}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, flatNumber: e.target.value }))
+                  }
+                  placeholder="Enter flat or house number"
+                />
               </div>
 
               <div className="space-y-1">
@@ -552,6 +528,12 @@ export default function AddressManager({
                 </div>
               </div>
 
+              {/* Hidden fields for delivery precision */}
+              <input type="hidden" name="latitude" value={form.latitude || ''} />
+              <input type="hidden" name="longitude" value={form.longitude || ''} />
+              <input type="hidden" name="display_name" value={form.display_name || ''} />
+              <input type="hidden" name="country" value={form.country || ''} />
+
               <Button onClick={save} className="w-full">
                 {editing ? 'Update' : 'Save'} Address
               </Button>
@@ -588,7 +570,7 @@ export default function AddressManager({
                       {selectedAddr.is_default && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Default</Badge>}
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-2">
-                      {selectedAddr.address_line1}{selectedAddr.address_line2 ? `, ${selectedAddr.address_line2}` : ''}, {selectedAddr.city} - {selectedAddr.pincode}
+                      {selectedAddr.flatNumber ? `${selectedAddr.flatNumber}, ` : ''}{selectedAddr.address_line1}{selectedAddr.address_line2 ? `, ${selectedAddr.address_line2}` : ''}, {selectedAddr.city} - {selectedAddr.pincode}
                     </p>
                     <p className="text-xs text-muted-foreground">+91 {selectedAddr.phone}</p>
                   </div>
@@ -618,7 +600,7 @@ export default function AddressManager({
                           {a.is_default && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Default</Badge>}
                         </div>
                         <p className="text-xs text-muted-foreground line-clamp-2">
-                          {a.address_line1}{a.address_line2 ? `, ${a.address_line2}` : ''}, {a.city} - {a.pincode}
+                          {a.flatNumber ? `${a.flatNumber}, ` : ''}{a.address_line1}{a.address_line2 ? `, ${a.address_line2}` : ''}, {a.city} - {a.pincode}
                         </p>
                         <p className="text-xs text-muted-foreground">+91 {a.phone}</p>
                       </div>
@@ -666,7 +648,7 @@ export default function AddressManager({
                     {a.is_default && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Default</Badge>}
                   </div>
                   <p className="text-xs text-muted-foreground line-clamp-2">
-                    {a.address_line1}{a.address_line2 ? `, ${a.address_line2}` : ''}, {a.city} - {a.pincode}
+                    {a.flatNumber ? `${a.flatNumber}, ` : ''}{a.address_line1}{a.address_line2 ? `, ${a.address_line2}` : ''}, {a.city} - {a.pincode}
                   </p>
                   <p className="text-xs text-muted-foreground">+91 {a.phone}</p>
                 </div>

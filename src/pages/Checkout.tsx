@@ -580,7 +580,7 @@ export default function Checkout() {
                   <span className="text-xs font-semibold">Deliver to</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {selectedAddress.full_name}, {selectedAddress.address_line1}
+                  {selectedAddress.full_name}, {selectedAddress.flatNumber ? `${selectedAddress.flatNumber}, ` : ''}{selectedAddress.address_line1}
                   {selectedAddress.address_line2 ? `, ${selectedAddress.address_line2}` : ''}, {selectedAddress.city} - {selectedAddress.pincode}
                 </p>
                 <p className="text-xs text-muted-foreground">{selectedAddress.phone}</p>
