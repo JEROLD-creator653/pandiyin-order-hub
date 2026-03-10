@@ -213,6 +213,7 @@ export default function Auth() {
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
                           required={isSignUp}
+                          autoComplete="name"
                           className="h-11 bg-white/95 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:bg-white focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
                         />
                       </div>
@@ -235,6 +236,7 @@ export default function Auth() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    autoComplete="email"
                     className="h-11 bg-white/95 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:bg-white focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
                   />
                 </div>
@@ -255,6 +257,7 @@ export default function Auth() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength={6}
+                    autoComplete={isSignUp ? 'new-password' : 'current-password'}
                     className="h-11 bg-white/95 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:bg-white focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
                   />
                 </div>

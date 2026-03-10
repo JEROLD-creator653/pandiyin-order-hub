@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -344,13 +344,16 @@ export default function AddressManager({
               <Plus className="h-3 w-3" /> Add New
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-hidden p-0 rounded-lg">
+          <DialogContent className="max-w-md w-[calc(100vw-1rem)] max-h-[95dvh] overflow-hidden p-0 rounded-xl">
             <div
-              className="overflow-y-auto pt-6 px-6 pb-6 scrollbar-hide"
-              style={{ maxHeight: '90vh', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              className="overflow-y-auto pt-5 px-4 pb-5 scrollbar-hide sm:px-6 sm:pt-6 sm:pb-6"
+              style={{ maxHeight: 'calc(95dvh - 2rem)', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
             <DialogHeader className="text-center pr-8">
               <DialogTitle>{editing ? 'Edit Address' : 'Add Address'}</DialogTitle>
+              <DialogDescription className="sr-only">
+                {editing ? 'Update your delivery address details' : 'Add a new delivery address'}
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 mt-3">
               {/* Use Current Location button — reveals map + triggers GPS */}
