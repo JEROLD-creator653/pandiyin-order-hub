@@ -27,6 +27,8 @@ export default function AdminOrderDetail() {
   const [order, setOrder] = useState<any>(null);
   const [orderItems, setOrderItems] = useState<any[]>([]);
   const [newStatus, setNewStatus] = useState('');
+  const [trackingId, setTrackingId] = useState('');
+  const [courierName, setCourierName] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
