@@ -146,6 +146,50 @@ export default function OrderDetail() {
           </CardContent>
         </Card>
 
+
+        {/* Tracking Info */}
+        {(order as any).tracking_id && (order as any).tracking_id !== '' && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Truck className="h-4 w-4" /> Shipment Tracking</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {(order as any).courier_name && (order as any).courier_name !== '' && (
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Courier: </span>
+                  <span className="font-medium">{(order as any).courier_name}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Tracking ID:</span>
+                <code className="bg-background border rounded px-2.5 py-1 font-mono text-sm font-semibold">{(order as any).tracking_id}</code>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 h-7"
+                  onClick={() => {
+                    navigator.clipboard.writeText((order as any).tracking_id);
+                    toast({ title: 'Tracking ID copied to clipboard' });
+                  }}
+                >
+                  <Copy className="h-3 w-3" /> Copy
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Your order has been shipped. Use the tracking ID on the courier provider's tracking website to track your shipment.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+        {!isCancelled && (!(order as any).tracking_id || (order as any).tracking_id === '') && currentStep >= 1 && (
+          <Card>
+            <CardContent className="py-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Truck className="h-4 w-4" />
+                <span>Tracking ID: <span className="font-medium text-foreground">Not Available Yet</span></span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Items */}
         <Card>
           <CardHeader><CardTitle className="text-lg">Items ({items.length})</CardTitle></CardHeader>
