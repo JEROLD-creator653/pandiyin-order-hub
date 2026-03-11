@@ -44,6 +44,8 @@ export default function AdminOrderDetail() {
         setOrder(data);
         setOrderItems(data.order_items || []);
         setNewStatus(data.status);
+        setTrackingId((data as any).tracking_id || '');
+        setCourierName((data as any).courier_name || '');
       }
       setLoading(false);
     };
