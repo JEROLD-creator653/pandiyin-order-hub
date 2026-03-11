@@ -1,5 +1,5 @@
 # PANDIYIN - Nature In Pack
-# https://pandiyin.com
+# https://pandiyin-natureinpack.vercel.app
 
 User-agent: Googlebot
 Allow: /
@@ -46,4 +46,4 @@ Disallow: /*?ref=
 Crawl-delay: 2
 
 # Sitemap
-Sitemap: https://pandiyin.com/sitemap.xml
+Sitemap: https://pandiyin-natureinpack.vercel.app/sitemap.xml

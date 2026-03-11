@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { clearAllCache } from '@/lib/cacheService';
 import AddressManager from '@/components/AddressManager';
 import { Loader } from '@/components/ui/loader';
+import SEOHead from '@/components/SEOHead';
 
 export default function Profile() {
   const { user, loading } = useAuth();
@@ -75,6 +76,7 @@ export default function Profile() {
 
   return (
     <div className="container mx-auto px-4 pt-24 pb-8 max-w-2xl">
+      <SEOHead title="My Profile" description="Manage your PANDIYIN account profile and addresses." noindex />
       <h1 className="text-3xl font-display font-bold mb-8">My Profile</h1>
 
       <div className="space-y-6">

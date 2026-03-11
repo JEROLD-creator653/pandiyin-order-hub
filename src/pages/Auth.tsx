@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, EyeOff } from "lucide-react";
+import SEOHead from '@/components/SEOHead';
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -102,15 +103,17 @@ export default function Auth() {
   };
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-      style={{
-        backgroundImage: 'url(/auth-bg.webp)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-      }}
-    >
+    <>
+      <SEOHead title={isSignUp ? 'Create Account' : 'Sign In'} description="Sign in or create an account at PANDIYIN to order authentic homemade foods from Madurai." noindex />
+      <div
+        className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
+        style={{
+          backgroundImage: 'url(/auth-bg.webp)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      >
       {/* Semi-transparent overlay */}
       <div className="absolute inset-0 bg-white/20 z-0" />
 
@@ -411,6 +414,7 @@ export default function Auth() {
           </motion.div>
         </AnimatePresence>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

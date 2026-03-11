@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const SITE_URL = "https://pandiyin.com";
+const SITE_URL = "https://pandiyin-natureinpack.vercel.app";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {

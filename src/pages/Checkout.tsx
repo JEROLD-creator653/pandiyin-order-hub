@@ -21,6 +21,7 @@ import { formatPrice } from '@/lib/formatters';
 import { ButtonLoader, Loader } from '@/components/ui/loader';
 import { STATE_ZONES, getChargedWeight, calculateDeliveryCharge, type ShippingZoneConfig } from '@/lib/deliveryCalculations';
 import { generateInvoiceNumber } from '@/lib/invoicePdf';
+import SEOHead from '@/components/SEOHead';
 
 declare global {
   interface Window {
@@ -415,6 +416,7 @@ export default function Checkout() {
 
   return (
     <div className="container mx-auto px-4 pt-20 md:pt-24 pb-8 max-w-4xl">
+      <SEOHead title="Checkout" description="Complete your purchase securely at PANDIYIN." noindex />
       <h1 className="text-2xl md:text-3xl font-display font-bold mb-6 md:mb-8">Checkout</h1>
 
       <ErrorModal

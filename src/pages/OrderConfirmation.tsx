@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatPrice } from '@/lib/formatters';
 import { generateInvoicePdf, type InvoiceData, type InvoiceItem } from '@/lib/invoicePdf';
+import SEOHead from '@/components/SEOHead';
 
 const getPaymentModeLabel = (mode: string): string => {
   const labels: Record<string, string> = {
@@ -132,6 +133,7 @@ export default function OrderConfirmation() {
 
   return (
     <div className="container mx-auto px-4 pt-24 pb-16 max-w-lg">
+      <SEOHead title="Order Confirmed" description="Your PANDIYIN order has been placed successfully." noindex />
       <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
         <div className="text-center mb-8">
           <CheckCircle className="h-20 w-20 text-primary mx-auto mb-6" />

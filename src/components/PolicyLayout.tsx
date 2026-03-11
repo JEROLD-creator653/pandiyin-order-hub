@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { memo } from 'react';
 import { motion } from 'framer-motion';
 import { useStoreSettings } from '@/hooks/useStoreSettings';
+import SEOHead from '@/components/SEOHead';
 
 interface PolicyLayoutProps {
   title: string;
@@ -22,13 +23,6 @@ function PolicyLayout({ title, lastUpdated, content }: PolicyLayoutProps) {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    // Update page title for SEO
-    document.title = `${title} | Pandiyin`;
-    // Update meta description
-    const metaDescription = document.querySelector('meta[name="description"]');
-    if (metaDescription) {
-      metaDescription.setAttribute('content', `${title} for Pandiyin Nature In Pack`);
-    }
   }, [title]);
 
   // Memoize content formatting to avoid recalculation
@@ -98,6 +92,7 @@ function PolicyLayout({ title, lastUpdated, content }: PolicyLayoutProps) {
       transition={{ duration: 0.5 }}
       className="min-h-screen bg-background pt-28 pb-16"
     >
+      <SEOHead title={title} description={`${title} for PANDIYIN Nature In Pack - Authentic homemade foods from Madurai.`} />
       <div className="container mx-auto px-4 max-w-3xl">
         {/* Header */}
         <div className="mb-12">

@@ -11,6 +11,7 @@ import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import { formatPrice } from '@/lib/formatters';
 import { Loader } from '@/components/ui/loader';
 import { getChargedWeight } from '@/lib/deliveryCalculations';
+import SEOHead from '@/components/SEOHead';
 
 function getPricingInfo(price: number, comparePrice?: number) {
   const hasDiscount = comparePrice && comparePrice > price;
@@ -68,6 +69,7 @@ export default function Cart() {
 
   return (
     <div className="container mx-auto px-4 pt-20 md:pt-24 pb-8">
+      <SEOHead title="Shopping Cart" description="Review items in your shopping cart at PANDIYIN." noindex />
       <h1 className="text-2xl md:text-3xl font-display font-bold mb-6 md:mb-8">Shopping Cart</h1>
       <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
         <div className="lg:col-span-2 space-y-4">

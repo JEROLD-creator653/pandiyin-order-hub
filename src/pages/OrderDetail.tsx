@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
 import { toast } from '@/hooks/use-toast';
 import { generateInvoicePdf, type InvoiceData, type InvoiceItem } from '@/lib/invoicePdf';
+import SEOHead from '@/components/SEOHead';
 
 const getPaymentModeLabel = (mode: string): string => {
   const labels: Record<string, string> = {
@@ -100,6 +101,7 @@ export default function OrderDetail() {
 
   return (
     <div className="container mx-auto px-4 pt-24 pb-8 max-w-3xl">
+      <SEOHead title={`Order ${order.order_number}`} description="View details for your PANDIYIN order." noindex />
       <Button variant="ghost" size="sm" asChild className="mb-4 gap-1">
         <Link to="/dashboard"><ArrowLeft className="h-4 w-4" /> Back to Orders</Link>
       </Button>
