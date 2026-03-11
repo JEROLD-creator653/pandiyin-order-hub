@@ -190,9 +190,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!popup) return { error: new Error('Popup blocked. Please allow popups for this site.') };
 
     // Poll until popup closes — session is picked up by onAuthStateChange
+    // Use try/catch to handle COOP restrictions on popup.closed
     await new Promise<void>((resolve) => {
       const timer = setInterval(() => {
-        if (popup.closed) {
+        try {
+          if (popup.closed) {
+            clearInterval(timer);
+            resolve();
+          }
+        } catch {
+          // COOP policy blocks popup.closed access — fall back to timeout
           clearInterval(timer);
           resolve();
         }
