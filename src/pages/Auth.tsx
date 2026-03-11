@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, EyeOff } from "lucide-react";
 import SEOHead from '@/components/SEOHead';
+import { useGoogleLogin } from "@react-oauth/google";
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
