@@ -97,6 +97,11 @@ export default function Dashboard() {
                           <Badge className={`${statusColors[o.status] || ''} text-xs`}>{o.status}</Badge>
                           <span className="font-medium text-sm">{formatPrice(o.total)}</span>
                         </div>
+                        {o.tracking_id && o.tracking_id !== '' && (
+                          <p className="text-xs text-primary font-medium mt-1 flex items-center gap-1">
+                            <Package className="h-3 w-3" /> Tracking: {o.tracking_id}
+                          </p>
+                        )}
                       </div>
                       <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                     </CardContent>
