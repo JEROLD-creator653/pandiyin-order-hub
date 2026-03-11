@@ -160,16 +160,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signInWithGoogle = async (idToken?: string) => {
-    if (!idToken) {
-      return { error: new Error('No Google ID token provided') };
-    }
-
+  const signInWithGoogleIdToken = async (idToken: string) => {
     const { error } = await supabase.auth.signInWithIdToken({
       provider: 'google',
       token: idToken,
     });
-
     return { error };
   };
 
