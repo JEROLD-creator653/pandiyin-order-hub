@@ -79,38 +79,24 @@ export default function Auth() {
     }
   };
 
-  const googleLogin = useGoogleLogin({
-    flow: 'implicit',
-    onSuccess: async (tokenResponse) => {
-      setGoogleLoading(true);
-      try {
-        // Exchange access token for id_token via Google's tokeninfo/userinfo
-        // For signInWithIdToken we need an id_token, so use the 'id_token' implicit flow
-        const { error } = await signInWithGoogle(tokenResponse.access_token);
-        if (error) throw error;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.message || "Failed to sign in with Google",
-          variant: "destructive",
-        });
-      } finally {
-        setGoogleLoading(false);
-      }
-    },
-    onError: (error) => {
+  const handleGoogleSuccess = async (credentialResponse: any) => {
+    setGoogleLoading(true);
+    try {
+      const idToken = credentialResponse.credential;
+      if (!idToken) throw new Error("No credential returned from Google");
+      const { error } = await signInWithGoogleIdToken(idToken);
+      if (error) throw error;
+      toast({ title: "Welcome 👋✨!" });
+      navigate("/");
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: "Google sign-in was cancelled or failed",
+        description: err.message || "Failed to sign in with Google",
         variant: "destructive",
       });
+    } finally {
       setGoogleLoading(false);
-    },
-  });
-
-  const handleGoogleSignIn = () => {
-    setGoogleLoading(true);
-    googleLogin();
+    }
   };
 
   const toggleMode = () => {
