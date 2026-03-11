@@ -20,11 +20,16 @@ export type Database = {
           address_line2: string | null
           area: string | null
           city: string
+          country: string | null
           created_at: string
+          display_name: string | null
           district: string | null
+          flatNumber: string | null
           full_name: string
           id: string
           is_default: boolean
+          latitude: number | null
+          longitude: number | null
           phone: string
           pincode: string
           state: string
@@ -35,11 +40,16 @@ export type Database = {
           address_line2?: string | null
           area?: string | null
           city?: string
+          country?: string | null
           created_at?: string
+          display_name?: string | null
           district?: string | null
+          flatNumber?: string | null
           full_name?: string
           id?: string
           is_default?: boolean
+          latitude?: number | null
+          longitude?: number | null
           phone?: string
           pincode?: string
           state?: string
@@ -50,11 +60,16 @@ export type Database = {
           address_line2?: string | null
           area?: string | null
           city?: string
+          country?: string | null
           created_at?: string
+          display_name?: string | null
           district?: string | null
+          flatNumber?: string | null
           full_name?: string
           id?: string
           is_default?: boolean
+          latitude?: number | null
+          longitude?: number | null
           phone?: string
           pincode?: string
           state?: string
