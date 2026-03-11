@@ -19,7 +19,7 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const { user, signIn, signUp, signInWithGoogle } = useAuth();
+  const { user, signIn, signUp, signInWithGoogleIdToken } = useAuth();
   const navigate = useNavigate();
 
   // Auto-redirect if already logged in
