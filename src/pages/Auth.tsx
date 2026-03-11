@@ -79,21 +79,38 @@ export default function Auth() {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
-    try {
-      const { error } = await signInWithGoogle();
-      if (error) throw error;
-      // Popup closed — session picked up by onAuthStateChange → user state updates → auto-redirect
-    } catch (err: any) {
+  const googleLogin = useGoogleLogin({
+    flow: 'implicit',
+    onSuccess: async (tokenResponse) => {
+      setGoogleLoading(true);
+      try {
+        // Exchange access token for id_token via Google's tokeninfo/userinfo
+        // For signInWithIdToken we need an id_token, so use the 'id_token' implicit flow
+        const { error } = await signInWithGoogle(tokenResponse.access_token);
+        if (error) throw error;
+      } catch (err: any) {
+        toast({
+          title: "Error",
+          description: err.message || "Failed to sign in with Google",
+          variant: "destructive",
+        });
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    onError: (error) => {
       toast({
         title: "Error",
-        description: err.message || "Failed to sign in with Google",
+        description: "Google sign-in was cancelled or failed",
         variant: "destructive",
       });
-    } finally {
       setGoogleLoading(false);
-    }
+    },
+  });
+
+  const handleGoogleSignIn = () => {
+    setGoogleLoading(true);
+    googleLogin();
   };
 
   const toggleMode = () => {

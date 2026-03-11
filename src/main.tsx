@@ -36,4 +36,8 @@ import { setupPerformanceOptimizations } from "./lib/performance";
 // Initialize performance optimizations
 setupPerformanceOptimizations();
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <GoogleOAuthProvider clientId="362194572254-7jtmskjootbv3lujuvhqg3bi0moh56ak.apps.googleusercontent.com">
+    <App />
+  </GoogleOAuthProvider>
+);
