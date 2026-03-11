@@ -530,6 +530,7 @@ export type Database = {
           cart_hash: string | null
           cgst_amount: number | null
           coupon_code: string | null
+          courier_name: string | null
           created_at: string
           delivery_address: Json | null
           delivery_charge: number
@@ -553,6 +554,7 @@ export type Database = {
           stripe_payment_id: string | null
           subtotal: number
           total: number
+          tracking_id: string | null
           updated_at: string
           user_id: string
         }
@@ -560,6 +562,7 @@ export type Database = {
           cart_hash?: string | null
           cgst_amount?: number | null
           coupon_code?: string | null
+          courier_name?: string | null
           created_at?: string
           delivery_address?: Json | null
           delivery_charge?: number
@@ -583,6 +586,7 @@ export type Database = {
           stripe_payment_id?: string | null
           subtotal?: number
           total?: number
+          tracking_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -590,6 +594,7 @@ export type Database = {
           cart_hash?: string | null
           cgst_amount?: number | null
           coupon_code?: string | null
+          courier_name?: string | null
           created_at?: string
           delivery_address?: Json | null
           delivery_charge?: number
@@ -613,6 +618,7 @@ export type Database = {
           stripe_payment_id?: string | null
           subtotal?: number
           total?: number
+          tracking_id?: string | null
           updated_at?: string
           user_id?: string
         }
