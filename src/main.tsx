@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import App from "./App.tsx";
 import "./index.css";
 import "./global-animations.css";
@@ -36,8 +35,4 @@ import { setupPerformanceOptimizations } from "./lib/performance";
 // Initialize performance optimizations
 setupPerformanceOptimizations();
 
-createRoot(document.getElementById("root")!).render(
-  <GoogleOAuthProvider clientId="362194572254-7jtmskjootbv3lujuvhqg3bi0moh56ak.apps.googleusercontent.com">
-    <App />
-  </GoogleOAuthProvider>
-);
+createRoot(document.getElementById("root")!).render(<App />);

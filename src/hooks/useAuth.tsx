@@ -10,7 +10,7 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signInWithGoogleIdToken: (idToken: string) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<{ error: any }>;
   signUpWithPhone: (phone: string, fullName: string) => Promise<{ error: any }>;
   signInWithPhone: (phone: string) => Promise<{ error: any }>;
   verifyOtp: (phone: string, token: string) => Promise<{ error: any }>;
@@ -160,12 +160,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
-  const signInWithGoogleIdToken = async (idToken: string) => {
-    const { error } = await supabase.auth.signInWithIdToken({
+  const signInWithGoogle = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      token: idToken,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        skipBrowserRedirect: true,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account',
+        },
+      },
     });
-    return { error };
+
+    if (error || !data?.url) return { error: error || new Error('No auth URL returned') };
+
+    // Open Google login in a centered popup
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.innerWidth - width) / 2;
+    const top = window.screenY + (window.innerHeight - height) / 2;
+
+    const popup = window.open(
+      data.url,
+      'googleLogin',
+      `width=${width},height=${height},top=${top},left=${left},scrollbars=yes`
+    );
+
+    if (!popup) return { error: new Error('Popup blocked. Please allow popups for this site.') };
+
+    // Poll until popup closes — session is picked up by onAuthStateChange
+    await new Promise<void>((resolve) => {
+      const timer = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(timer);
+          resolve();
+        }
+      }, 500);
+    });
+
+    return { error: null };
   };
 
   const signUpWithPhone = async (phone: string, fullName: string) => {
@@ -204,7 +238,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, signUp, signIn, signInWithGoogleIdToken, signUpWithPhone, signInWithPhone, verifyOtp, resendOtp, signOut }}>
+    <AuthContext.Provider value={{ user, session, isAdmin, loading, signUp, signIn, signInWithGoogle, signUpWithPhone, signInWithPhone, verifyOtp, resendOtp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
