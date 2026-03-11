@@ -7,12 +7,14 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
@@ -160,7 +162,6 @@ export default function Auth() {
                     alt="PANDIYIN Logo"
                     className="w-full h-full object-contain"
                     loading="eager"
-                    fetchPriority="high"
                   />
                 </div>
               </motion.div>
@@ -247,16 +248,38 @@ export default function Auth() {
                   >
                     Password
                   </Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    className="h-11 bg-white/95 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:bg-white focus-visible:ring-primary focus-visible:border-primary transition-all duration-200"
-                  />
+                  <div className="relative">
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      className="h-11 bg-white/95 border-gray-200 text-gray-900 placeholder:text-gray-400 focus:bg-white focus-visible:ring-primary focus-visible:border-primary"
+                      style={{ paddingRight: '48px' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute text-gray-400 hover:text-gray-700 focus:outline-none"
+                      style={{
+                        right: '14px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        lineHeight: 0,
+                      }}
+                      tabIndex={-1}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5 pointer-events-none" />
+                      ) : (
+                        <Eye className="h-5 w-5 pointer-events-none" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Submit Button */}
