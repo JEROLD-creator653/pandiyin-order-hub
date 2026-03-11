@@ -20,11 +20,16 @@ export type Database = {
           address_line2: string | null
           area: string | null
           city: string
+          country: string | null
           created_at: string
+          display_name: string | null
           district: string | null
+          flatNumber: string | null
           full_name: string
           id: string
           is_default: boolean
+          latitude: number | null
+          longitude: number | null
           phone: string
           pincode: string
           state: string
@@ -35,11 +40,16 @@ export type Database = {
           address_line2?: string | null
           area?: string | null
           city?: string
+          country?: string | null
           created_at?: string
+          display_name?: string | null
           district?: string | null
+          flatNumber?: string | null
           full_name?: string
           id?: string
           is_default?: boolean
+          latitude?: number | null
+          longitude?: number | null
           phone?: string
           pincode?: string
           state?: string
@@ -50,11 +60,16 @@ export type Database = {
           address_line2?: string | null
           area?: string | null
           city?: string
+          country?: string | null
           created_at?: string
+          display_name?: string | null
           district?: string | null
+          flatNumber?: string | null
           full_name?: string
           id?: string
           is_default?: boolean
+          latitude?: number | null
+          longitude?: number | null
           phone?: string
           pincode?: string
           state?: string
@@ -515,6 +530,7 @@ export type Database = {
           cart_hash: string | null
           cgst_amount: number | null
           coupon_code: string | null
+          courier_name: string | null
           created_at: string
           delivery_address: Json | null
           delivery_charge: number
@@ -538,6 +554,7 @@ export type Database = {
           stripe_payment_id: string | null
           subtotal: number
           total: number
+          tracking_id: string | null
           updated_at: string
           user_id: string
         }
@@ -545,6 +562,7 @@ export type Database = {
           cart_hash?: string | null
           cgst_amount?: number | null
           coupon_code?: string | null
+          courier_name?: string | null
           created_at?: string
           delivery_address?: Json | null
           delivery_charge?: number
@@ -568,6 +586,7 @@ export type Database = {
           stripe_payment_id?: string | null
           subtotal?: number
           total?: number
+          tracking_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -575,6 +594,7 @@ export type Database = {
           cart_hash?: string | null
           cgst_amount?: number | null
           coupon_code?: string | null
+          courier_name?: string | null
           created_at?: string
           delivery_address?: Json | null
           delivery_charge?: number
@@ -598,6 +618,7 @@ export type Database = {
           stripe_payment_id?: string | null
           subtotal?: number
           total?: number
+          tracking_id?: string | null
           updated_at?: string
           user_id?: string
         }

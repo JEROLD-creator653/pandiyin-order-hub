@@ -27,6 +27,8 @@ export default function AdminOrderDetail() {
   const [order, setOrder] = useState<any>(null);
   const [orderItems, setOrderItems] = useState<any[]>([]);
   const [newStatus, setNewStatus] = useState('');
+  const [trackingId, setTrackingId] = useState('');
+  const [courierName, setCourierName] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,6 +44,8 @@ export default function AdminOrderDetail() {
         setOrder(data);
         setOrderItems(data.order_items || []);
         setNewStatus(data.status);
+        setTrackingId((data as any).tracking_id || '');
+        setCourierName((data as any).courier_name || '');
       }
       setLoading(false);
     };
@@ -59,6 +63,22 @@ export default function AdminOrderDetail() {
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast({ title: `${label} copied` });
+  };
+
+  const saveTracking = async () => {
+    if (!order) return;
+    await supabase.from('orders').update({ tracking_id: trackingId, courier_name: courierName } as any).eq('id', order.id);
+    setOrder((prev: any) => ({ ...prev, tracking_id: trackingId, courier_name: courierName }));
+    toast({ title: 'Tracking ID saved successfully' });
+  };
+
+  const clearTracking = async () => {
+    if (!order) return;
+    await supabase.from('orders').update({ tracking_id: '', courier_name: '' } as any).eq('id', order.id);
+    setTrackingId('');
+    setCourierName('');
+    setOrder((prev: any) => ({ ...prev, tracking_id: '', courier_name: '' }));
+    toast({ title: 'Tracking ID removed' });
   };
 
   const copyOrderDetails = () => {
@@ -334,7 +354,54 @@ export default function AdminOrderDetail() {
 
         <Separator />
 
-        {/* SECTION 7 — ADMIN ACTIONS */}
+        {/* SECTION 7 — COURIER TRACKING */}
+        <div className="px-6 py-4">
+          <p className="text-xs font-medium tracking-widest uppercase text-muted-foreground mb-3">Courier Tracking</p>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Courier Name</label>
+              <input
+                type="text"
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                placeholder="e.g. India Post, DTDC, Delhivery"
+                value={courierName}
+                onChange={(e) => setCourierName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Courier Tracking ID</label>
+              <input
+                type="text"
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm font-mono placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                placeholder="e.g. TRK89374652"
+                value={trackingId}
+                onChange={(e) => setTrackingId(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                disabled={trackingId === (order.tracking_id || '') && courierName === (order.courier_name || '')}
+                onClick={saveTracking}
+              >
+                Save Tracking ID
+              </Button>
+              {order.tracking_id && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={clearTracking}
+                >
+                  Remove Tracking
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* SECTION 8 — ADMIN ACTIONS */}
         <div className="px-6 py-4 flex flex-wrap items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleGenerateInvoice} className="gap-1.5">
             <FileText className="h-3.5 w-3.5" /> Generate Invoice

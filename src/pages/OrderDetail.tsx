@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, Settings, Leaf, MapPin, Download, CreditCard, IndianRupee, Shield } from 'lucide-react';
+import { ArrowLeft, Package, Truck, CheckCircle, XCircle, Clock, Settings, Leaf, MapPin, Download, CreditCard, IndianRupee, Shield, Copy } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
+import { toast } from '@/hooks/use-toast';
 import { generateInvoicePdf, type InvoiceData, type InvoiceItem } from '@/lib/invoicePdf';
 
 const getPaymentModeLabel = (mode: string): string => {
@@ -144,6 +145,50 @@ export default function OrderDetail() {
             )}
           </CardContent>
         </Card>
+
+
+        {/* Tracking Info */}
+        {(order as any).tracking_id && (order as any).tracking_id !== '' && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Truck className="h-4 w-4" /> Shipment Tracking</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {(order as any).courier_name && (order as any).courier_name !== '' && (
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Courier: </span>
+                  <span className="font-medium">{(order as any).courier_name}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Tracking ID:</span>
+                <code className="bg-background border rounded px-2.5 py-1 font-mono text-sm font-semibold">{(order as any).tracking_id}</code>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 h-7"
+                  onClick={() => {
+                    navigator.clipboard.writeText((order as any).tracking_id);
+                    toast({ title: 'Tracking ID copied to clipboard' });
+                  }}
+                >
+                  <Copy className="h-3 w-3" /> Copy
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Your order has been shipped. Use the tracking ID on the courier provider's tracking website to track your shipment.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+        {!isCancelled && (!(order as any).tracking_id || (order as any).tracking_id === '') && currentStep >= 1 && (
+          <Card>
+            <CardContent className="py-4">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Truck className="h-4 w-4" />
+                <span>Tracking ID: <span className="font-medium text-foreground">Not Available Yet</span></span>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Items */}
         <Card>
