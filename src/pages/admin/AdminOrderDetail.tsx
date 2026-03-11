@@ -65,6 +65,22 @@ export default function AdminOrderDetail() {
     toast({ title: `${label} copied` });
   };
 
+  const saveTracking = async () => {
+    if (!order) return;
+    await supabase.from('orders').update({ tracking_id: trackingId, courier_name: courierName } as any).eq('id', order.id);
+    setOrder((prev: any) => ({ ...prev, tracking_id: trackingId, courier_name: courierName }));
+    toast({ title: 'Tracking ID saved successfully' });
+  };
+
+  const clearTracking = async () => {
+    if (!order) return;
+    await supabase.from('orders').update({ tracking_id: '', courier_name: '' } as any).eq('id', order.id);
+    setTrackingId('');
+    setCourierName('');
+    setOrder((prev: any) => ({ ...prev, tracking_id: '', courier_name: '' }));
+    toast({ title: 'Tracking ID removed' });
+  };
+
   const copyOrderDetails = () => {
     if (!order) return;
     const addr = order.delivery_address as any;

@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
+import { toast } from '@/hooks/use-toast';
 import { generateInvoicePdf, type InvoiceData, type InvoiceItem } from '@/lib/invoicePdf';
 
 const getPaymentModeLabel = (mode: string): string => {
