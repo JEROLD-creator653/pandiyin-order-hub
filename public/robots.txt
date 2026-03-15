@@ -7,7 +7,6 @@ Disallow: /admin
 Disallow: /auth
 Disallow: /checkout
 Disallow: /cart
-Disallow: /dashboard
 Disallow: /profile
 Disallow: /order-confirmation
 Disallow: /orders
@@ -18,7 +17,6 @@ Disallow: /admin
 Disallow: /auth
 Disallow: /checkout
 Disallow: /cart
-Disallow: /dashboard
 Disallow: /profile
 Disallow: /order-confirmation
 Disallow: /orders
@@ -36,7 +34,6 @@ Disallow: /admin
 Disallow: /auth
 Disallow: /checkout
 Disallow: /cart
-Disallow: /dashboard
 Disallow: /profile
 Disallow: /order-confirmation
 Disallow: /orders
