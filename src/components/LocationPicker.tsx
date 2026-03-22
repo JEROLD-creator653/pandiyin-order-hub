@@ -340,7 +340,7 @@ export default function LocationPickerMap({
       <div className="relative rounded-lg overflow-hidden border border-border/60 shadow-sm transition-all duration-300">
         <div
           ref={mapContainerRef}
-          className="w-full h-[250px] md:h-[300px] touch-none"
+          className="w-full h-[250px] md:h-[300px] touch-auto"
           style={{ background: '#f0f4f3', zIndex: 0 }}
         />
 

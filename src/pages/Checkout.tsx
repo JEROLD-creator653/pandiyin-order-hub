@@ -29,6 +29,13 @@ declare global {
   }
 }
 
+type VerifiedQuote = {
+  subtotal: number;
+  delivery_charge: number;
+  discount: number;
+  grand_total: number;
+};
+
 // Razorpay key is fetched from the server — never hardcode secrets or keys in frontend
 
 const getGSTType = (state: string): 'cgst_sgst' | 'igst' => {
@@ -54,6 +61,7 @@ export default function Checkout() {
   const [couponOpen, setCouponOpen] = useState(false);
   const [gstSettings, setGstSettings] = useState({ gst_enabled: false });
   const [calculatedGstAmount, setCalculatedGstAmount] = useState(0);
+  const [verifiedQuote, setVerifiedQuote] = useState<VerifiedQuote | null>(null);
 
   // Derive delivery state from selected address pincode/state
   const deliveryState = selectedAddress?.state || '';
@@ -159,9 +167,13 @@ export default function Checkout() {
   }
   if (!user) return null;
 
-  const createOrder = async () => {
+  const createOrder = async (quote?: VerifiedQuote | null) => {
     const totalMRP = items.reduce((a, i) => a + ((i.product as any).compare_price || i.product.price) * i.quantity, 0);
     const sellingTotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0);
+    const effectiveSubtotal = quote?.subtotal ?? sellingTotal;
+    const effectiveDiscount = quote?.discount ?? discount;
+    const effectiveDelivery = quote?.delivery_charge ?? effectiveDeliveryCharge;
+    const effectiveGrandTotal = quote?.grand_total ?? (effectiveSubtotal - effectiveDiscount + effectiveDelivery);
     const gstType = getGSTType(deliveryState || selectedAddress?.state || '');
     let cgstAmount = 0, sgstAmount = 0, igstAmount = 0;
     if (gstType === 'cgst_sgst') {
@@ -177,10 +189,10 @@ export default function Checkout() {
     const { data: order, error } = await supabase.from('orders').insert({
       user_id: user!.id,
       order_number: 'temp',
-      subtotal: sellingTotal,
-      delivery_charge: effectiveDeliveryCharge,
-      discount: discount,
-      total: grandTotal,
+      subtotal: effectiveSubtotal,
+      delivery_charge: effectiveDelivery,
+      discount: effectiveDiscount,
+      total: effectiveGrandTotal,
       gst_amount: gstAmount,
       gst_percentage: avgGstPercentage,
       gst_type: gstType,
@@ -221,7 +233,7 @@ export default function Checkout() {
     });
     await supabase.from('order_items').insert(orderItems);
 
-    if (couponCode && discount > 0) {
+    if (couponCode && effectiveDiscount > 0) {
       const { data: redeemed, error: redeemError } = await supabase.rpc('redeem_coupon_atomic' as any, {
         _coupon_code: couponCode.trim().toUpperCase(),
         _user_id: user!.id,
@@ -229,7 +241,7 @@ export default function Checkout() {
       });
       if (redeemError || redeemed === false) {
         // Coupon could not be redeemed (race condition / expired) — remove discount from order
-        await supabase.from('orders').update({ discount: 0, total: grandTotal + discount, coupon_code: null }).eq('id', order.id);
+        await supabase.from('orders').update({ discount: 0, total: effectiveGrandTotal + effectiveDiscount, coupon_code: null }).eq('id', order.id);
         console.warn('Coupon redemption failed, discount removed from order');
       }
     }
@@ -237,7 +249,7 @@ export default function Checkout() {
     return order;
   };
 
-  const handleRazorpayPayment = async () => {
+  const handleRazorpayPayment = async (quote?: VerifiedQuote | null) => {
     setCheckoutError(null);
     if (!window.Razorpay) {
       setCheckoutError('Payment gateway not loaded. Please refresh the page and try again.');
@@ -275,7 +287,7 @@ export default function Checkout() {
       const razorpayKeyId = razorpayOrder.key_id;
       if (!razorpayKeyId) throw new Error('Payment gateway configuration error');
 
-      const order = await createOrder();
+      const order = await createOrder(quote);
 
       const options = {
         key: razorpayKeyId,
@@ -360,6 +372,8 @@ export default function Checkout() {
 
     setLoading(true);
 
+    let quoteToUse: VerifiedQuote | null = null;
+
     // Backend verification: validate prices, stock, and delivery charge server-side
     try {
       const { data: verifyResult, error: verifyError } = await supabase.functions.invoke('verify-order', {
@@ -380,13 +394,23 @@ export default function Checkout() {
         return;
       }
 
+      quoteToUse = {
+        subtotal: Number(verifyResult.subtotal || 0),
+        delivery_charge: Number(verifyResult.delivery_charge || 0),
+        discount: Number(verifyResult.discount || 0),
+        grand_total: Number(verifyResult.grand_total || 0),
+      };
+      setVerifiedQuote(quoteToUse);
+
       // Check if frontend totals match backend
       const backendTotal = verifyResult.grand_total;
       if (Math.abs(backendTotal - grandTotal) > 1) {
-        setCheckoutError('Prices or delivery charges have changed. Your cart has been refreshed with the latest data. Please review before proceeding.');
-        setLoading(false);
+        setDiscount(Number(verifyResult.discount || 0));
+        toast({
+          title: 'Checkout updated',
+          description: 'Prices were refreshed from the server. Proceeding with verified totals.',
+        });
         refetch();
-        return;
       }
     } catch (err: any) {
       console.error('Order verification error:', err);
@@ -396,13 +420,13 @@ export default function Checkout() {
     }
 
     if (paymentMethod === 'razorpay') {
-      await handleRazorpayPayment();
+      await handleRazorpayPayment(quoteToUse || verifiedQuote);
       return;
     }
 
     setLoading(true);
     try {
-      const order = await createOrder();
+      const order = await createOrder(quoteToUse || verifiedQuote);
       clearCart();
       navigate(`/order-confirmation/${order.id}`);
     } catch (err: any) {
