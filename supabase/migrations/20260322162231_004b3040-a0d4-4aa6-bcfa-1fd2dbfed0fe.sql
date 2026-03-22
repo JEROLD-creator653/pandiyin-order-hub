@@ -1,0 +1,1 @@
+UPDATE coupons SET current_uses = 0;

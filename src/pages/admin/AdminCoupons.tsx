@@ -17,7 +17,7 @@ export default function AdminCoupons() {
   const [coupons, setCoupons] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ code: '', discount_type: 'percentage', discount_value: '', min_order_value: '', max_uses: '', is_active: true, expires_at: '' });
+  const [form, setForm] = useState({ code: '', discount_type: 'percentage', discount_value: '', min_order_value: '', max_uses: '', max_uses_per_user: '', is_active: true, expires_at: '' });
 
   const load = async () => {
     const { data } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
