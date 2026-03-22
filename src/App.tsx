@@ -37,6 +37,7 @@ const CancellationPolicy = lazy(() => import("./pages/policies/CancellationPolic
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminProducts from "./pages/admin/AdminProducts";
+import AdminProductEditor from "./pages/admin/AdminProductEditor";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminCoupons from "./pages/admin/AdminCoupons";
@@ -98,6 +99,8 @@ const App = () => (
                   <Route index element={<AdminDashboard />} />
                   <Route path="alerts" element={<AdminAlerts />} />
                   <Route path="products" element={<AdminProducts />} />
+                  <Route path="products/new" element={<AdminProductEditor />} />
+                  <Route path="products/:id/edit" element={<AdminProductEditor />} />
                   <Route path="categories" element={<AdminCategories />} />
                   <Route path="orders" element={<AdminOrders />} />
                   <Route path="orders/:orderNumber" element={<AdminOrderDetail />} />
