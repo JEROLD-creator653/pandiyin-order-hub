@@ -77,8 +77,9 @@ export default function AdminCoupons() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Min Order Rs.</Label><Input type="number" value={form.min_order_value} onChange={e => setForm(f => ({ ...f, min_order_value: e.target.value }))} /></div>
-                <div className="space-y-2"><Label>Max Uses</Label><Input type="number" value={form.max_uses} onChange={e => setForm(f => ({ ...f, max_uses: e.target.value }))} placeholder="Unlimited" /></div>
+                <div className="space-y-2"><Label>Max Total Uses</Label><Input type="number" value={form.max_uses} onChange={e => setForm(f => ({ ...f, max_uses: e.target.value }))} placeholder="Unlimited" /></div>
               </div>
+              <div className="space-y-2"><Label>Max Uses Per User</Label><Input type="number" value={form.max_uses_per_user} onChange={e => setForm(f => ({ ...f, max_uses_per_user: e.target.value }))} placeholder="Unlimited" /></div>
               <div className="space-y-2"><Label>Expiry Date</Label><Input type="date" value={form.expires_at} onChange={e => setForm(f => ({ ...f, expires_at: e.target.value }))} /></div>
               <div className="flex items-center gap-2"><Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} /><Label>Active</Label></div>
               <Button onClick={save} className="w-full">{editing ? 'Update' : 'Create'} Coupon</Button>
