@@ -60,7 +60,7 @@ export default function AdminCoupons() {
         <h2 className="text-xl font-bold font-sans">Coupons</h2>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setEditing(null); setForm({ code: '', discount_type: 'percentage', discount_value: '', min_order_value: '', max_uses: '', is_active: true, expires_at: '' }); }}><Plus className="mr-2 h-4 w-4" /> Create Coupon</Button>
+            <Button onClick={() => { setEditing(null); setForm({ code: '', discount_type: 'percentage', discount_value: '', min_order_value: '', max_uses: '', max_uses_per_user: '', is_active: true, expires_at: '' }); }}><Plus className="mr-2 h-4 w-4" /> Create Coupon</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>{editing ? 'Edit' : 'Create'} Coupon</DialogTitle></DialogHeader>
