@@ -101,7 +101,7 @@ export default function AdminCoupons() {
                   <TableCell><Badge className={c.is_active ? 'bg-green-100 text-green-800' : ''}>{c.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => { setEditing(c); setForm({ code: c.code, discount_type: c.discount_type, discount_value: String(c.discount_value), min_order_value: String(c.min_order_value || ''), max_uses: c.max_uses ? String(c.max_uses) : '', is_active: c.is_active, expires_at: c.expires_at ? c.expires_at.split('T')[0] : '' }); setDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => { setEditing(c); setForm({ code: c.code, discount_type: c.discount_type, discount_value: String(c.discount_value), min_order_value: String(c.min_order_value || ''), max_uses: c.max_uses ? String(c.max_uses) : '', max_uses_per_user: c.max_uses_per_user ? String(c.max_uses_per_user) : '', is_active: c.is_active, expires_at: c.expires_at ? c.expires_at.split('T')[0] : '' }); setDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" className="text-destructive" onClick={() => remove(c.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   </TableCell>
