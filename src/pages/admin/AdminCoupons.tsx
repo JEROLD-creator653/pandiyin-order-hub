@@ -32,6 +32,7 @@ export default function AdminCoupons() {
       discount_value: Number(form.discount_value),
       min_order_value: form.min_order_value ? Number(form.min_order_value) : 0,
       max_uses: form.max_uses ? Number(form.max_uses) : null,
+      max_uses_per_user: form.max_uses_per_user ? Number(form.max_uses_per_user) : null,
       is_active: form.is_active,
       expires_at: form.expires_at || null,
     };
