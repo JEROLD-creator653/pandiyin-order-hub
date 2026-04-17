@@ -128,7 +128,7 @@ export default function RelatedProducts({
                         <img
                           src={product.image_url}
                           alt={product.name}
-                          className="w-full h-full object-contain rounded-lg group-hover:scale-110 transition-transform duration-500 p-2"
+                          className="w-full h-full object-cover rounded-lg group-hover:scale-110 transition-transform duration-500"
                           loading="lazy"
                         />
                       ) : (
@@ -234,7 +234,7 @@ export default function RelatedProducts({
                           <img
                             src={product.image_url}
                             alt={product.name}
-                            className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500 p-2"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             loading="lazy"
                           />
                         ) : (
