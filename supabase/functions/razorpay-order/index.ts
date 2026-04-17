@@ -7,21 +7,27 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Simple in-memory rate limiter per user
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
-const RATE_LIMIT_MAX = 10; // max 10 requests per minute per user
+// Global rate limit: 125 requests per 60s per user/IP (DB-backed, shared across instances)
+const RATE_LIMIT_MAX = 125;
+const RATE_LIMIT_WINDOW_SECONDS = 60;
 
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(userId);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return true;
+async function checkRateLimit(
+  adminClient: any,
+  identifier: string
+): Promise<{ allowed: boolean; retryAfter: number }> {
+  try {
+    const { data, error } = await adminClient.rpc("check_rate_limit", {
+      _identifier: identifier,
+      _max_requests: RATE_LIMIT_MAX,
+      _window_seconds: RATE_LIMIT_WINDOW_SECONDS,
+    });
+    if (error || !data || data.length === 0) {
+      return { allowed: true, retryAfter: 0 };
+    }
+    return { allowed: data[0].allowed, retryAfter: data[0].retry_after };
+  } catch (_e) {
+    return { allowed: true, retryAfter: 0 };
   }
-  if (entry.count >= RATE_LIMIT_MAX) return false;
-  entry.count++;
-  return true;
 }
 
 serve(async (req) => {
@@ -56,11 +62,14 @@ serve(async (req) => {
     }
     const userId = user.id;
 
-    // Rate limiting
-    if (!checkRateLimit(userId)) {
+    // Rate limiting (DB-backed, shared, 125/min per user/IP)
+    const adminClientForLimit = createClient(supabaseUrl, supabaseServiceKey);
+    const clientIpForLimit = req.headers.get("x-forwarded-for") || req.headers.get("cf-connecting-ip") || "unknown";
+    const limit = await checkRateLimit(adminClientForLimit, `user:${userId}:${clientIpForLimit}`);
+    if (!limit.allowed) {
       return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
         status: 429,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": String(limit.retryAfter) },
       });
     }
 
