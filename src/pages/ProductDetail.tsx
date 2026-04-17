@@ -202,7 +202,7 @@ export default function ProductDetail() {
                 <img 
                   src={product.image_url} 
                   alt={product.name} 
-                  className="w-full h-full object-cover block" 
+                  className="w-full h-full object-contain block" 
                 />
               ) : (
                 <div className="flex items-center justify-center w-full h-full">

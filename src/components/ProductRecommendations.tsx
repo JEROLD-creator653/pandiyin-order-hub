@@ -86,7 +86,7 @@ export default function ProductRecommendations({
                       <img
                           src={product.image_url}
                           alt={product.name}
-                          className="w-full h-full object-cover object-center rounded-lg group-hover:scale-110 transition-transform duration-500"
+                          className="w-full h-full object-contain object-center rounded-lg group-hover:scale-110 transition-transform duration-500 p-2"
                           loading="lazy"
                         />
                     ) : (
