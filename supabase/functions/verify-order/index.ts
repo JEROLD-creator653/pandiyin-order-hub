@@ -37,6 +37,25 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Rate limiting (DB-backed, shared, 125 req/min per user/IP)
+    const adminClientForLimit = createClient(supabaseUrl, supabaseServiceKey);
+    const clientIpForLimit = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
+    try {
+      const { data: limitData } = await adminClientForLimit.rpc('check_rate_limit', {
+        _identifier: `user:${user.id}:${clientIpForLimit}`,
+        _max_requests: 125,
+        _window_seconds: 60,
+      });
+      if (limitData && limitData.length > 0 && !limitData[0].allowed) {
+        return new Response(JSON.stringify({ error: 'Too many requests' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(limitData[0].retry_after) },
+        });
+      }
+    } catch (_e) {
+      // Fail open
+    }
+
     const { cart_items, delivery_state, coupon_code } = await req.json();
 
     if (!cart_items || !Array.isArray(cart_items) || cart_items.length === 0) {
