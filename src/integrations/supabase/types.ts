@@ -828,6 +828,30 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          id: string
+          identifier: string
+          request_count: number
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          id?: string
+          identifier: string
+          request_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          id?: string
+          identifier?: string
+          request_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       shipping_regions: {
         Row: {
           base_charge: number
@@ -1072,6 +1096,18 @@ export type Database = {
           base_amount: number
           gst_amount: number
           total_amount: number
+        }[]
+      }
+      check_rate_limit: {
+        Args: {
+          _identifier: string
+          _max_requests?: number
+          _window_seconds?: number
+        }
+        Returns: {
+          allowed: boolean
+          current_count: number
+          retry_after: number
         }[]
       }
       generate_invoice_number: { Args: never; Returns: string }
