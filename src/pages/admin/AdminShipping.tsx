@@ -170,12 +170,25 @@ export default function AdminShipping() {
                 </p>
               </div>
               <div>
-                <Label className="text-xs font-medium">Free Delivery Above (₹)</Label>
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="text-xs font-medium">Free Delivery Above (₹)</Label>
+                  <div className="flex items-center gap-1.5">
+                    <Switch
+                      id={`free-${region.id}`}
+                      checked={region.free_delivery_above !== null}
+                      onCheckedChange={(checked) => updateRegion(region.id, 'free_delivery_above', checked ? 799 : null)}
+                    />
+                    <Label htmlFor={`free-${region.id}`} className="text-[10px] text-muted-foreground cursor-pointer">
+                      {region.free_delivery_above !== null ? 'On' : 'Off'}
+                    </Label>
+                  </div>
+                </div>
                 <Input
                   type="number"
                   min="0"
                   value={region.free_delivery_above ?? ''}
-                  placeholder="No free delivery"
+                  placeholder="Disabled"
+                  disabled={region.free_delivery_above === null}
                   onChange={e => {
                     const val = e.target.value;
                     updateRegion(region.id, 'free_delivery_above', val === '' ? null : Number(val));
@@ -183,7 +196,9 @@ export default function AdminShipping() {
                   className="mt-1"
                 />
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  Leave empty for no free delivery
+                  {region.free_delivery_above === null
+                    ? 'Free delivery is disabled for this zone'
+                    : `Orders above ₹${region.free_delivery_above} ship free`}
                 </p>
               </div>
             </div>

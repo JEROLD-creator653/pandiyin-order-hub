@@ -26,10 +26,22 @@ type Product = {
   categories?: { name: string } | null;
 };
 
-type Category = { id: string; name: string };
+type Category = { id: string; name: string; sort_order: number };
+
+type BestsellersSettings = {
+  enabled: boolean;
+  label: string;
+  sort_order: number;
+};
 
 const BESTSELLERS_TAB = '__bestsellers__';
 const ALL_TAB = '__all__';
+
+const DEFAULT_BESTSELLERS: BestsellersSettings = {
+  enabled: true,
+  label: 'Bestsellers',
+  sort_order: -1,
+};
 
 export default function ShopByCategory() {
   const navigate = useNavigate();
@@ -38,31 +50,44 @@ export default function ShopByCategory() {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [bestsellers, setBestsellers] = useState<BestsellersSettings>(DEFAULT_BESTSELLERS);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>(BESTSELLERS_TAB);
   const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const [catsRes, prodsRes] = await Promise.all([
-          supabase.from('categories').select('id, name').order('sort_order'),
-          supabase
-            .from('products')
-            .select('id, name, price, compare_price, image_url, weight, unit, stock_quantity, average_rating, category_id, is_featured, categories(name)')
-            .eq('is_available', true)
-            .order('created_at', { ascending: false })
-            .limit(40),
-        ]);
-        if (catsRes.data) setCategories(catsRes.data as Category[]);
-        if (prodsRes.data) setProducts(prodsRes.data as unknown as Product[]);
-      } catch (e) {
-        console.error('ShopByCategory load failed:', e);
-      } finally {
-        setLoading(false);
+  const load = async () => {
+    try {
+      const [catsRes, prodsRes, settingsRes] = await Promise.all([
+        supabase.from('categories').select('id, name, sort_order').order('sort_order'),
+        supabase
+          .from('products')
+          .select('id, name, price, compare_price, image_url, weight, unit, stock_quantity, average_rating, category_id, is_featured, categories(name)')
+          .eq('is_available', true)
+          .order('created_at', { ascending: false })
+          .limit(40),
+        supabase
+          .from('public_store_settings')
+          .select('bestsellers_enabled, bestsellers_label, bestsellers_sort_order')
+          .maybeSingle(),
+      ]);
+      if (catsRes.data) setCategories(catsRes.data as Category[]);
+      if (prodsRes.data) setProducts(prodsRes.data as unknown as Product[]);
+      if (settingsRes.data) {
+        setBestsellers({
+          enabled: settingsRes.data.bestsellers_enabled ?? true,
+          label: settingsRes.data.bestsellers_label || 'Bestsellers',
+          sort_order: settingsRes.data.bestsellers_sort_order ?? -1,
+        });
       }
-    };
+    } catch (e) {
+      console.error('ShopByCategory load failed:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setLoading(true);
     if ('requestIdleCallback' in window) {
       (window as any).requestIdleCallback(() => load(), { timeout: 400 });
     } else {
@@ -70,11 +95,42 @@ export default function ShopByCategory() {
     }
   }, []);
 
+  // Live updates: refresh when admin changes categories, products, or store settings
+  useEffect(() => {
+    const channel = supabase
+      .channel('shop-by-category-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => load())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'store_settings' }, () => load())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   const visibleCategories = useMemo(() => {
-    // Only show categories that actually have products
     const ids = new Set(products.map(p => p.category_id).filter(Boolean));
     return categories.filter(c => ids.has(c.id));
   }, [categories, products]);
+
+  // Build the ordered tab list, inserting Bestsellers at admin-defined sort_order
+  const orderedTabs = useMemo(() => {
+    type Tab = { key: string; label: string; sort: number };
+    const tabs: Tab[] = [
+      { key: ALL_TAB, label: 'All Products', sort: -9999 },
+      ...visibleCategories.map(c => ({ key: c.id, label: c.name, sort: c.sort_order })),
+    ];
+    if (bestsellers.enabled) {
+      tabs.push({ key: BESTSELLERS_TAB, label: bestsellers.label, sort: bestsellers.sort_order });
+    }
+    return tabs.sort((a, b) => a.sort - b.sort);
+  }, [visibleCategories, bestsellers]);
+
+  // Ensure activeTab is always valid; default to first tab
+  useEffect(() => {
+    if (loading || orderedTabs.length === 0) return;
+    if (!orderedTabs.some(t => t.key === activeTab)) {
+      setActiveTab(orderedTabs[0].key);
+    }
+  }, [orderedTabs, activeTab, loading]);
 
   const filtered = useMemo(() => {
     if (activeTab === BESTSELLERS_TAB) return products.filter(p => p.is_featured).slice(0, 8);
@@ -107,7 +163,6 @@ export default function ShopByCategory() {
   return (
     <section className="py-10 md:py-16">
       <div className="container mx-auto px-4">
-        {/* Section header — matches site style */}
         <div className="flex items-center justify-between mb-6 md:mb-8">
           <div>
             <h2 className="text-2xl md:text-3xl font-display font-bold">Our Products</h2>
@@ -118,34 +173,22 @@ export default function ShopByCategory() {
           </Button>
         </div>
 
-        {/* Category tabs — horizontally scrollable on mobile */}
+        {/* Category tabs */}
         <div className="mb-6 md:mb-8 -mx-4 px-4 overflow-x-auto scrollbar-hide">
           <div className="flex gap-2 md:gap-3 min-w-max md:flex-wrap md:min-w-0">
-            <button
-              onClick={() => setActiveTab(BESTSELLERS_TAB)}
-              className={`${tabBaseClass} ${activeTab === BESTSELLERS_TAB ? tabActiveClass : tabIdleClass}`}
-            >
-              Bestsellers
-            </button>
-            <button
-              onClick={() => setActiveTab(ALL_TAB)}
-              className={`${tabBaseClass} ${activeTab === ALL_TAB ? tabActiveClass : tabIdleClass}`}
-            >
-              All Products
-            </button>
-            {(loading ? Array.from({ length: 4 }) : visibleCategories).map((c: any, idx) =>
-              loading ? (
-                <Skeleton key={idx} className="h-9 w-24 rounded-full" />
-              ) : (
-                <button
-                  key={c.id}
-                  onClick={() => setActiveTab(c.id)}
-                  className={`${tabBaseClass} ${activeTab === c.id ? tabActiveClass : tabIdleClass}`}
-                >
-                  {c.name}
-                </button>
-              )
-            )}
+            {loading
+              ? Array.from({ length: 5 }).map((_, idx) => (
+                  <Skeleton key={idx} className="h-9 w-24 rounded-full" />
+                ))
+              : orderedTabs.map(t => (
+                  <button
+                    key={t.key}
+                    onClick={() => setActiveTab(t.key)}
+                    className={`${tabBaseClass} ${activeTab === t.key ? tabActiveClass : tabIdleClass}`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
           </div>
         </div>
 
