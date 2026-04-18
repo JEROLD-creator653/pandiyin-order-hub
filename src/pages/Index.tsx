@@ -46,7 +46,7 @@ export default function Index() {
   const navigate = useNavigate();
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
-  const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
+  // (cart actions handled by ShopByCategory)
   const isScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartXRef = useRef<number | null>(null);
@@ -54,7 +54,7 @@ export default function Index() {
   const [showReminderPopup, setShowReminderPopup] = useState(false);
   
   const { user } = useAuth();
-  const { items: cartItems, addToCart } = useCart();
+  const { items: cartItems } = useCart();
 
   // Read cached banners from localStorage at mount time (synchronous, zero latency)
   // This provides instant data so the hero banner renders on the very first frame
@@ -145,21 +145,6 @@ export default function Index() {
     }
   }, [user, cartItems]);
 
-  const handleAddToCart = async (productId: string) => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    setAddingItems(prev => new Set(prev).add(productId));
-    await addToCart(productId, 1);
-    setTimeout(() => {
-      setAddingItems(prev => {
-        const next = new Set(prev);
-        next.delete(productId);
-        return next;
-      });
-    }, 600);
-  };
 
   // Auto-rotate banners every 5 seconds
   useEffect(() => {
