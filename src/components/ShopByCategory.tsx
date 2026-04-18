@@ -22,11 +22,13 @@ type Product = {
   stock_quantity: number;
   average_rating: number | null;
   category_id: string | null;
+  is_featured: boolean | null;
   categories?: { name: string } | null;
 };
 
 type Category = { id: string; name: string };
 
+const BESTSELLERS_TAB = '__bestsellers__';
 const ALL_TAB = '__all__';
 
 export default function ShopByCategory() {
@@ -37,7 +39,7 @@ export default function ShopByCategory() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<string>(ALL_TAB);
+  const [activeTab, setActiveTab] = useState<string>(BESTSELLERS_TAB);
   const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function ShopByCategory() {
           supabase.from('categories').select('id, name').order('sort_order'),
           supabase
             .from('products')
-            .select('id, name, price, compare_price, image_url, weight, unit, stock_quantity, average_rating, category_id, categories(name)')
+            .select('id, name, price, compare_price, image_url, weight, unit, stock_quantity, average_rating, category_id, is_featured, categories(name)')
             .eq('is_available', true)
             .order('created_at', { ascending: false })
             .limit(40),
@@ -75,6 +77,7 @@ export default function ShopByCategory() {
   }, [categories, products]);
 
   const filtered = useMemo(() => {
+    if (activeTab === BESTSELLERS_TAB) return products.filter(p => p.is_featured).slice(0, 8);
     if (activeTab === ALL_TAB) return products.slice(0, 8);
     return products.filter(p => p.category_id === activeTab).slice(0, 8);
   }, [products, activeTab]);
@@ -97,13 +100,17 @@ export default function ShopByCategory() {
 
   if (!loading && products.length === 0) return null;
 
+  const tabBaseClass = 'px-4 py-2 rounded-full text-sm font-medium border transition-all whitespace-nowrap';
+  const tabActiveClass = 'bg-primary text-primary-foreground border-primary shadow-sm';
+  const tabIdleClass = 'bg-background text-foreground border-border hover:bg-secondary hover:border-primary/40';
+
   return (
     <section className="py-10 md:py-16">
       <div className="container mx-auto px-4">
-        {/* Section header — matches Bestsellers style */}
+        {/* Section header — matches site style */}
         <div className="flex items-center justify-between mb-6 md:mb-8">
           <div>
-            <h2 className="text-2xl md:text-3xl font-display font-bold">Shop by Category</h2>
+            <h2 className="text-2xl md:text-3xl font-display font-bold">Our Products</h2>
             <div className="mt-2 h-1 w-16 bg-primary/80 rounded-full" />
           </div>
           <Button asChild variant="ghost" size="sm">
@@ -115,12 +122,14 @@ export default function ShopByCategory() {
         <div className="mb-6 md:mb-8 -mx-4 px-4 overflow-x-auto scrollbar-hide">
           <div className="flex gap-2 md:gap-3 min-w-max md:flex-wrap md:min-w-0">
             <button
+              onClick={() => setActiveTab(BESTSELLERS_TAB)}
+              className={`${tabBaseClass} ${activeTab === BESTSELLERS_TAB ? tabActiveClass : tabIdleClass}`}
+            >
+              Bestsellers
+            </button>
+            <button
               onClick={() => setActiveTab(ALL_TAB)}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition-all whitespace-nowrap ${
-                activeTab === ALL_TAB
-                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                  : 'bg-background text-foreground border-border hover:bg-secondary hover:border-primary/40'
-              }`}
+              className={`${tabBaseClass} ${activeTab === ALL_TAB ? tabActiveClass : tabIdleClass}`}
             >
               All Products
             </button>
@@ -131,11 +140,7 @@ export default function ShopByCategory() {
                 <button
                   key={c.id}
                   onClick={() => setActiveTab(c.id)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium border transition-all whitespace-nowrap ${
-                    activeTab === c.id
-                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                      : 'bg-background text-foreground border-border hover:bg-secondary hover:border-primary/40'
-                  }`}
+                  className={`${tabBaseClass} ${activeTab === c.id ? tabActiveClass : tabIdleClass}`}
                 >
                   {c.name}
                 </button>
@@ -157,7 +162,9 @@ export default function ShopByCategory() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            No products found in this category.
+            {activeTab === BESTSELLERS_TAB
+              ? 'No bestsellers featured yet.'
+              : 'No products found in this category.'}
           </div>
         ) : (
           <AnimatePresence mode="wait">

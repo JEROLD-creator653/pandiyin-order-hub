@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
+import pandiyinLogo from '@/assets/pandiyin-logo.png';
 
 interface ProductSuggestion {
   id: string;
@@ -348,10 +349,13 @@ export default function Navbar() {
 
           {/* Center: Logo */}
           <Link to="/" className="flex-1 flex justify-center mx-1 min-w-0">
-            <div className="flex flex-col items-center leading-none">
-              <span className="text-base sm:text-lg font-display font-bold text-primary truncate">PANDIYIN</span>
-              <span className="text-[8px] sm:text-[9px] text-muted-foreground tracking-wider">Nature In Pack</span>
-            </div>
+            <img
+              src={pandiyinLogo}
+              alt="PANDIYIN — Nature In Pack"
+              loading="eager"
+              decoding="async"
+              className="h-9 sm:h-10 w-auto object-contain"
+            />
           </Link>
 
           {/* Right: Search + Cart */}
@@ -381,17 +385,16 @@ export default function Navbar() {
 
         {/* ===== DESKTOP HEADER ===== */}
         <div className="hidden md:flex items-center justify-between h-full gap-4">
-          <Link to="/" className="flex items-center gap-2 transition-colors duration-300">
-            <span className={`text-xl font-display font-bold transition-colors duration-300 ${
-              (isHomePage && !isActive) ? 'md:text-white text-primary md:drop-shadow-lg' : 'text-primary'
-            }`}>
-              PANDIYIN
-            </span>
-            <span className={`hidden sm:inline text-xs font-sans transition-colors duration-300 ${
-              (isHomePage && !isActive) ? 'md:text-white/80 text-muted-foreground md:drop-shadow' : 'text-muted-foreground'
-            }`}>
-              Nature In Pack
-            </span>
+          <Link to="/" className="flex items-center transition-colors duration-300">
+            <img
+              src={pandiyinLogo}
+              alt="PANDIYIN — Nature In Pack"
+              loading="eager"
+              decoding="async"
+              className={`h-11 lg:h-12 w-auto object-contain transition-all duration-300 ${
+                (isHomePage && !isActive) ? 'md:drop-shadow-lg' : ''
+              }`}
+            />
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
