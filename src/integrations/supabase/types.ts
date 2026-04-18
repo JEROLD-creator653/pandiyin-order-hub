@@ -897,6 +897,9 @@ export type Database = {
       store_settings: {
         Row: {
           address: string | null
+          bestsellers_enabled: boolean
+          bestsellers_label: string
+          bestsellers_sort_order: number
           email: string | null
           gst_enabled: boolean
           gst_inclusive: boolean
@@ -910,6 +913,9 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          bestsellers_enabled?: boolean
+          bestsellers_label?: string
+          bestsellers_sort_order?: number
           email?: string | null
           gst_enabled?: boolean
           gst_inclusive?: boolean
@@ -923,6 +929,9 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          bestsellers_enabled?: boolean
+          bestsellers_label?: string
+          bestsellers_sort_order?: number
           email?: string | null
           gst_enabled?: boolean
           gst_inclusive?: boolean
@@ -1065,18 +1074,27 @@ export type Database = {
       }
       public_store_settings: {
         Row: {
+          bestsellers_enabled: boolean | null
+          bestsellers_label: string | null
+          bestsellers_sort_order: number | null
           gst_enabled: boolean | null
           gst_inclusive: boolean | null
           gst_percentage: number | null
           store_name: string | null
         }
         Insert: {
+          bestsellers_enabled?: boolean | null
+          bestsellers_label?: string | null
+          bestsellers_sort_order?: number | null
           gst_enabled?: boolean | null
           gst_inclusive?: boolean | null
           gst_percentage?: number | null
           store_name?: string | null
         }
         Update: {
+          bestsellers_enabled?: boolean | null
+          bestsellers_label?: string | null
+          bestsellers_sort_order?: number | null
           gst_enabled?: boolean | null
           gst_inclusive?: boolean | null
           gst_percentage?: number | null
