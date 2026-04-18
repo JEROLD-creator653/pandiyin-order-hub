@@ -522,6 +522,9 @@ export default function Index() {
         </section>
       )}
 
+      {/* Shop by Category */}
+      <ShopByCategory />
+
       {/* Brand Story */}
       <section className="py-20">
         <div className="container mx-auto px-4 text-center max-w-2xl">
