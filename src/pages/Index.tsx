@@ -3,10 +3,8 @@ import type { TouchEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Leaf, Truck, ShieldCheck, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
+import { Leaf, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CartReminderPopup } from '@/components/CartReminderPopup';
 import ShopByCategory from '@/components/ShopByCategory';
@@ -16,7 +14,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
 import favicon from '@/public/Pandiyin.ico';
-import { formatPrice } from '@/lib/formatters';
 
 const BANNER_CACHE_KEY = 'hero_banner_url';
 const BANNER_DATA_CACHE_KEY = 'hero_banners_data';
@@ -127,43 +124,6 @@ export default function Index() {
       return () => preloadedImg.removeEventListener('load', onLoad);
     }
   }, [banners, handleImageLoad]);
-
-  // Fetch featured products (OPTIMIZED: Non-blocking, loads in background)
-  // OLD: This blocked page render until ALL featured products loaded
-  // NEW: Shows placeholder immediately, updates when data arrives
-  const [featured, setFeatured] = useState<any[]>([]);
-  const [featuredLoading, setFeaturedLoading] = useState(true);
-  
-  useEffect(() => {
-    // Defer featured products loading to prioritize hero banner
-    // Uses requestIdleCallback (or 150ms fallback) so banner gets network priority
-    const loadFeatured = async () => {
-      try {
-        setFeaturedLoading(true);
-        const { data } = await supabase
-          .from('products')
-          .select('*, categories(name)')
-          .eq('is_featured', true)
-          .eq('is_available', true)
-          .limit(8);
-        
-        if (data) {
-          setFeatured(data);
-        }
-      } catch (error) {
-        console.error('Failed to load featured products:', error);
-      } finally {
-        setFeaturedLoading(false);
-      }
-    };
-
-    // Defer: let hero banner load first
-    if ('requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(() => loadFeatured(), { timeout: 300 });
-    } else {
-      setTimeout(loadFeatured, 150);
-    }
-  }, []);
 
   // Favicon setup
   useEffect(() => {
