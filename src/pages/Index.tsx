@@ -3,10 +3,8 @@ import type { TouchEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Leaf, Truck, ShieldCheck, ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
+import { Leaf, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CartReminderPopup } from '@/components/CartReminderPopup';
 import ShopByCategory from '@/components/ShopByCategory';
@@ -16,7 +14,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
 import favicon from '@/public/Pandiyin.ico';
-import { formatPrice } from '@/lib/formatters';
 
 const BANNER_CACHE_KEY = 'hero_banner_url';
 const BANNER_DATA_CACHE_KEY = 'hero_banners_data';
@@ -49,7 +46,7 @@ export default function Index() {
   const navigate = useNavigate();
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
-  const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
+  // (cart actions handled by ShopByCategory)
   const isScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartXRef = useRef<number | null>(null);
@@ -57,7 +54,7 @@ export default function Index() {
   const [showReminderPopup, setShowReminderPopup] = useState(false);
   
   const { user } = useAuth();
-  const { items: cartItems, addToCart } = useCart();
+  const { items: cartItems } = useCart();
 
   // Read cached banners from localStorage at mount time (synchronous, zero latency)
   // This provides instant data so the hero banner renders on the very first frame
@@ -128,43 +125,6 @@ export default function Index() {
     }
   }, [banners, handleImageLoad]);
 
-  // Fetch featured products (OPTIMIZED: Non-blocking, loads in background)
-  // OLD: This blocked page render until ALL featured products loaded
-  // NEW: Shows placeholder immediately, updates when data arrives
-  const [featured, setFeatured] = useState<any[]>([]);
-  const [featuredLoading, setFeaturedLoading] = useState(true);
-  
-  useEffect(() => {
-    // Defer featured products loading to prioritize hero banner
-    // Uses requestIdleCallback (or 150ms fallback) so banner gets network priority
-    const loadFeatured = async () => {
-      try {
-        setFeaturedLoading(true);
-        const { data } = await supabase
-          .from('products')
-          .select('*, categories(name)')
-          .eq('is_featured', true)
-          .eq('is_available', true)
-          .limit(8);
-        
-        if (data) {
-          setFeatured(data);
-        }
-      } catch (error) {
-        console.error('Failed to load featured products:', error);
-      } finally {
-        setFeaturedLoading(false);
-      }
-    };
-
-    // Defer: let hero banner load first
-    if ('requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(() => loadFeatured(), { timeout: 300 });
-    } else {
-      setTimeout(loadFeatured, 150);
-    }
-  }, []);
-
   // Favicon setup
   useEffect(() => {
     const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
@@ -185,21 +145,6 @@ export default function Index() {
     }
   }, [user, cartItems]);
 
-  const handleAddToCart = async (productId: string) => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    setAddingItems(prev => new Set(prev).add(productId));
-    await addToCart(productId, 1);
-    setTimeout(() => {
-      setAddingItems(prev => {
-        const next = new Set(prev);
-        next.delete(productId);
-        return next;
-      });
-    }, 600);
-  };
 
   // Auto-rotate banners every 5 seconds
   useEffect(() => {
@@ -420,109 +365,7 @@ export default function Index() {
         <TrustBadges />
       </div>
 
-      {/* Featured Products */}
-      {featured.length > 0 && (
-        <section className="py-10 md:py-16 bg-secondary/30">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-6 md:mb-10">
-              <h2 className="text-2xl md:text-3xl font-display font-bold">Bestsellers</h2>
-              <Button asChild variant="ghost" size="sm"><Link to="/products">View All <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
-            </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-              {featured.map((p, i) => (
-                <motion.div key={p.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="h-full">
-                  <Link to={`/products/${p.id}`} className="h-full block">
-                    <Card className="overflow-hidden hover:shadow-lg transition-shadow group h-full flex flex-col border-0 shadow-sm">
-                      <div className="h-40 md:h-56 lg:h-64 w-full bg-muted flex items-center justify-center overflow-hidden relative">
-                        {p.image_url ? (
-                          <img src={p.image_url} alt={p.name} className="w-full h-full object-cover object-center rounded-lg group-hover:scale-105 transition-transform duration-500" />
-                        ) : (
-                          <Leaf className="h-12 w-12 text-muted-foreground/30" />
-                        )}
-                        {p.stock_quantity <= 5 && p.stock_quantity > 0 && (
-                          <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] md:text-xs border-0 shadow-sm">Few Left</Badge>
-                        )}
-                        {p.stock_quantity === 0 && (
-                          <Badge variant="destructive" className="absolute top-2 right-2 text-[10px] md:text-xs border-0 shadow-sm">Out of Stock</Badge>
-                        )}
-                      </div>
-                      <CardContent className="p-3 md:p-4 flex-1 flex flex-col">
-                        <div>
-                          <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">{(p as any).categories?.name}</p>
-                          <h3 className="font-semibold text-sm md:text-base font-sans line-clamp-2 mb-1 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
-                          {p.weight && <p className="text-[10px] md:text-xs text-muted-foreground mb-1 md:mb-2">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
-                        </div>
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2 md:mb-3">
-                          <div className="flex items-center gap-1.5 md:gap-2">
-                            <span className="font-medium text-base md:text-lg text-primary">{formatPrice(p.price)}</span>
-                            {p.compare_price && <span className="text-xs md:text-sm text-muted-foreground line-through">{formatPrice(p.compare_price)}</span>}
-                          </div>
-                          {p.average_rating !== null && p.average_rating !== undefined && Number(p.average_rating) > 0 && (
-                            <span className="flex items-center gap-1 text-sm font-medium text-slate-600">
-                              <span className="text-yellow-500">★</span>
-                              {Number(p.average_rating).toFixed(1)}+
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-auto pt-3 flex justify-center">
-                          {((cartItems || []).some(i => i.product_id === p.id) || addingItems.has(p.id)) ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="w-full rounded-full text-sm bg-primary text-primary-foreground group-hover:!bg-transparent group-hover:!text-foreground transition-all"
-                              onClick={(e) => { e.preventDefault(); navigate('/cart'); }}
-                            >
-                              <motion.span initial={{ x: -6, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center justify-center">
-                                <ShoppingCart className="h-4 w-4 mr-2" /> Go to Cart
-                              </motion.span>
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              className="w-full rounded-full text-sm group-hover:bg-primary group-hover:text-primary-foreground transition-all"
-                              variant={addingItems.has(p.id) ? "secondary" : "outline"}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handleAddToCart(p.id);
-                              }}
-                              disabled={p.stock_quantity === 0 || addingItems.has(p.id)}
-                            >
-                              {addingItems.has(p.id) ? (
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  className="flex items-center gap-1"
-                                >
-                                  <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 0.5, ease: "easeInOut" }}
-                                  >
-                                    ✓
-                                  </motion.div>
-                                  Added
-                                </motion.div>
-                              ) : p.stock_quantity === 0 ? (
-                                'Out of Stock'
-                              ) : (
-                                <>
-                                  <ShoppingCart className="h-4 w-4 mr-2" />
-                                  Add to Cart
-                                </>
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Shop by Category */}
+      {/* Our Products (Bestsellers + categories) */}
       <ShopByCategory />
 
       {/* Brand Story */}
