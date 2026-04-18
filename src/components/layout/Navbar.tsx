@@ -385,16 +385,22 @@ export default function Navbar() {
 
         {/* ===== DESKTOP HEADER ===== */}
         <div className="hidden md:flex items-center justify-between h-full gap-4">
-          <Link to="/" className="flex items-center transition-colors duration-300">
-            <img
-              src={pandiyinLogo}
-              alt="PANDIYIN — Nature In Pack"
-              loading="eager"
-              decoding="async"
-              className={`h-11 lg:h-12 w-auto object-contain transition-all duration-300 ${
-                (isHomePage && !isActive) ? 'md:drop-shadow-lg' : ''
+          <Link to="/" className="flex items-center transition-all duration-300 group">
+            <span
+              className={`inline-flex items-center justify-center rounded-xl transition-all duration-300 ${
+                (isHomePage && !isActive)
+                  ? 'bg-white/95 backdrop-blur-sm px-2.5 py-1 shadow-md ring-1 ring-black/5'
+                  : 'bg-transparent px-0 py-0 shadow-none ring-0'
               }`}
-            />
+            >
+              <img
+                src={pandiyinLogo}
+                alt="PANDIYIN — Nature In Pack"
+                loading="eager"
+                decoding="async"
+                className="h-10 lg:h-11 w-auto object-contain transition-all duration-300"
+              />
+            </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
