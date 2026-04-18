@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CartReminderPopup } from '@/components/CartReminderPopup';
+import ShopByCategory from '@/components/ShopByCategory';
 import TrustBadges from '@/components/TrustBadges';
 import SEOHead, { buildOrganizationSchema, buildWebSiteSchema } from '@/components/SEOHead';
 import { useAuth } from '@/hooks/useAuth';
@@ -520,6 +521,9 @@ export default function Index() {
           </div>
         </section>
       )}
+
+      {/* Shop by Category */}
+      <ShopByCategory />
 
       {/* Brand Story */}
       <section className="py-20">
