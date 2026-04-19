@@ -143,15 +143,30 @@ export default function ShopByCategory() {
       navigate('/auth');
       return;
     }
-    setAddingItems(prev => new Set(prev).add(productId));
-    await addToCart(productId, 1);
-    setTimeout(() => {
-      setAddingItems(prev => {
-        const next = new Set(prev);
-        next.delete(productId);
-        return next;
-      });
-    }, 600);
+    let isSuccess = false; // Track success to preserve existing delay UX on success only.
+    setAddingItems(prev => new Set(prev).add(productId)); // Mark in-flight immediately.
+    try {
+      await addToCart(productId, 1); // Await rejection-capable addToCart contract.
+      isSuccess = true; // Flag success for delayed clear behavior.
+    } catch {
+      // Swallow here; cart hook already surfaces toast for failure.
+    } finally {
+      if (isSuccess) {
+        setTimeout(() => {
+          setAddingItems(prev => {
+            const next = new Set(prev);
+            next.delete(productId);
+            return next;
+          });
+        }, 600); // Keep existing short success feedback window.
+      } else {
+        setAddingItems(prev => {
+          const next = new Set(prev);
+          next.delete(productId);
+          return next;
+        }); // Unconditional immediate cleanup on failure.
+      }
+    }
   };
 
   if (!loading && products.length === 0) return null;
@@ -174,7 +189,7 @@ export default function ShopByCategory() {
         </div>
 
         {/* Category tabs */}
-        <div className="mb-6 md:mb-8 -mx-4 px-4 overflow-x-auto scrollbar-hide">
+        <div className="mb-6 md:mb-8 -mx-4 px-4 py-1 overflow-x-auto overflow-y-visible scrollbar-hide">
           <div className="flex gap-2 md:gap-3 min-w-max md:flex-wrap md:min-w-0">
             {loading
               ? Array.from({ length: 5 }).map((_, idx) => (
@@ -279,7 +294,7 @@ export default function ShopByCategory() {
                               onClick={(e) => { e.preventDefault(); navigate('/cart'); }}
                             >
                               <motion.span initial={{ x: -6, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center justify-center">
-                                <ShoppingCart className="h-4 w-4 mr-2" /> Go to Cart
+                                <ShoppingCart className="h-4 w-4 mr-2" /> Added to Cart
                               </motion.span>
                             </Button>
                           ) : (
@@ -303,7 +318,7 @@ export default function ShopByCategory() {
                               ) : (
                                 <>
                                   <ShoppingCart className="h-4 w-4 mr-2" />
-                                  Add to Cart
+                                  Buy Now
                                 </>
                               )}
                             </Button>

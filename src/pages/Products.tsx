@@ -37,6 +37,7 @@ export default function Products() {
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [addingItems, setAddingItems] = useState<Set<string>>(new Set());
+  const [pendingItems, setPendingItems] = useState<Set<string>>(new Set());
   const { addToCart, items: cartItems } = useCart();
   const navigate = useNavigate();
   const { endRouteLoad } = useRouteLoader();
@@ -109,15 +110,31 @@ export default function Products() {
   }, []);
 
   const handleAddToCart = async (productId: string) => {
-    setAddingItems(prev => new Set(prev).add(productId));
-    await addToCart(productId, 1);
-    setTimeout(() => {
+    if (pendingItems.has(productId)) return; // Block duplicate in-flight clicks for same product.
+    setPendingItems(prev => new Set(prev).add(productId)); // Set in-flight guard before await.
+    try {
+      await addToCart(productId, 1); // Mark adding only after confirmed add success.
+      setAddingItems(prev => new Set(prev).add(productId)); // Success path visual state.
+      setTimeout(() => {
+        setAddingItems(prev => {
+          const next = new Set(prev);
+          next.delete(productId);
+          return next;
+        });
+      }, 600);
+    } catch {
       setAddingItems(prev => {
         const next = new Set(prev);
         next.delete(productId);
         return next;
-      });
-    }, 600);
+      }); // Immediate clear on failure so item never remains in loading state.
+    } finally {
+      setPendingItems(prev => {
+        const next = new Set(prev);
+        next.delete(productId);
+        return next;
+      }); // Always clear in-flight guard regardless of outcome.
+    }
   };
 
   // OPTIMIZED: Load categories with caching
@@ -535,7 +552,7 @@ export default function Products() {
                           onClick={(e) => { e.preventDefault(); navigate('/cart'); }}
                         >
                           <motion.span initial={{ x: -6, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center justify-center">
-                            <ShoppingCart className="h-4 w-4 mr-2" /> Go to Cart
+                            <ShoppingCart className="h-4 w-4 mr-2" /> Added to Cart
                           </motion.span>
                         </Button>
                       ) : (
@@ -547,7 +564,7 @@ export default function Products() {
                             e.preventDefault();
                             handleAddToCart(p.id);
                           }}
-                          disabled={p.stock_quantity === 0 || addingItems.has(p.id)}
+                          disabled={p.stock_quantity === 0 || addingItems.has(p.id) || pendingItems.has(p.id)}
                         >
                           {addingItems.has(p.id) ? (
                             <motion.div
@@ -568,7 +585,7 @@ export default function Products() {
                           ) : (
                             <>
                               <ShoppingCart className="h-4 w-4 mr-2" />
-                              Add to Cart
+                              Buy Now
                             </>
                           )}
                         </Button>

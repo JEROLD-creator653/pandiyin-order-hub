@@ -27,12 +27,19 @@ export interface CartItem {
   product: CartProduct;
 }
 
+export class AuthRedirectError extends Error {
+  constructor(message = 'unauthenticated') {
+    super(message);
+    this.name = 'AuthRedirectError';
+  }
+}
+
 interface CartContextType {
   items: CartItem[];
   itemCount: number;
   total: number;
   loading: boolean;
-  addToCart: (productId: string, quantity?: number) => void;
+  addToCart: (productId: string, quantity?: number) => Promise<void>; // Allow callers to await success/failure.
   updateQuantity: (itemId: string, quantity: number) => void;
   removeItem: (itemId: string) => void;
   clearCart: () => void;
@@ -179,7 +186,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       total,
       loading: isLoading,
       refetch: () => refetch(),
-      addToCart: (productId, quantity = 1) => {
+      addToCart: async (productId, quantity = 1) => {
         if (!user) {
           toast({
             title: 'Please sign in',
@@ -187,11 +194,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
             variant: 'destructive'
           });
           window.location.href = '/auth';
-          return;
+          throw new AuthRedirectError('unauthenticated'); // Reject so awaiters can roll back optimistic UI.
         }
         const existing = items.find(i => i.product_id === productId);
         const newQty = existing ? existing.quantity + quantity : quantity;
-        addMutation.mutate({ productId, quantity: newQty });
+        await addMutation.mutateAsync({ productId, quantity: newQty }); // Resolve/reject by mutation outcome.
       },
       updateQuantity: (itemId, quantity) => {
         const item = items.find(i => i.id === itemId);
