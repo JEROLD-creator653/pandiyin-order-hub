@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
+import pandiyinLogo from '@/assets/pandiyin-logo.png';
 
 interface ProductSuggestion {
   id: string;
@@ -348,10 +349,13 @@ export default function Navbar() {
 
           {/* Center: Logo */}
           <Link to="/" className="flex-1 flex justify-center mx-1 min-w-0">
-            <div className="flex flex-col items-center leading-none">
-              <span className="text-base sm:text-lg font-display font-bold text-primary truncate">PANDIYIN</span>
-              <span className="text-[8px] sm:text-[9px] text-muted-foreground tracking-wider">Nature In Pack</span>
-            </div>
+            <img
+              src={pandiyinLogo}
+              alt="PANDIYIN — Nature In Pack"
+              loading="eager"
+              decoding="async"
+              className="h-9 sm:h-10 w-auto object-contain"
+            />
           </Link>
 
           {/* Right: Search + Cart */}
@@ -381,16 +385,21 @@ export default function Navbar() {
 
         {/* ===== DESKTOP HEADER ===== */}
         <div className="hidden md:flex items-center justify-between h-full gap-4">
-          <Link to="/" className="flex items-center gap-2 transition-colors duration-300">
-            <span className={`text-xl font-display font-bold transition-colors duration-300 ${
-              (isHomePage && !isActive) ? 'md:text-white text-primary md:drop-shadow-lg' : 'text-primary'
-            }`}>
-              PANDIYIN
-            </span>
-            <span className={`hidden sm:inline text-xs font-sans transition-colors duration-300 ${
-              (isHomePage && !isActive) ? 'md:text-white/80 text-muted-foreground md:drop-shadow' : 'text-muted-foreground'
-            }`}>
-              Nature In Pack
+          <Link to="/" className="flex items-center transition-all duration-300 group">
+            <span
+              className={`inline-flex items-center justify-center rounded-xl transition-all duration-300 ${
+                (isHomePage && !isActive)
+                  ? 'bg-white/95 backdrop-blur-sm px-2.5 py-1 shadow-md ring-1 ring-black/5'
+                  : 'bg-transparent px-0 py-0 shadow-none ring-0'
+              }`}
+            >
+              <img
+                src={pandiyinLogo}
+                alt="PANDIYIN — Nature In Pack"
+                loading="eager"
+                decoding="async"
+                className="h-10 lg:h-11 w-auto object-contain transition-all duration-300"
+              />
             </span>
           </Link>
 

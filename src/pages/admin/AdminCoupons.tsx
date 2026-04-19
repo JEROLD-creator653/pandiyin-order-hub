@@ -17,7 +17,7 @@ export default function AdminCoupons() {
   const [coupons, setCoupons] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
-  const [form, setForm] = useState({ code: '', discount_type: 'percentage', discount_value: '', min_order_value: '', max_uses: '', is_active: true, expires_at: '' });
+  const [form, setForm] = useState({ code: '', discount_type: 'percentage', discount_value: '', min_order_value: '', max_uses: '', max_uses_per_user: '', is_active: true, expires_at: '' });
 
   const load = async () => {
     const { data } = await supabase.from('coupons').select('*').order('created_at', { ascending: false });
@@ -32,6 +32,7 @@ export default function AdminCoupons() {
       discount_value: Number(form.discount_value),
       min_order_value: form.min_order_value ? Number(form.min_order_value) : 0,
       max_uses: form.max_uses ? Number(form.max_uses) : null,
+      max_uses_per_user: form.max_uses_per_user ? Number(form.max_uses_per_user) : null,
       is_active: form.is_active,
       expires_at: form.expires_at || null,
     };
@@ -59,7 +60,7 @@ export default function AdminCoupons() {
         <h2 className="text-xl font-bold font-sans">Coupons</h2>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setEditing(null); setForm({ code: '', discount_type: 'percentage', discount_value: '', min_order_value: '', max_uses: '', is_active: true, expires_at: '' }); }}><Plus className="mr-2 h-4 w-4" /> Create Coupon</Button>
+            <Button onClick={() => { setEditing(null); setForm({ code: '', discount_type: 'percentage', discount_value: '', min_order_value: '', max_uses: '', max_uses_per_user: '', is_active: true, expires_at: '' }); }}><Plus className="mr-2 h-4 w-4" /> Create Coupon</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>{editing ? 'Edit' : 'Create'} Coupon</DialogTitle></DialogHeader>
@@ -76,8 +77,9 @@ export default function AdminCoupons() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>Min Order Rs.</Label><Input type="number" value={form.min_order_value} onChange={e => setForm(f => ({ ...f, min_order_value: e.target.value }))} /></div>
-                <div className="space-y-2"><Label>Max Uses</Label><Input type="number" value={form.max_uses} onChange={e => setForm(f => ({ ...f, max_uses: e.target.value }))} placeholder="Unlimited" /></div>
+                <div className="space-y-2"><Label>Max Total Uses</Label><Input type="number" value={form.max_uses} onChange={e => setForm(f => ({ ...f, max_uses: e.target.value }))} placeholder="Unlimited" /></div>
               </div>
+              <div className="space-y-2"><Label>Max Uses Per User</Label><Input type="number" value={form.max_uses_per_user} onChange={e => setForm(f => ({ ...f, max_uses_per_user: e.target.value }))} placeholder="Unlimited" /></div>
               <div className="space-y-2"><Label>Expiry Date</Label><Input type="date" value={form.expires_at} onChange={e => setForm(f => ({ ...f, expires_at: e.target.value }))} /></div>
               <div className="flex items-center gap-2"><Switch checked={form.is_active} onCheckedChange={v => setForm(f => ({ ...f, is_active: v }))} /><Label>Active</Label></div>
               <Button onClick={save} className="w-full">{editing ? 'Update' : 'Create'} Coupon</Button>
@@ -99,7 +101,7 @@ export default function AdminCoupons() {
                   <TableCell><Badge className={c.is_active ? 'bg-green-100 text-green-800' : ''}>{c.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => { setEditing(c); setForm({ code: c.code, discount_type: c.discount_type, discount_value: String(c.discount_value), min_order_value: String(c.min_order_value || ''), max_uses: c.max_uses ? String(c.max_uses) : '', is_active: c.is_active, expires_at: c.expires_at ? c.expires_at.split('T')[0] : '' }); setDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => { setEditing(c); setForm({ code: c.code, discount_type: c.discount_type, discount_value: String(c.discount_value), min_order_value: String(c.min_order_value || ''), max_uses: c.max_uses ? String(c.max_uses) : '', max_uses_per_user: c.max_uses_per_user ? String(c.max_uses_per_user) : '', is_active: c.is_active, expires_at: c.expires_at ? c.expires_at.split('T')[0] : '' }); setDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" className="text-destructive" onClick={() => remove(c.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   </TableCell>

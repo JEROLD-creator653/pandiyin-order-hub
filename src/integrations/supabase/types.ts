@@ -828,6 +828,30 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          id: string
+          identifier: string
+          request_count: number
+          updated_at: string
+          window_start: string
+        }
+        Insert: {
+          id?: string
+          identifier: string
+          request_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Update: {
+          id?: string
+          identifier?: string
+          request_count?: number
+          updated_at?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       shipping_regions: {
         Row: {
           base_charge: number
@@ -873,6 +897,9 @@ export type Database = {
       store_settings: {
         Row: {
           address: string | null
+          bestsellers_enabled: boolean
+          bestsellers_label: string
+          bestsellers_sort_order: number
           email: string | null
           gst_enabled: boolean
           gst_inclusive: boolean
@@ -886,6 +913,9 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          bestsellers_enabled?: boolean
+          bestsellers_label?: string
+          bestsellers_sort_order?: number
           email?: string | null
           gst_enabled?: boolean
           gst_inclusive?: boolean
@@ -899,6 +929,9 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          bestsellers_enabled?: boolean
+          bestsellers_label?: string
+          bestsellers_sort_order?: number
           email?: string | null
           gst_enabled?: boolean
           gst_inclusive?: boolean
@@ -1041,18 +1074,27 @@ export type Database = {
       }
       public_store_settings: {
         Row: {
+          bestsellers_enabled: boolean | null
+          bestsellers_label: string | null
+          bestsellers_sort_order: number | null
           gst_enabled: boolean | null
           gst_inclusive: boolean | null
           gst_percentage: number | null
           store_name: string | null
         }
         Insert: {
+          bestsellers_enabled?: boolean | null
+          bestsellers_label?: string | null
+          bestsellers_sort_order?: number | null
           gst_enabled?: boolean | null
           gst_inclusive?: boolean | null
           gst_percentage?: number | null
           store_name?: string | null
         }
         Update: {
+          bestsellers_enabled?: boolean | null
+          bestsellers_label?: string | null
+          bestsellers_sort_order?: number | null
           gst_enabled?: boolean | null
           gst_inclusive?: boolean | null
           gst_percentage?: number | null
@@ -1072,6 +1114,18 @@ export type Database = {
           base_amount: number
           gst_amount: number
           total_amount: number
+        }[]
+      }
+      check_rate_limit: {
+        Args: {
+          _identifier: string
+          _max_requests?: number
+          _window_seconds?: number
+        }
+        Returns: {
+          allowed: boolean
+          current_count: number
+          retry_after: number
         }[]
       }
       generate_invoice_number: { Args: never; Returns: string }
