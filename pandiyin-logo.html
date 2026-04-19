@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pandiyin Logo</title>
+  <style>
+    :root {
+      --brand: hsl(145 40% 28%);
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: transparent;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      padding: 2.5rem;
+    }
+
+    .pandiyin-logo {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      padding: 1.9rem 3.2rem 1.75rem;
+      border: 1px solid hsl(145 40% 28% / 0.3);
+      outline: 1px solid hsl(145 40% 28% / 0.5);
+      outline-offset: 4px;
+      background: transparent;
+      color: var(--brand);
+    }
+
+    .pandiyin-top {
+      margin: 0;
+      font-family: "Didot", "Bodoni MT", "Playfair Display", Georgia, serif;
+      font-size: 0.96rem;
+      font-weight: 300;
+      letter-spacing: 0.62em;
+      color: var(--brand);
+      opacity: 0.88;
+      text-transform: uppercase;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    .pandiyin-bottom {
+      margin: 0.44rem 0 0 0;
+      font-family: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+      font-size: 2.32rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--brand);
+      white-space: nowrap;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="pandiyin-logo" role="img" aria-label="Pandiyin Nature In Pack logo">
+    <div class="pandiyin-top">PANDIYIN</div>
+    <div class="pandiyin-bottom">Nature In Pack</div>
+  </div>
+</body>
+</html>

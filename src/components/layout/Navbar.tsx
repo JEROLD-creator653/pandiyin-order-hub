@@ -11,7 +11,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
-import pandiyinLogo from '@/assets/pandiyin-logo.png';
 
 interface ProductSuggestion {
   id: string;
@@ -151,6 +150,25 @@ export default function Navbar() {
     { label: 'Products', to: '/products' },
     { label: 'About', to: '/about' },
   ];
+
+  const logoGradientClass = 'bg-gradient-to-b from-primary via-primary to-primary/75 bg-clip-text text-transparent';
+
+  const BrandLogo = ({ compact = false }: { compact?: boolean }) => (
+    <span className="inline-flex flex-col items-center leading-none select-none">
+      <span
+        className={`${logoGradientClass} ${compact ? 'font-display text-[10px] tracking-[0.34em] opacity-85 whitespace-nowrap' : 'font-display text-[10px] lg:text-[11px] tracking-[0.36em] opacity-85 whitespace-nowrap'}`}
+        style={{ fontFamily: 'Didot, Bodoni MT, Playfair Display, Georgia, serif', fontWeight: 300 }}
+      >
+        PANDIYIN
+      </span>
+      <span
+        className={`${logoGradientClass} ${compact ? 'mt-0.5 text-[17px] tracking-[0.12em] whitespace-nowrap' : 'mt-0.5 text-[14px] lg:text-[15px] tracking-[0.12em] whitespace-nowrap'}`}
+        style={{ fontFamily: 'Palatino Linotype, Palatino, Book Antiqua, Georgia, serif', fontWeight: 700 }}
+      >
+        Nature In Pack
+      </span>
+    </span>
+  );
 
   const isActive = isHomePage ? (isScrolled || isHovered || mobileOpen) : true;
   const isProductsPage = location.pathname === '/products';
@@ -349,13 +367,7 @@ export default function Navbar() {
 
           {/* Center: Logo */}
           <Link to="/" className="flex-1 flex justify-center mx-1 min-w-0">
-            <img
-              src={pandiyinLogo}
-              alt="PANDIYIN — Nature In Pack"
-              loading="eager"
-              decoding="async"
-              className="h-9 sm:h-10 w-auto object-contain"
-            />
+            <BrandLogo compact />
           </Link>
 
           {/* Right: Search + Cart */}
@@ -386,21 +398,7 @@ export default function Navbar() {
         {/* ===== DESKTOP HEADER ===== */}
         <div className="hidden md:flex items-center justify-between h-full gap-4">
           <Link to="/" className="flex items-center transition-all duration-300 group">
-            <span
-              className={`inline-flex items-center justify-center rounded-xl transition-all duration-300 ${
-                (isHomePage && !isActive)
-                  ? 'bg-white/95 backdrop-blur-sm px-2.5 py-1 shadow-md ring-1 ring-black/5'
-                  : 'bg-transparent px-0 py-0 shadow-none ring-0'
-              }`}
-            >
-              <img
-                src={pandiyinLogo}
-                alt="PANDIYIN — Nature In Pack"
-                loading="eager"
-                decoding="async"
-                className="h-10 lg:h-11 w-auto object-contain transition-all duration-300"
-              />
-            </span>
+            <BrandLogo />
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
