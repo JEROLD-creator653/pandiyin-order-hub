@@ -154,16 +154,16 @@ export default function Navbar() {
   const logoGradientClass = 'bg-gradient-to-b from-primary via-primary to-primary/75 bg-clip-text text-transparent';
 
   const BrandLogo = ({ compact = false }: { compact?: boolean }) => (
-    <span className="inline-flex flex-col items-center leading-none select-none">
+    <span className={`inline-flex flex-col items-center leading-none select-none ${compact ? 'scale-[1.08]' : ''}`}>
       <span
-        className={`${logoGradientClass} ${compact ? 'font-display text-[10px] tracking-[0.34em] opacity-85 whitespace-nowrap' : 'font-display text-[10px] lg:text-[11px] tracking-[0.36em] opacity-85 whitespace-nowrap'}`}
-        style={{ fontFamily: 'Didot, Bodoni MT, Playfair Display, Georgia, serif', fontWeight: 300 }}
+        className={`${logoGradientClass} ${compact ? 'font-display text-[12px] tracking-[0.32em] opacity-95 whitespace-nowrap' : 'font-display text-[10px] lg:text-[11px] tracking-[0.36em] opacity-85 whitespace-nowrap'}`}
+        style={{ fontFamily: 'Didot, Bodoni MT, Playfair Display, Georgia, serif', fontWeight: compact ? 600 : 500 }}
       >
         PANDIYIN
       </span>
       <span
-        className={`${logoGradientClass} ${compact ? 'mt-0.5 text-[17px] tracking-[0.12em] whitespace-nowrap' : 'mt-0.5 text-[14px] lg:text-[15px] tracking-[0.12em] whitespace-nowrap'}`}
-        style={{ fontFamily: 'Palatino Linotype, Palatino, Book Antiqua, Georgia, serif', fontWeight: 700 }}
+        className={`${logoGradientClass} ${compact ? 'mt-0.5 text-[19px] tracking-[0.11em] whitespace-nowrap' : 'mt-0.5 text-[14px] lg:text-[15px] tracking-[0.12em] whitespace-nowrap'}`}
+        style={{ fontFamily: 'Palatino Linotype, Palatino, Book Antiqua, Georgia, serif', fontWeight: compact ? 800 : 700 }}
       >
         Nature In Pack
       </span>
@@ -366,7 +366,7 @@ export default function Navbar() {
           </Sheet>
 
           {/* Center: Logo */}
-          <Link to="/" className="flex-1 flex justify-center mx-1 min-w-0">
+          <Link to="/" className="flex-[1.35] flex justify-center mx-1 min-w-0">
             <BrandLogo compact />
           </Link>
 
