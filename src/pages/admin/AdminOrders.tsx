@@ -73,13 +73,21 @@ export default function AdminOrders() {
           </div>
           <h2 className="text-xl font-bold font-sans">Orders ({orders.length})</h2>
         </div>
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Orders</SelectItem>
-            {statuses.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Switch id="show-unpaid" checked={showUnpaid} onCheckedChange={setShowUnpaid} />
+            <Label htmlFor="show-unpaid" className="text-xs cursor-pointer text-muted-foreground">
+              Show failed/cancelled
+            </Label>
+          </div>
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Orders</SelectItem>
+              {statuses.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <Card>
         <CardContent className="p-0">
