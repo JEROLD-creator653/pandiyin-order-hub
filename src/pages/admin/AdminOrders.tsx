@@ -22,12 +22,18 @@ export default function AdminOrders() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showUnpaid, setShowUnpaid] = useState(false);
 
   const load = async () => {
     setLoading(true);
     try {
       let q = supabase.from('orders').select('*, order_items(*, products(image_url, name))').order('created_at', { ascending: false });
       if (filter !== 'all') q = q.eq('status', filter as any);
+      // By default, hide unpaid/failed/cancelled orders. Show only real revenue:
+      // online payments that succeeded (paid) OR COD orders that haven't been cancelled.
+      if (!showUnpaid) {
+        q = q.or('payment_status.eq.paid,payment_method.eq.cod').neq('status', 'cancelled');
+      }
       if (debouncedSearch && debouncedSearch.trim() !== '') {
         q = q.ilike('order_number', `%${debouncedSearch}%`);
       }
@@ -39,7 +45,7 @@ export default function AdminOrders() {
       setLoading(false);
     }
   };
-  useEffect(() => { load(); }, [filter, debouncedSearch]);
+  useEffect(() => { load(); }, [filter, debouncedSearch, showUnpaid]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
