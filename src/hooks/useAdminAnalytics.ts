@@ -82,11 +82,15 @@ export function useAdminAnalytics() {
         { count: totalCustomers },
         { count: totalProducts },
       ] = await Promise.all([
+        // Only count REAL revenue: paid online orders + delivered COD orders.
+        // Excludes pending/failed/cancelled payments and cancelled orders.
         supabase
           .from('orders')
           .select('*')
           .gte('created_at', dateRange.from.toISOString())
           .lte('created_at', dateRange.to.toISOString())
+          .or('payment_status.eq.paid,and(payment_method.eq.cod,status.eq.delivered)')
+          .neq('status', 'cancelled')
           .order('created_at', { ascending: false }),
         supabase
           .from('order_items')
