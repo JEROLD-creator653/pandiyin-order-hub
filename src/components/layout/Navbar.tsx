@@ -170,7 +170,7 @@ export default function Navbar() {
         alt="PANDIYIN — Nature In Pack"
         loading="eager"
         decoding="async"
-        className={`${compact ? 'h-full max-h-16 scale-[1.35] origin-center' : 'h-11 lg:h-12'} w-auto object-contain`}
+        className={`${compact ? 'h-16 w-auto object-contain object-center' : 'h-11 lg:h-12 w-auto object-contain'}`}
         draggable={false}
       />
     </span>
