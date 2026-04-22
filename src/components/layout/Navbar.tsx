@@ -159,7 +159,7 @@ export default function Navbar() {
     <span
       className={`inline-flex items-center justify-center select-none transition-all duration-300 ${
         compact
-          ? 'px-1'
+          ? 'h-16 py-0'
           : showTransparentBadge
             ? 'rounded-xl bg-white/95 px-3 py-1.5 shadow-md ring-1 ring-black/5 backdrop-blur-sm'
             : 'rounded-lg px-1 py-0.5'
