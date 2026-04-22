@@ -159,7 +159,7 @@ export default function Navbar() {
     <span
       className={`inline-flex items-center justify-center select-none transition-all duration-300 ${
         compact
-          ? 'px-1'
+          ? 'h-16 py-0'
           : showTransparentBadge
             ? 'rounded-xl bg-white/95 px-3 py-1.5 shadow-md ring-1 ring-black/5 backdrop-blur-sm'
             : 'rounded-lg px-1 py-0.5'
@@ -170,7 +170,7 @@ export default function Navbar() {
         alt="PANDIYIN — Nature In Pack"
         loading="eager"
         decoding="async"
-        className={`${compact ? 'h-14 sm:h-16' : 'h-11 lg:h-12'} w-auto object-contain`}
+        className={`${compact ? 'h-full max-h-16 scale-[1.35] origin-center' : 'h-11 lg:h-12'} w-auto object-contain`}
         draggable={false}
       />
     </span>
