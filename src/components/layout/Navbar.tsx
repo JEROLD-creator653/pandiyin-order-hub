@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
+import pandiyinLogo from '@/assets/pandiyin-logo.png';
 
 interface ProductSuggestion {
   id: string;
@@ -151,26 +152,29 @@ export default function Navbar() {
     { label: 'About', to: '/about' },
   ];
 
-  const logoGradientClass = 'bg-gradient-to-b from-primary via-primary to-primary/75 bg-clip-text text-transparent';
+  const isActive = isHomePage ? (isScrolled || isHovered || mobileOpen) : true;
+  const showTransparentBadge = isHomePage && !isActive;
 
   const BrandLogo = ({ compact = false }: { compact?: boolean }) => (
-    <span className={`inline-flex flex-col items-center leading-none select-none ${compact ? 'scale-[1.08]' : ''}`}>
-      <span
-        className={`${logoGradientClass} ${compact ? 'font-display text-[12px] tracking-[0.32em] opacity-95 whitespace-nowrap' : 'font-display text-[10px] lg:text-[11px] tracking-[0.36em] opacity-85 whitespace-nowrap'}`}
-        style={{ fontFamily: 'Didot, Bodoni MT, Playfair Display, Georgia, serif', fontWeight: compact ? 600 : 500 }}
-      >
-        PANDIYIN
-      </span>
-      <span
-        className={`${logoGradientClass} ${compact ? 'mt-0.5 text-[19px] tracking-[0.11em] whitespace-nowrap' : 'mt-0.5 text-[14px] lg:text-[15px] tracking-[0.12em] whitespace-nowrap'}`}
-        style={{ fontFamily: 'Palatino Linotype, Palatino, Book Antiqua, Georgia, serif', fontWeight: compact ? 800 : 700 }}
-      >
-        Nature In Pack
-      </span>
+    <span
+      className={`inline-flex items-center justify-center select-none transition-all duration-300 ${
+        compact
+          ? 'rounded-lg bg-white/95 px-2 py-1 shadow-sm ring-1 ring-black/5'
+          : showTransparentBadge
+            ? 'rounded-xl bg-white/95 px-3 py-1.5 shadow-md ring-1 ring-black/5 backdrop-blur-sm'
+            : 'rounded-lg px-1 py-0.5'
+      }`}
+    >
+      <img
+        src={pandiyinLogo}
+        alt="PANDIYIN — Nature In Pack"
+        loading="eager"
+        decoding="async"
+        className={`${compact ? 'h-9' : 'h-11 lg:h-12'} w-auto object-contain`}
+        draggable={false}
+      />
     </span>
   );
-
-  const isActive = isHomePage ? (isScrolled || isHovered || mobileOpen) : true;
   const isProductsPage = location.pathname === '/products';
 
   // Reusable suggestions dropdown
