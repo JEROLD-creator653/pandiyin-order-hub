@@ -1,5 +1,6 @@
 /**
  * Admin Product Editor Page
+ * Supports up to 3 product images (multi-image gallery).
  */
 
 import { useEffect, useMemo, useState } from 'react';
@@ -12,13 +13,17 @@ import { RichTextEditor } from '@/components/RichTextEditor';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { ImageUpload } from '@/components/ImageUpload';
+import MultiImageUpload, { MultiImageItem } from '@/components/MultiImageUpload';
 import { TableSkeleton } from '@/components/ui/loader';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { uploadAndSaveProductImage, updateProductImage } from '@/lib/imageUpload';
+import {
+  uploadProductImages,
+  deleteProductImagePaths,
+  MAX_PRODUCT_IMAGES,
+  BUCKET_NAMES,
+} from '@/lib/imageUpload';
 
 interface Product {
   id: string;
@@ -29,6 +34,7 @@ interface Product {
   category_id?: string;
   image_url: string;
   image_path: string;
+  images?: string[] | null;
   stock_quantity: number;
   is_available: boolean;
   is_featured: boolean;
@@ -44,6 +50,19 @@ interface Category {
   name: string;
 }
 
+// Extract storage path from a Supabase public URL
+function pathFromPublicUrl(url: string): string | null {
+  if (!url) return null;
+  const marker = `/storage/v1/object/public/${BUCKET_NAMES.PRODUCTS}/`;
+  const idx = url.indexOf(marker);
+  if (idx === -1) return null;
+  try {
+    return decodeURIComponent(url.substring(idx + marker.length));
+  } catch {
+    return null;
+  }
+}
+
 export default function AdminProductEditor() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -55,8 +74,7 @@ export default function AdminProductEditor() {
   const [loadingPage, setLoadingPage] = useState(true);
   const [existingProduct, setExistingProduct] = useState<Product | null>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [uploadKey, setUploadKey] = useState(0);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imageItems, setImageItems] = useState<MultiImageItem[]>([]);
 
   const [form, setForm] = useState({
     name: '', description: '', price: '', compare_price: '', category_id: '',
@@ -95,6 +113,22 @@ export default function AdminProductEditor() {
       is_available: product.is_available,
       is_featured: product.is_featured,
     });
+
+    // Build image items from existing data: prefer images[] array, fall back to image_url
+    const existingUrls: string[] = [];
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      existingUrls.push(...product.images.filter(Boolean));
+    } else if (product.image_url) {
+      existingUrls.push(product.image_url);
+    }
+
+    setImageItems(
+      existingUrls.slice(0, MAX_PRODUCT_IMAGES).map((url, idx) => ({
+        id: `existing_${idx}_${Math.random().toString(36).slice(2, 7)}`,
+        url,
+        existingPath: pathFromPublicUrl(url) || undefined,
+      }))
+    );
   };
 
   useEffect(() => {
@@ -139,58 +173,79 @@ export default function AdminProductEditor() {
   const save = async () => {
     if (!form.name) { toast.error('Product name is required'); return; }
     if (!form.price) { toast.error('Product price is required'); return; }
-    if (!isEditing && !selectedFile) { toast.error('Please upload a product image'); return; }
+    if (imageItems.length === 0) { toast.error('Please add at least one product image'); return; }
     if (!user?.id) { toast.error('User not authenticated'); return; }
 
     try {
       setIsSaving(true);
       const weightKg = computeWeightKg(form.weight, form.unit);
 
+      // Determine which existing images were removed (to delete from storage)
+      const previousPaths = new Set(
+        (existingProduct?.images || [])
+          .map((u) => pathFromPublicUrl(u))
+          .filter((p): p is string => Boolean(p))
+      );
+      if (existingProduct?.image_path) previousPaths.add(existingProduct.image_path);
+
+      const keptPaths = new Set(
+        imageItems
+          .filter((i) => i.existingPath)
+          .map((i) => i.existingPath!)
+      );
+      const pathsToDelete = Array.from(previousPaths).filter((p) => !keptPaths.has(p));
+
+      // Upload any new files
+      const newFiles = imageItems.filter((i) => i.file).map((i) => i.file!);
+      const uploaded = newFiles.length > 0 ? await uploadProductImages(newFiles, user.id) : [];
+
+      // Build the final ordered image URL list matching imageItems order
+      let uploadedIdx = 0;
+      const finalUrls: string[] = imageItems.map((item) => {
+        if (item.existingPath) return item.url;
+        const result = uploaded[uploadedIdx++];
+        return result.imageUrl;
+      });
+      const primaryUrl = finalUrls[0];
+      const primaryPath =
+        imageItems[0].existingPath ||
+        uploaded[0]?.imagePath ||
+        '';
+
+      const payload: any = {
+        name: form.name,
+        description: form.description,
+        price: Number(form.price),
+        compare_price: form.compare_price ? Number(form.compare_price) : null,
+        category_id: form.category_id || null,
+        stock_quantity: Number(form.stock_quantity),
+        weight: form.weight ? String(form.weight) : '',
+        weight_kg: weightKg,
+        unit: form.unit,
+        gst_percentage: Number(form.gst_percentage),
+        hsn_code: form.hsn_code,
+        is_available: form.is_available,
+        is_featured: form.is_featured,
+        image_url: primaryUrl,
+        image_path: primaryPath,
+        images: finalUrls,
+      };
+
       if (isEditing && existingProduct) {
-        const updateData: any = {
-          name: form.name,
-          description: form.description,
-          price: Number(form.price),
-          compare_price: form.compare_price ? Number(form.compare_price) : null,
-          category_id: form.category_id || null,
-          stock_quantity: Number(form.stock_quantity),
-          weight: form.weight ? String(form.weight) : '',
-          weight_kg: weightKg,
-          unit: form.unit,
-          gst_percentage: Number(form.gst_percentage),
-          hsn_code: form.hsn_code,
-          is_available: form.is_available,
-          is_featured: form.is_featured,
-        };
+        const { error } = await supabase.from('products').update(payload).eq('id', existingProduct.id);
+        if (error) throw error;
 
-        if (selectedFile) {
-          await updateProductImage(existingProduct.id, selectedFile, existingProduct.image_path, user.id);
+        // Cleanup removed images (best-effort)
+        if (pathsToDelete.length > 0) {
+          await deleteProductImagePaths(pathsToDelete);
         }
-
-        await supabase.from('products').update(updateData).eq('id', existingProduct.id);
         toast.success('Product updated successfully');
       } else {
-        await uploadAndSaveProductImage(
-          selectedFile!,
-          {
-            name: form.name,
-            description: form.description,
-            price: Number(form.price),
-            category_id: form.category_id || undefined,
-            stock_quantity: Number(form.stock_quantity) || 0,
-            weight: form.weight ? String(form.weight) : '',
-            weight_kg: weightKg,
-            unit: form.unit,
-            gst_percentage: Number(form.gst_percentage),
-            hsn_code: form.hsn_code,
-          } as any,
-          user.id
-        );
+        const { error } = await supabase.from('products').insert({ ...payload, user_id: user.id });
+        if (error) throw error;
         toast.success('Product created successfully');
       }
 
-      setSelectedFile(null);
-      setUploadKey(prev => prev + 1);
       navigate('/admin/products');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to save product');
@@ -229,7 +284,7 @@ export default function AdminProductEditor() {
           </Button>
           <h1 className="text-3xl font-bold">{isEditing ? 'Edit Product' : 'Add Product'}</h1>
           <p className="text-sm text-muted-foreground">
-            {isEditing ? 'Update product details and image' : 'Create a new product with image'}
+            {isEditing ? 'Update product details and images' : 'Create a new product with up to 3 images'}
           </p>
         </div>
       </div>
@@ -240,22 +295,15 @@ export default function AdminProductEditor() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-medium mb-2 block">Product Image {!isEditing && '*'}</label>
-            {isEditing && !selectedFile && existingProduct?.image_url && (
-              <div className="mb-3 relative rounded-lg overflow-hidden border border-muted bg-muted">
-                <img src={existingProduct.image_url} alt={existingProduct.name} className="w-full h-64 object-contain" />
-                <Badge className="absolute top-2 left-2 bg-background/80 text-foreground text-xs">Current Image</Badge>
-              </div>
-            )}
-            <ImageUpload
-              key={uploadKey}
-              onImageSelect={(file) => setSelectedFile(file)}
+            <label className="text-sm font-medium mb-2 block">
+              Product Images <span className="text-muted-foreground font-normal">(up to {MAX_PRODUCT_IMAGES})</span>
+            </label>
+            <MultiImageUpload
+              value={imageItems}
+              onChange={setImageItems}
+              maxImages={MAX_PRODUCT_IMAGES}
               disabled={isSaving}
-              label={isEditing ? 'Upload New Product Image' : 'Upload Product Image'}
             />
-            {isEditing && selectedFile && (
-              <p className="text-xs text-green-600 mt-1 font-medium">New image selected and will be updated on save</p>
-            )}
           </div>
 
           <div>

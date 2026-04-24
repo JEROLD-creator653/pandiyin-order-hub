@@ -19,6 +19,7 @@ import ReviewForm, { ReviewFormData } from '@/components/ReviewForm';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import RelatedProducts from '@/components/RelatedProducts';
 import ProductDescriptionCollapsible from '@/components/ProductDescriptionCollapsible';
+import ProductImageGallery from '@/components/ProductImageGallery';
 import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import SEOHead, { buildProductSchema, buildBreadcrumbSchema } from '@/components/SEOHead';
 import { formatPrice } from '@/lib/formatters';
@@ -223,21 +224,20 @@ export default function ProductDetail() {
       {/* Main Content Grid: Product Image + Details */}
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8 mb-12">
-          {/* Left Column: Product Image Card */}
+          {/* Left Column: Product Image Gallery (Amazon/Flipkart style) */}
           <div className="lg:col-span-2">
-            <div className="sticky top-28 rounded-2xl overflow-hidden border border-muted shadow-sm bg-muted h-[320px] md:h-[520px] w-full">
-              {product.image_url ? (
-                <img 
-                  src={product.image_url} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover block" 
-                />
-              ) : (
-                <div className="flex items-center justify-center w-full h-full">
-                  <Leaf className="h-24 w-24 text-muted-foreground/40" />
-                </div>
-              )}
-            </div>
+            <ProductImageGallery
+              images={(() => {
+                const arr: string[] = [];
+                if (Array.isArray(product.images) && product.images.length > 0) {
+                  arr.push(...product.images.filter(Boolean));
+                } else if (product.image_url) {
+                  arr.push(product.image_url);
+                }
+                return arr;
+              })()}
+              productName={product.name}
+            />
           </div>
 
           {/* Right Column: Product Details (Desktop 3/5, Mobile Full Width) */}
