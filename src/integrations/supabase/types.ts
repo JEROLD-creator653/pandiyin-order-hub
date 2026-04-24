@@ -679,6 +679,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          images: string[] | null
           product_id: string
           rating: number
           user_id: string
@@ -688,6 +689,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          images?: string[] | null
           product_id: string
           rating: number
           user_id: string
@@ -697,6 +699,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          images?: string[] | null
           product_id?: string
           rating?: number
           user_id?: string
@@ -1042,6 +1045,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           id: string | null
+          images: string[] | null
           product_id: string | null
           rating: number | null
           user_name: string | null
@@ -1050,6 +1054,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string | null
+          images?: string[] | null
           product_id?: string | null
           rating?: number | null
           user_name?: string | null
@@ -1058,6 +1063,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           id?: string | null
+          images?: string[] | null
           product_id?: string | null
           rating?: number | null
           user_name?: string | null
