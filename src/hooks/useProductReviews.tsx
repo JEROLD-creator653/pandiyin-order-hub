@@ -268,6 +268,13 @@ export function useProductReviews({
         description: reviewData.reviewId ? 'Review updated successfully' : 'Review submitted successfully'
       });
 
+      // Best-effort cleanup: delete any images the user removed during edit
+      if (removedUrls.length > 0) {
+        deleteReviewImages(removedUrls).catch((err) =>
+          console.warn('Review image cleanup failed:', err)
+        );
+      }
+
       // Manually update product's average_rating and review_count
       // (in case DB trigger is missing or not firing)
       const { data: reviewAgg } = await (supabase as any)
