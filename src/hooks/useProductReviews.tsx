@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from './use-toast';
 import { clearAllCache } from '@/lib/cacheService';
+import { uploadReviewImages, deleteReviewImages } from '@/lib/reviewImageUpload';
 
 interface Review {
   id: string;
@@ -12,6 +13,7 @@ interface Review {
   created_at: string;
   user_name?: string;
   user_email?: string;
+  images?: string[] | null;
 }
 
 interface ReviewStats {
@@ -89,6 +91,7 @@ export function useProductReviews({
           rating,
           description,
           user_name,
+          images,
           created_at
         `, { count: 'exact' })
         .eq('product_id', productId)
@@ -132,7 +135,8 @@ export function useProductReviews({
       const reviewsWithUser = (data || []).map((review: any) => ({
         ...review,
         user_name: review.user_name?.trim() || 'Customer',
-        user_email: ''
+        user_email: '',
+        images: Array.isArray(review.images) ? review.images : [],
       }));
 
       if (append) {
@@ -169,11 +173,13 @@ export function useProductReviews({
     fetchReviews(nextPage, true);
   }, [page, fetchReviews]);
 
-  // Submit or update review
+  // Submit or update review (with optional image uploads, WebP-converted)
   const submitReview = useCallback(async (reviewData: {
     rating: number;
     description: string;
     reviewId?: string;
+    newImageFiles?: File[];
+    keptImageUrls?: string[];
   }) => {
     if (!userId) {
       toast({
@@ -206,25 +212,42 @@ export function useProductReviews({
         userName = profileData.full_name;
       }
 
+      // Upload any new images (auto-converted to WebP)
+      const newFiles = reviewData.newImageFiles || [];
+      const uploadedUrls = newFiles.length > 0 ? await uploadReviewImages(newFiles, userId) : [];
+      const keptUrls = reviewData.keptImageUrls || [];
+      const finalImages = [...keptUrls, ...uploadedUrls];
+
+      // For edits: detect images the user removed so we can delete them from storage
+      let removedUrls: string[] = [];
+      if (reviewData.reviewId) {
+        const { data: prior } = await (supabase as any)
+          .from('product_reviews')
+          .select('images')
+          .eq('id', reviewData.reviewId)
+          .maybeSingle();
+        const priorImages: string[] = Array.isArray(prior?.images) ? prior.images : [];
+        removedUrls = priorImages.filter((u) => !keptUrls.includes(u));
+      }
+
       const payload = {
         user_id: userId,
         product_id: productId,
         rating: reviewData.rating,
         description: trimmedDescription,
-        user_name: userName
+        user_name: userName,
+        images: finalImages,
       };
 
       let error;
 
       if (reviewData.reviewId) {
-        // Update existing review
         ({ error } = await (supabase as any)
           .from('product_reviews')
           .update(payload)
           .eq('id', reviewData.reviewId)
           .eq('user_id', userId));
       } else {
-        // Insert new review
         ({ error } = await (supabase as any)
           .from('product_reviews')
           .insert(payload));
