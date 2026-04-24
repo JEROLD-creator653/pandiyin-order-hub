@@ -315,6 +315,15 @@ export function useProductReviews({
     if (!userId) return;
 
     try {
+      // Fetch the review's images first so we can clean up storage after delete
+      const { data: priorReview } = await (supabase as any)
+        .from('product_reviews')
+        .select('images')
+        .eq('id', reviewId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      const imagesToDelete: string[] = Array.isArray(priorReview?.images) ? priorReview.images : [];
+
       const { error } = await (supabase as any)
         .from('product_reviews')
         .delete()
@@ -329,6 +338,13 @@ export function useProductReviews({
           variant: 'destructive'
         });
         return;
+      }
+
+      // Best-effort storage cleanup
+      if (imagesToDelete.length > 0) {
+        deleteReviewImages(imagesToDelete).catch((err) =>
+          console.warn('Review image cleanup failed:', err)
+        );
       }
 
       toast({
