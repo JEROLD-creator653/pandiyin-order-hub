@@ -326,6 +326,35 @@ export async function updateBannerImage(
 }
 
 /**
+ * Upload multiple product images and return URLs + paths.
+ * Used for multi-image (gallery) product creation/edit.
+ */
+export const MAX_PRODUCT_IMAGES = 3;
+
+export async function uploadProductImages(
+  files: File[],
+  userId: string
+): Promise<UploadResult[]> {
+  const trimmed = files.slice(0, MAX_PRODUCT_IMAGES);
+  const results: UploadResult[] = [];
+  for (const file of trimmed) {
+    // Sequential to surface validation errors clearly
+    const result = await uploadImage(file, BUCKET_NAMES.PRODUCTS, userId);
+    results.push(result);
+  }
+  return results;
+}
+
+/**
+ * Delete multiple product image storage paths (best-effort).
+ */
+export async function deleteProductImagePaths(paths: string[]): Promise<void> {
+  const filtered = paths.filter(Boolean);
+  if (filtered.length === 0) return;
+  await supabase.storage.from(BUCKET_NAMES.PRODUCTS).remove(filtered).then(() => {}).catch(() => {});
+}
+
+/**
  * Update product image (delete old, upload new)
  */
 export async function updateProductImage(
