@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Leaf, ShoppingCart, Minus, Plus, ArrowLeft, Star, MessageSquare, Loader2 } from 'lucide-react';
+import { Leaf, ShoppingCart, Minus, Plus, ArrowLeft, Star, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,9 +19,11 @@ import ReviewForm, { ReviewFormData } from '@/components/ReviewForm';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import RelatedProducts from '@/components/RelatedProducts';
 import ProductDescriptionCollapsible from '@/components/ProductDescriptionCollapsible';
+import ProductImageGallery from '@/components/ProductImageGallery';
 import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import SEOHead, { buildProductSchema, buildBreadcrumbSchema } from '@/components/SEOHead';
 import { formatPrice } from '@/lib/formatters';
+import { formatProductUnit } from '@/lib/unitHelpers';
 import { Loader } from '@/components/ui/loader';
 import { getPricingInfo } from '@/lib/discountCalculations';
 
@@ -30,7 +32,8 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addToCart, items: cartItems } = useCart();
-  const [adding, setAdding] = useState(false);
+  const [ctaStatus, setCtaStatus] = useState<'idle' | 'added'>('idle'); // Remove dead loading state.
+  const [pendingAdd, setPendingAdd] = useState(false);
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
@@ -42,6 +45,7 @@ export default function ProductDetail() {
   const purchaseSectionRef = useRef<HTMLDivElement>(null);
   const reviewsRef = useRef<HTMLDivElement>(null);
   const [showStickyBar, setShowStickyBar] = useState(false);
+  const isInCart = !!product && (cartItems || []).some(i => i.product_id === product.id);
   
   const {
     reviews,
@@ -84,15 +88,41 @@ export default function ProductDetail() {
     return () => observer.disconnect();
   }, [product]);
 
-  const handleAddToCart = () => {
-    if (!user) { navigate('/auth'); return; }
-    if (adding) return; // prevent double-click
-    setAdding(true);
-    try {
-      addToCart(product.id, qty);
-    } finally {
-      setTimeout(() => setAdding(false), 600);
+  useEffect(() => {
+    if (!product) return;
+
+    if (isInCart) {
+      setCtaStatus('added');
+      setPendingAdd(false);
+      return;
     }
+
+    if (!pendingAdd) {
+      setCtaStatus('idle');
+    }
+  }, [isInCart, pendingAdd, product]);
+
+  const handleAddToCart = async (): Promise<boolean> => {
+    if (!user) { navigate('/auth'); return false; } // Deterministic boolean for unauthenticated path.
+    if (!product) return false;
+    if (pendingAdd) return false;
+
+    setCtaStatus('added'); // Optimistic label update on click.
+    setPendingAdd(true); // Lock CTA while add request is in-flight.
+
+    try {
+      await addToCart(product.id, qty); // Await confirmed mutation result.
+      return true; // Success path for Buy Now navigation gate.
+    } catch {
+      setPendingAdd(false); // Roll back pending lock on mutation error.
+      setCtaStatus('idle'); // Roll back optimistic label on mutation error.
+      return false;
+    }
+  };
+
+  const handleBuyNow = async () => {
+    const isAdded = await handleAddToCart(); // Reuse add flow and await outcome.
+    if (isAdded) navigate('/cart'); // Navigate only after confirmed add success.
   };
 
   const handleWriteReview = async () => {
@@ -195,21 +225,20 @@ export default function ProductDetail() {
       {/* Main Content Grid: Product Image + Details */}
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8 mb-12">
-          {/* Left Column: Product Image Card */}
+          {/* Left Column: Product Image Gallery (Amazon/Flipkart style) */}
           <div className="lg:col-span-2">
-            <div className="sticky top-28 rounded-2xl overflow-hidden border border-muted shadow-sm bg-muted h-[320px] md:h-[520px] w-full">
-              {product.image_url ? (
-                <img 
-                  src={product.image_url} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover block" 
-                />
-              ) : (
-                <div className="flex items-center justify-center w-full h-full">
-                  <Leaf className="h-24 w-24 text-muted-foreground/40" />
-                </div>
-              )}
-            </div>
+            <ProductImageGallery
+              images={(() => {
+                const arr: string[] = [];
+                if (Array.isArray(product.images) && product.images.length > 0) {
+                  arr.push(...product.images.filter(Boolean));
+                } else if (product.image_url) {
+                  arr.push(product.image_url);
+                }
+                return arr;
+              })()}
+              productName={product.name}
+            />
           </div>
 
           {/* Right Column: Product Details (Desktop 3/5, Mobile Full Width) */}
@@ -259,10 +288,25 @@ export default function ProductDetail() {
               <TaxInclusiveInfo variant="subtitle" />
             </div>
 
-            {/* Weight/Unit Info */}
-            {product.weight && (
-              <p className="text-sm text-muted-foreground mb-6">{product.weight} {product.unit}</p>
+            {/* Combo badge + Weight/Unit Info */}
+            {product.is_combo && (
+              <div className="mb-3">
+                <Badge
+                  className="text-combo-foreground border-0 shadow-md font-bold tracking-wide uppercase px-3 py-1"
+                  style={{ backgroundImage: 'var(--gradient-combo)' }}
+                >
+                  {product.combo_badge?.trim() || 'Combo Deal'}
+                </Badge>
+              </div>
             )}
+            {(() => {
+              const unitLabel = formatProductUnit(product) || (product.weight ? `${product.weight} ${product.unit || ''}`.trim() : '');
+              return unitLabel ? (
+                <p className="text-sm text-muted-foreground mb-6">
+                  {product.is_combo ? 'Net Weight: ' : ''}{unitLabel}
+                </p>
+              ) : null;
+            })()}
 
             {/* Quantity & Add to Cart Section */}
             <div ref={purchaseSectionRef} className="space-y-4 mb-8">
@@ -297,39 +341,34 @@ export default function ProductDetail() {
                   </div>
                   
                   <div className="flex gap-3 pt-2">
-                    {((cartItems || []).some(i => i.product_id === product.id)) ? (
+                    {ctaStatus === 'added' ? (
                       <Button
                         size="lg"
                         variant="outline"
                         className="flex-1 rounded-full h-12 font-semibold bg-primary text-primary-foreground group-hover:!bg-transparent group-hover:!text-foreground transition-colors"
                         onClick={() => navigate('/cart')}
+                        disabled={pendingAdd && !isInCart} // Prevent open-cart before item is confirmed in cart.
                       >
-                        <motion.span initial={{ x: -6, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex items-center justify-center">
-                          <ShoppingCart className="mr-2 h-5 w-5" /> Go to Cart
-                        </motion.span>
+                        <span className="flex items-center justify-center">
+                          <ShoppingCart className="mr-2 h-5 w-5" /> Added to Cart
+                        </span>
                       </Button>
                     ) : (
                       <Button 
                         size="lg" 
                         className="flex-1 rounded-full h-12 font-semibold" 
                         onClick={handleAddToCart}
-                        disabled={adding}
+                        disabled={pendingAdd}
                       >
-                        {adding ? (
-                          <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Adding...</>
-                        ) : (
-                          <><ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart</>
-                        )}
+                        <><ShoppingCart className="mr-2 h-5 w-5" /> Add to Cart</>
                       </Button>
                     )}
                     <Button 
                       size="lg" 
                       variant="outline" 
                       className="flex-1 rounded-full h-12 font-semibold"
-                      onClick={() => {
-                        handleAddToCart();
-                        navigate('/cart');
-                      }}
+                      disabled={pendingAdd}
+                      onClick={handleBuyNow}
                     >
                       Buy Now
                     </Button>
@@ -448,24 +487,21 @@ export default function ProductDetail() {
         >
           <div className="flex items-center gap-3">
             {/* Add to Cart / Go to Cart */}
-            {((cartItems || []).some(i => i.product_id === product.id)) ? (
+            {ctaStatus === 'added' ? (
               <Button
                 className="flex-1 h-12 rounded-xl font-semibold text-[15px] bg-primary text-primary-foreground"
                 onClick={() => navigate('/cart')}
+                disabled={pendingAdd && !isInCart} // Prevent open-cart before item is confirmed in cart.
               >
-                <ShoppingCart className="mr-1.5 h-4 w-4" /> Go to Cart
+                <ShoppingCart className="mr-1.5 h-4 w-4" /> Added to Cart
               </Button>
             ) : (
               <Button
                 className="flex-1 h-12 rounded-xl font-semibold text-[15px]"
                 onClick={handleAddToCart}
-                disabled={adding}
+                disabled={pendingAdd}
               >
-                {adding ? (
-                  <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> Adding...</>
-                ) : (
-                  <><ShoppingCart className="mr-1.5 h-4 w-4" /> Add to Cart</>
-                )}
+                <><ShoppingCart className="mr-1.5 h-4 w-4" /> Add to Cart</>
               </Button>
             )}
 
@@ -473,10 +509,8 @@ export default function ProductDetail() {
             <Button
               variant="outline"
               className="flex-1 h-12 rounded-xl font-semibold text-[15px]"
-              onClick={() => {
-                handleAddToCart();
-                navigate('/cart');
-              }}
+              disabled={pendingAdd}
+              onClick={handleBuyNow}
             >
               Buy Now
             </Button>

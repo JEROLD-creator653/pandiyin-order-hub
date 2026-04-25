@@ -37,6 +37,25 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Rate limiting (DB-backed, shared, 125 req/min per user/IP)
+    const adminClientForLimit = createClient(supabaseUrl, supabaseServiceKey);
+    const clientIpForLimit = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
+    try {
+      const { data: limitData } = await adminClientForLimit.rpc('check_rate_limit', {
+        _identifier: `user:${user.id}:${clientIpForLimit}`,
+        _max_requests: 125,
+        _window_seconds: 60,
+      });
+      if (limitData && limitData.length > 0 && !limitData[0].allowed) {
+        return new Response(JSON.stringify({ error: 'Too many requests' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(limitData[0].retry_after) },
+        });
+      }
+    } catch (_e) {
+      // Fail open
+    }
+
     const { cart_items, delivery_state, coupon_code } = await req.json();
 
     if (!cart_items || !Array.isArray(cart_items) || cart_items.length === 0) {
@@ -52,12 +71,30 @@ serve(async (req) => {
     const productIds = cart_items.map((i: any) => i.product_id);
     const { data: products, error: prodErr } = await adminClient
       .from('products')
-      .select('id, price, stock_quantity, is_available, weight_kg, gst_percentage, hsn_code, tax_inclusive, name')
+      .select('id, price, stock_quantity, is_available, weight_kg, calculated_shipping_weight, unit_type, quantity_count, per_unit_weight, per_unit_weight_unit, gst_percentage, hsn_code, tax_inclusive, name')
       .in('id', productIds);
 
     if (prodErr) throw prodErr;
 
     const productMap = new Map(products?.map(p => [p.id, p]) || []);
+
+    // Resolve effective shipping weight (kg) per product.
+    // Prefer the precomputed calculated_shipping_weight; fall back to weight_kg
+    // (legacy products) or recompute from quantity_count × per_unit_weight.
+    const COUNT_UNITS = new Set(['pcs', 'pack', 'bottle', 'jar', 'box', 'combo']);
+    const resolveShippingWeightKg = (p: any): number => {
+      const stored = Number(p?.calculated_shipping_weight);
+      if (isFinite(stored) && stored > 0) return stored;
+      const unit = String(p?.unit_type || '').toLowerCase();
+      if (COUNT_UNITS.has(unit)) {
+        const qty = Number(p?.quantity_count) || 0;
+        const pu = Number(p?.per_unit_weight) || 0;
+        const puUnit = String(p?.per_unit_weight_unit || 'g').toLowerCase();
+        const puKg = puUnit === 'kg' ? pu : pu / 1000;
+        return Math.max(0, qty * puKg);
+      }
+      return Math.max(0, Number(p?.weight_kg) || 0);
+    };
 
     // Validate all products
     const errors: string[] = [];
@@ -79,7 +116,7 @@ serve(async (req) => {
         errors.push(`${product.name}: only ${product.stock_quantity} in stock (requested ${item.quantity})`);
         continue;
       }
-      const weightKg = Number(product.weight_kg) || 0;
+      const weightKg = resolveShippingWeightKg(product);
       if (weightKg <= 0) {
         errors.push(`${product.name}: weight not configured`);
         continue;

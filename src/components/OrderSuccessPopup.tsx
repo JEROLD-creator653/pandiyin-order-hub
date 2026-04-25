@@ -96,7 +96,7 @@ export default function OrderSuccessPopup({
           transition={{ delay: 0.6 }}
           className="text-sm text-gray-600 mb-8"
         >
-          Thank you for shopping with us! Your order will be delivered soon.
+          Thank you for shopping with us! Your order is being processed and will be dispatched within 2–7 working days.
         </motion.p>
 
         {/* Action Buttons */}

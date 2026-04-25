@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -20,12 +22,18 @@ export default function AdminOrders() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showUnpaid, setShowUnpaid] = useState(false);
 
   const load = async () => {
     setLoading(true);
     try {
       let q = supabase.from('orders').select('*, order_items(*, products(image_url, name))').order('created_at', { ascending: false });
       if (filter !== 'all') q = q.eq('status', filter as any);
+      // By default, hide unpaid/failed/cancelled orders. Show only real revenue:
+      // online payments that succeeded (paid) OR COD orders that haven't been cancelled.
+      if (!showUnpaid) {
+        q = q.or('payment_status.eq.paid,payment_method.eq.cod').neq('status', 'cancelled');
+      }
       if (debouncedSearch && debouncedSearch.trim() !== '') {
         q = q.ilike('order_number', `%${debouncedSearch}%`);
       }
@@ -37,7 +45,7 @@ export default function AdminOrders() {
       setLoading(false);
     }
   };
-  useEffect(() => { load(); }, [filter, debouncedSearch]);
+  useEffect(() => { load(); }, [filter, debouncedSearch, showUnpaid]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300);
@@ -65,13 +73,21 @@ export default function AdminOrders() {
           </div>
           <h2 className="text-xl font-bold font-sans">Orders ({orders.length})</h2>
         </div>
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Orders</SelectItem>
-            {statuses.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Switch id="show-unpaid" checked={showUnpaid} onCheckedChange={setShowUnpaid} />
+            <Label htmlFor="show-unpaid" className="text-xs cursor-pointer text-muted-foreground">
+              Show failed/cancelled
+            </Label>
+          </div>
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Orders</SelectItem>
+              {statuses.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       <Card>
         <CardContent className="p-0">

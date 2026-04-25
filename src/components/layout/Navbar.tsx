@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from '@/lib/formatters';
+import pandiyinLogo from '@/assets/pandiyin-logo.png';
 
 interface ProductSuggestion {
   id: string;
@@ -152,6 +153,28 @@ export default function Navbar() {
   ];
 
   const isActive = isHomePage ? (isScrolled || isHovered || mobileOpen) : true;
+  const showTransparentBadge = isHomePage && !isActive;
+
+  const BrandLogo = ({ compact = false }: { compact?: boolean }) => (
+    <span
+      className={`inline-flex items-center justify-center select-none transition-all duration-300 ${
+        compact
+          ? 'h-16 py-0'
+          : showTransparentBadge
+            ? 'rounded-xl bg-white/95 px-3 py-1.5 shadow-md ring-1 ring-black/5 backdrop-blur-sm'
+            : 'rounded-lg px-1 py-0.5'
+      }`}
+    >
+      <img
+        src={pandiyinLogo}
+        alt="PANDIYIN — Nature In Pack"
+        loading="eager"
+        decoding="async"
+        className={`${compact ? 'h-16 w-auto object-contain object-center' : 'h-11 lg:h-12 w-auto object-contain'}`}
+        draggable={false}
+      />
+    </span>
+  );
   const isProductsPage = location.pathname === '/products';
 
   // Reusable suggestions dropdown
@@ -347,11 +370,8 @@ export default function Navbar() {
           </Sheet>
 
           {/* Center: Logo */}
-          <Link to="/" className="flex-1 flex justify-center mx-1 min-w-0">
-            <div className="flex flex-col items-center leading-none">
-              <span className="text-base sm:text-lg font-display font-bold text-primary truncate">PANDIYIN</span>
-              <span className="text-[8px] sm:text-[9px] text-muted-foreground tracking-wider">Nature In Pack</span>
-            </div>
+          <Link to="/" className="flex-[1.35] flex justify-center mx-1 min-w-0">
+            <BrandLogo compact />
           </Link>
 
           {/* Right: Search + Cart */}
@@ -381,17 +401,8 @@ export default function Navbar() {
 
         {/* ===== DESKTOP HEADER ===== */}
         <div className="hidden md:flex items-center justify-between h-full gap-4">
-          <Link to="/" className="flex items-center gap-2 transition-colors duration-300">
-            <span className={`text-xl font-display font-bold transition-colors duration-300 ${
-              (isHomePage && !isActive) ? 'md:text-white text-primary md:drop-shadow-lg' : 'text-primary'
-            }`}>
-              PANDIYIN
-            </span>
-            <span className={`hidden sm:inline text-xs font-sans transition-colors duration-300 ${
-              (isHomePage && !isActive) ? 'md:text-white/80 text-muted-foreground md:drop-shadow' : 'text-muted-foreground'
-            }`}>
-              Nature In Pack
-            </span>
+          <Link to="/" className="flex items-center transition-all duration-300 group">
+            <BrandLogo />
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">

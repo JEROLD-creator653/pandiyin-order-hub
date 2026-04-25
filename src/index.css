@@ -40,6 +40,10 @@
     --accent: 38 60% 50%;
     --accent-foreground: 40 33% 96%;
 
+    --combo: 28 90% 50%;
+    --combo-foreground: 40 33% 96%;
+    --gradient-combo: linear-gradient(135deg, hsl(38 90% 52%), hsl(20 88% 50%));
+
     --destructive: 0 72% 51%;
     --destructive-foreground: 40 33% 96%;
 
@@ -319,3 +323,13 @@
 }
 
 
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

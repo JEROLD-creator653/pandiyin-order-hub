@@ -1,0 +1,18 @@
+<svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Outer border frame -->
+  <rect x="18" y="18" width="364" height="164" rx="1" fill="none" stroke="hsl(145,40%,28%)" stroke-width="0.6" opacity="0.5"/>
+  <rect x="23" y="23" width="354" height="154" rx="1" fill="none" stroke="hsl(145,40%,28%)" stroke-width="0.3" opacity="0.35"/>
+
+  <!-- PANDIYIN -->
+  <text x="200" y="84" text-anchor="middle" font-family="'Didot', 'Bodoni MT', 'Playfair Display', Georgia, serif" font-size="34" font-weight="300" letter-spacing="14" fill="hsl(145,40%,28%)">PANDIYIN</text>
+
+  <!-- Thin rule left -->
+  <line x1="48" y1="105" x2="163" y2="105" stroke="hsl(145,40%,28%)" stroke-width="0.7" opacity="0.6"/>
+  <!-- Diamond ornament -->
+  <rect x="195" y="101" width="10" height="10" rx="0.5" fill="hsl(145,40%,28%)" opacity="0.75" transform="rotate(45 200 106)"/>
+  <!-- Thin rule right -->
+  <line x1="237" y1="105" x2="352" y2="105" stroke="hsl(145,40%,28%)" stroke-width="0.7" opacity="0.6"/>
+
+  <!-- Nature In Pack -->
+  <text x="200" y="148" text-anchor="middle" font-family="'Palatino Linotype', Palatino, 'Book Antiqua', Georgia, serif" font-size="22" font-weight="700" letter-spacing="6" fill="hsl(145,40%,28%)">NATURE IN PACK</text>
+</svg>
