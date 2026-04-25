@@ -545,6 +545,14 @@ export default function Products() {
                     ) : (
                       <Leaf className="h-12 w-12 text-muted-foreground/30" />
                     )}
+                    {p.is_combo && (
+                      <Badge
+                        className="absolute top-2 left-2 text-combo-foreground text-[10px] md:text-xs border-0 shadow-md font-bold tracking-wide uppercase"
+                        style={{ backgroundImage: 'var(--gradient-combo)' }}
+                      >
+                        {p.combo_badge?.trim() || 'Combo Deal'}
+                      </Badge>
+                    )}
                     {p.stock_quantity <= 5 && p.stock_quantity > 0 && (
                       <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] md:text-xs border-0 shadow-sm">Few Left</Badge>
                     )}
@@ -555,7 +563,10 @@ export default function Products() {
                   <CardContent className="p-3 md:p-4 flex-1 flex flex-col">
                     <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5">{(p as any).categories?.name}</p>
                     <h3 className="font-semibold text-sm md:text-base font-sans line-clamp-2 mb-1 md:mb-1.5 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
-                    {p.weight && <p className="text-[10px] md:text-xs text-muted-foreground mb-1">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
+                    {(() => {
+                      const unitLabel = formatProductUnit(p) || (p.weight ? `${p.weight}${p.unit ? ` ${p.unit}` : ''}` : '');
+                      return unitLabel ? <p className="text-[10px] md:text-xs text-muted-foreground mb-1">{unitLabel}</p> : null;
+                    })()}
                     {Number(p.average_rating) > 0 && (
                       <div className="flex items-center gap-1.5 mb-2">
                         <span className="inline-flex items-center gap-0.5 bg-primary/10 text-primary text-sm sm:text-xs font-semibold px-2 sm:px-1.5 py-0.5 rounded">
