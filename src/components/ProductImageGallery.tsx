@@ -66,7 +66,7 @@ export default function ProductImageGallery({
     return (
       <div
         className={cn(
-          'sticky top-28 rounded-2xl overflow-hidden border border-muted bg-muted h-[320px] md:h-[520px] w-full flex items-center justify-center',
+          'sticky top-28 rounded-2xl overflow-hidden border border-muted bg-white aspect-square w-full flex items-center justify-center',
           className
         )}
       >
