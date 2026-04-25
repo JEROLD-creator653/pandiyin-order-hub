@@ -177,7 +177,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   });
 
   const total = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const itemCount = items.length;
 
   return (
     <CartContext.Provider value={{

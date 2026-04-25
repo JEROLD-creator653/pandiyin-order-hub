@@ -339,7 +339,14 @@ export default function Checkout() {
             const verifyData = await verifyRes.json();
             if (verifyData.verified) {
               clearCart();
-              navigate(`/order-confirmation/${order.id}`);
+              setLoading(false);
+              navigate(`/order-confirmation/${order.id}`, {
+                state: {
+                  showSuccessModal: true,
+                  successTitle: 'Payment Successful',
+                  successMessage: 'Your payment was successful. Your order has been placed and will be processed within 2-5 working days.',
+                },
+              });
             } else {
               setCheckoutError('Payment verification failed. Please contact support.');
             }
@@ -449,7 +456,13 @@ export default function Checkout() {
     try {
       const order = await createOrder(quoteToUse || verifiedQuote);
       clearCart();
-      navigate(`/order-confirmation/${order.id}`);
+      navigate(`/order-confirmation/${order.id}`, {
+        state: {
+          showSuccessModal: true,
+          successTitle: 'Order Confirmed',
+          successMessage: 'Your order has been placed successfully and will be processed within 2-5 working days.',
+        },
+      });
     } catch (err: any) {
       setCheckoutError(err.message || 'Order failed. Please try again.');
     } finally {

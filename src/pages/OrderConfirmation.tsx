@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useParams, Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CheckCircle, Package, ShoppingBag, FileText, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { formatPrice } from '@/lib/formatters';
 import { generateInvoicePdf, type InvoiceData, type InvoiceItem } from '@/lib/invoicePdf';
 import SEOHead from '@/components/SEOHead';
+import SuccessModal from '@/components/SuccessModal';
 
 const getPaymentModeLabel = (mode: string): string => {
   const labels: Record<string, string> = {
@@ -25,10 +26,15 @@ const getPaymentModeLabel = (mode: string): string => {
 
 export default function OrderConfirmation() {
   const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAdmin, loading: authLoading } = useAuth();
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [unauthorized, setUnauthorized] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(Boolean((location.state as any)?.showSuccessModal));
+  const successTitle = ((location.state as any)?.successTitle as string) || 'Order Confirmed';
+  const successMessage = ((location.state as any)?.successMessage as string) || 'Your order has been placed successfully and will be processed within 2-5 working days.';
 
   useEffect(() => {
     if (!id || !user || authLoading) return;
@@ -63,6 +69,11 @@ export default function OrderConfirmation() {
   }, [id, user, isAdmin, authLoading]);
 
   const address = order?.delivery_address as any;
+
+  const closeSuccessModal = () => {
+    setSuccessOpen(false);
+    navigate(location.pathname, { replace: true });
+  };
 
   if (authLoading) {
     return (
@@ -134,6 +145,13 @@ export default function OrderConfirmation() {
   return (
     <div className="container mx-auto px-4 pt-24 pb-16 max-w-lg">
       <SEOHead title="Order Confirmed" description="Your PANDIYIN order has been placed successfully." noindex />
+      <SuccessModal
+        open={successOpen}
+        onClose={closeSuccessModal}
+        title={successTitle}
+        message={successMessage}
+        ctaLabel="View Order"
+      />
       <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
         <div className="text-center mb-8">
           <CheckCircle className="h-20 w-20 text-primary mx-auto mb-6" />
