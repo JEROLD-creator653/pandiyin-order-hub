@@ -213,7 +213,11 @@ export default function Products() {
     loadProducts();
   }, [searchFilter, endRouteLoad]);
 
-  const activeFilterCount = (selectedCategories.length > 0 ? 1 : 0) + (inStockOnly ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0);
+  const activeFilterCount =
+    (selectedCategories.length > 0 ? 1 : 0) +
+    (inStockOnly ? 1 : 0) +
+    (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0) +
+    (comboFilter !== 'all' ? 1 : 0);
 
   const filtered = useMemo(() => {
     let result = [...products];
@@ -224,6 +228,13 @@ export default function Products() {
         const catName = (p as any).categories?.name;
         return catName && selectedCategories.includes(catName);
       });
+    }
+
+    // Combo filter (3-way: all / products only / combos only)
+    if (comboFilter === 'products') {
+      result = result.filter(p => !p.is_combo);
+    } else if (comboFilter === 'combos') {
+      result = result.filter(p => p.is_combo);
     }
 
     // Price filter
@@ -243,7 +254,7 @@ export default function Products() {
     }
 
     return result;
-  }, [products, selectedCategories, priceRange, inStockOnly, sortBy]);
+  }, [products, selectedCategories, priceRange, inStockOnly, sortBy, comboFilter]);
 
   const toggleCategory = (name: string) => {
     setSelectedCategories(prev =>
@@ -257,6 +268,7 @@ export default function Products() {
     setManualMin('');
     setManualMax('');
     setInStockOnly(false);
+    setComboFilter('all');
   };
 
   const applyManualPrice = () => {
