@@ -89,7 +89,19 @@ export default function Cart() {
                   {item.product.stock_quantity > 0 && item.product.stock_quantity <= 5 && (
                     <p className="text-xs font-medium text-destructive mt-0.5">Only {item.product.stock_quantity} left in stock!</p>
                   )}
-                  {(item.product as any).weight && <p className="text-xs text-muted-foreground mt-0.5">{(item.product as any).weight}{(item.product as any).unit ? ` ${(item.product as any).unit}` : ''}</p>}
+                  {(() => {
+                    const p: any = item.product;
+                    const COUNT = ['pcs','pack','bottle','jar','box','combo'];
+                    const u = String(p.unit_type || '').toLowerCase();
+                    let label = '';
+                    if (COUNT.includes(u)) {
+                      const n = Number(p.quantity_count) || 0;
+                      if (n > 0) label = u === 'combo' ? `${n} combo pack${n > 1 ? 's' : ''}` : `${n} ${u}${n > 1 && u !== 'pcs' ? 's' : ''}`;
+                    } else if (p.weight) {
+                      label = `${p.weight}${p.unit ? ` ${p.unit}` : ''}`;
+                    }
+                    return label ? <p className="text-xs text-muted-foreground mt-0.5">{label}</p> : null;
+                  })()}
                   {(() => {
                     const pricing = getPricingInfo(item.product.price, (item.product as any).compare_price);
                     return (
