@@ -328,8 +328,12 @@ export async function updateBannerImage(
 /**
  * Upload multiple product images and return URLs + paths.
  * Used for multi-image (gallery) product creation/edit.
+ *
+ * - Normal products: up to 3 images (enforced in UI)
+ * - Combo products: up to 6 images (enforced in UI)
  */
 export const MAX_PRODUCT_IMAGES = 3;
+export const MAX_COMBO_IMAGES = 6;
 
 export async function uploadProductImages(
   files: File[],

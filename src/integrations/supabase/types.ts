@@ -718,7 +718,9 @@ export type Database = {
       products: {
         Row: {
           average_rating: number | null
+          calculated_shipping_weight: number
           category_id: string | null
+          combo_badge: string | null
           compare_price: number | null
           created_at: string
           created_at_updated: boolean | null
@@ -730,13 +732,23 @@ export type Database = {
           image_url: string | null
           images: string[] | null
           is_available: boolean
+          is_combo: boolean
           is_featured: boolean
           name: string
+          per_unit_weight: number | null
+          per_unit_weight_unit: string | null
           price: number
+          quantity_count: number | null
           review_count: number | null
+          seo_description: string | null
+          seo_title: string | null
+          short_description: string | null
+          slug: string | null
           stock_quantity: number
+          tags: string[] | null
           tax_inclusive: boolean
           unit: string | null
+          unit_type: string | null
           updated_at: string
           user_id: string | null
           weight: string | null
@@ -744,7 +756,9 @@ export type Database = {
         }
         Insert: {
           average_rating?: number | null
+          calculated_shipping_weight?: number
           category_id?: string | null
+          combo_badge?: string | null
           compare_price?: number | null
           created_at?: string
           created_at_updated?: boolean | null
@@ -756,13 +770,23 @@ export type Database = {
           image_url?: string | null
           images?: string[] | null
           is_available?: boolean
+          is_combo?: boolean
           is_featured?: boolean
           name: string
+          per_unit_weight?: number | null
+          per_unit_weight_unit?: string | null
           price?: number
+          quantity_count?: number | null
           review_count?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          short_description?: string | null
+          slug?: string | null
           stock_quantity?: number
+          tags?: string[] | null
           tax_inclusive?: boolean
           unit?: string | null
+          unit_type?: string | null
           updated_at?: string
           user_id?: string | null
           weight?: string | null
@@ -770,7 +794,9 @@ export type Database = {
         }
         Update: {
           average_rating?: number | null
+          calculated_shipping_weight?: number
           category_id?: string | null
+          combo_badge?: string | null
           compare_price?: number | null
           created_at?: string
           created_at_updated?: boolean | null
@@ -782,13 +808,23 @@ export type Database = {
           image_url?: string | null
           images?: string[] | null
           is_available?: boolean
+          is_combo?: boolean
           is_featured?: boolean
           name?: string
+          per_unit_weight?: number | null
+          per_unit_weight_unit?: string | null
           price?: number
+          quantity_count?: number | null
           review_count?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          short_description?: string | null
+          slug?: string | null
           stock_quantity?: number
+          tags?: string[] | null
           tax_inclusive?: boolean
           unit?: string | null
+          unit_type?: string | null
           updated_at?: string
           user_id?: string | null
           weight?: string | null

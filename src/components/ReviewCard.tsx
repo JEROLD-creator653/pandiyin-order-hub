@@ -85,26 +85,22 @@ export default function ReviewCard({
                 <span className="font-medium">{getDisplayName()}</span>
               </div>
 
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-3">
                 <RatingStars rating={review.rating} size="sm" />
                 <span className="text-xs text-muted-foreground">
                   {formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}
                 </span>
               </div>
 
-              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                {review.description}
-              </p>
-
-              {/* Review Images */}
+              {/* Review Images — shown ABOVE the text (Amazon/Flipkart style) */}
               {images.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mb-3 flex flex-wrap gap-2">
                   {images.map((img, idx) => (
                     <button
                       key={`${img}-${idx}`}
                       type="button"
                       onClick={() => setLightboxIndex(idx)}
-                      className="rounded-lg overflow-hidden border bg-muted hover:opacity-90 transition-opacity h-20 w-20 sm:h-24 sm:w-24"
+                      className="rounded-lg overflow-hidden border bg-muted hover:opacity-90 transition-opacity h-24 w-24 sm:h-28 sm:w-28 flex-shrink-0"
                       aria-label={`View review photo ${idx + 1}`}
                     >
                       <img
@@ -117,6 +113,10 @@ export default function ReviewCard({
                   ))}
                 </div>
               )}
+
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                {review.description}
+              </p>
             </div>
           </div>
 
