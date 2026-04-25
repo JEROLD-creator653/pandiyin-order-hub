@@ -60,7 +60,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (!user) return [];
       const { data, error } = await supabase
         .from('cart_items')
-        .select('id, product_id, quantity, products(id, name, price, compare_price, image_url, stock_quantity, weight_kg, gst_percentage, hsn_code, tax_inclusive, is_available, description, images)')
+        .select('id, product_id, quantity, products(id, name, price, compare_price, image_url, stock_quantity, weight, unit, weight_kg, calculated_shipping_weight, unit_type, quantity_count, per_unit_weight, per_unit_weight_unit, is_combo, combo_badge, gst_percentage, hsn_code, tax_inclusive, is_available, description, images)')
         .eq('user_id', user.id);
       if (error) throw error;
       return (data || [])
