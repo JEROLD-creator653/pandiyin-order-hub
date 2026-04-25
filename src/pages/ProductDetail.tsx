@@ -200,7 +200,7 @@ export default function ProductDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-background pt-20 md:pt-24 pb-[100px] md:pb-8">
+    <div className={`min-h-screen bg-background pt-20 md:pt-24 ${showStickyBar ? 'pb-[100px]' : 'pb-6'} md:pb-8`}>
       {product && (
         <SEOHead
           title={`${product.name}${product.categories?.name ? ` - ${product.categories.name}` : ''}`}

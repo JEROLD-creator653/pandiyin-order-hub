@@ -49,7 +49,7 @@ export default function RelatedProducts({
             .eq('category_id', categoryId)
             .order('created_at', { ascending: false });
 
-          if (!categoryError && categoryProducts && categoryProducts.length >= 2) {
+          if (!categoryError && categoryProducts && categoryProducts.length >= 1) {
             setProducts(categoryProducts);
             setLoading(false);
             return;
@@ -106,13 +106,13 @@ export default function RelatedProducts({
     }
   };
 
-  // Don't show section if no products or still loading with no products
-  if (!loading && (!products || products.length < 2)) {
+  // Don't show section only when no products found
+  if (!loading && (!products || products.length === 0)) {
     return null;
   }
 
   return (
-    <section className="w-full py-8 mt-12 mb-8">
+    <section className="w-full pt-4 pb-2 sm:py-8 mt-6 sm:mt-12 mb-0 sm:mb-8">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />
@@ -231,20 +231,19 @@ export default function RelatedProducts({
           </div>
 
           {/* Mobile Horizontal Slider */}
-          <div className="sm:hidden overflow-x-auto -mx-4 px-4 scrollbar-hide">
-            <div className="flex gap-3 pb-2" style={{ width: `${(products.length / 2.2) * 100}%`, minWidth: '100%' }}>
+          <div className="sm:hidden overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+            <div className="flex gap-3 pb-2">
               {products.map((product, index) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex-shrink-0"
-                  style={{ width: 'calc(50% - 6px)' }}
+                  className="flex-shrink-0 snap-start w-full"
                 >
-                  <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+                      <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 h-full flex flex-col">
                     <Link to={`/products/${product.id}`} className="block">
-                      <div className="relative aspect-square w-full bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
+                        <div className="relative aspect-[4/3] w-full bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
                         {product.image_url ? (
                           <img
                             src={product.image_url}
@@ -269,22 +268,22 @@ export default function RelatedProducts({
                       </div>
                     </Link>
 
-                    <CardContent className="p-3 flex-1 flex flex-col">
+                    <CardContent className="p-2.5 flex-1 flex flex-col">
                       <Link to={`/products/${product.id}`}>
                         {product.categories?.name && (
-                          <Badge variant="outline" className="mb-1 text-[10px]">
+                          <Badge variant="outline" className="mb-1 text-[10px] px-2 py-0.5">
                             {product.categories.name}
                           </Badge>
                         )}
 
-                        <h3 className="font-semibold text-xs line-clamp-2 mb-1 group-hover:text-primary transition-colors">
+                        <h3 className="font-semibold text-[13px] leading-snug line-clamp-2 mb-1 group-hover:text-primary transition-colors">
                           {product.name}
                         </h3>
                       </Link>
 
-                      <div className="mt-auto space-y-2">
+                      <div className="mt-auto space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-primary">
+                          <p className="text-[15px] font-medium text-primary">
                             {formatPrice(product.price)}
                           </p>
                           {product.average_rating !== null && product.average_rating !== undefined && Number(product.average_rating) > 0 && (

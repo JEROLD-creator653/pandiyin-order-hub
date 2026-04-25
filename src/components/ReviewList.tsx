@@ -52,6 +52,7 @@ export default function ReviewList({
   className
 }: ReviewListProps) {
   const [sortValue, setSortValue] = useState(sortBy);
+  const [showAllReviews, setShowAllReviews] = useState(false);
 
   const handleSortChange = (value: string) => {
     const newSortBy = value as SortByType;
@@ -81,6 +82,9 @@ export default function ReviewList({
   if (!loading && reviews.length === 0) {
     return null;
   }
+
+  const visibleReviews = showAllReviews ? reviews : reviews.slice(0, 2);
+  const hasHiddenReviews = reviews.length > 2;
 
   return (
     <div className={cn('space-y-4', className)}>
@@ -114,7 +118,7 @@ export default function ReviewList({
 
       {/* Reviews List */}
       <div className="space-y-6">
-        {reviews.map((review) => (
+        {visibleReviews.map((review) => (
           <ReviewCard
             key={review.id}
             review={review}
@@ -124,6 +128,19 @@ export default function ReviewList({
           />
         ))}
       </div>
+
+      {hasHiddenReviews && (
+        <div className="flex justify-center pt-1">
+          <Button
+            variant="ghost"
+            onClick={() => setShowAllReviews((prev) => !prev)}
+            className="gap-2 text-primary hover:text-primary"
+          >
+            {showAllReviews ? 'Show fewer reviews' : 'View more reviews'}
+            <ChevronDown className={cn('h-4 w-4 transition-transform', showAllReviews && 'rotate-180')} />
+          </Button>
+        </div>
+      )}
 
       {/* Load More Button */}
       {hasMore && (
