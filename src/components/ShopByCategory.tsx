@@ -41,6 +41,7 @@ type BestsellersSettings = {
 
 const BESTSELLERS_TAB = '__bestsellers__';
 const ALL_TAB = '__all__';
+const COMBO_TAB = '__combo__';
 
 const DEFAULT_BESTSELLERS: BestsellersSettings = {
   enabled: true,
@@ -116,6 +117,8 @@ export default function ShopByCategory() {
     return categories.filter(c => ids.has(c.id));
   }, [categories, products]);
 
+  const hasComboProducts = useMemo(() => products.some(p => Boolean(p.is_combo)), [products]);
+
   // Build the ordered tab list, inserting Bestsellers at admin-defined sort_order
   const orderedTabs = useMemo(() => {
     type Tab = { key: string; label: string; sort: number };
@@ -123,11 +126,14 @@ export default function ShopByCategory() {
       { key: ALL_TAB, label: 'All Products', sort: -9999 },
       ...visibleCategories.map(c => ({ key: c.id, label: c.name, sort: c.sort_order })),
     ];
+    if (hasComboProducts) {
+      tabs.push({ key: COMBO_TAB, label: 'Combo', sort: -9998 });
+    }
     if (bestsellers.enabled) {
       tabs.push({ key: BESTSELLERS_TAB, label: bestsellers.label, sort: bestsellers.sort_order });
     }
     return tabs.sort((a, b) => a.sort - b.sort);
-  }, [visibleCategories, bestsellers]);
+  }, [visibleCategories, bestsellers, hasComboProducts]);
 
   // Ensure activeTab is always valid; default to first tab
   useEffect(() => {
@@ -139,6 +145,7 @@ export default function ShopByCategory() {
 
   const filtered = useMemo(() => {
     if (activeTab === BESTSELLERS_TAB) return products.filter(p => p.is_featured).slice(0, 8);
+    if (activeTab === COMBO_TAB) return products.filter(p => p.is_combo).slice(0, 8);
     if (activeTab === ALL_TAB) return products.slice(0, 8);
     return products.filter(p => p.category_id === activeTab).slice(0, 8);
   }, [products, activeTab]);
@@ -227,6 +234,8 @@ export default function ShopByCategory() {
           <div className="text-center py-12 text-muted-foreground">
             {activeTab === BESTSELLERS_TAB
               ? 'No bestsellers featured yet.'
+              : activeTab === COMBO_TAB
+                ? 'No combo products available right now.'
               : 'No products found in this category.'}
           </div>
         ) : (

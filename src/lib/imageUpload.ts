@@ -337,9 +337,11 @@ export const MAX_COMBO_IMAGES = 6;
 
 export async function uploadProductImages(
   files: File[],
-  userId: string
+  userId: string,
+  maxImages: number = MAX_PRODUCT_IMAGES
 ): Promise<UploadResult[]> {
-  const trimmed = files.slice(0, MAX_PRODUCT_IMAGES);
+  const safeLimit = Math.max(1, maxImages);
+  const trimmed = files.slice(0, safeLimit);
   const results: UploadResult[] = [];
   for (const file of trimmed) {
     // Sequential to surface validation errors clearly

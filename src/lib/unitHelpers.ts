@@ -5,7 +5,10 @@
  *   - g, kg, ml, l (we treat ml/l as direct mass-equivalents for shipping)
  *
  * GROUP B (count units) — needs `quantity_count` × `per_unit_weight`:
- *   - pcs, pack, bottle, jar, box, combo
+ *   - pcs, pack, bottle, jar, box
+ *
+ * `combo` is special: admins enter total net weight directly (g/kg)
+ * alongside quantity_count for display.
  *
  * `calculated_shipping_weight` is always stored in **kilograms**.
  */
@@ -48,6 +51,18 @@ interface ShippingWeightInput {
  */
 export function computeShippingWeightKg(p: ShippingWeightInput): number {
   const unit = (p.unit_type || '').toLowerCase();
+
+  // Combo: direct total net weight using g/kg selector
+  if (unit === 'combo') {
+    const raw = Number(p.weight);
+    const weightUnit = (p.per_unit_weight_unit || 'g') as 'g' | 'kg';
+    if (raw > 0) return toKg(raw, weightUnit);
+
+    // Legacy fallback (older combos saved as qty x per-unit)
+    const qty = Number(p.quantity_count) || 0;
+    const pu = Number(p.per_unit_weight) || 0;
+    if (qty > 0 && pu > 0) return Math.max(0, qty * toKg(pu, weightUnit));
+  }
 
   // Group B: count × per-unit weight
   if (isGroupB(unit)) {

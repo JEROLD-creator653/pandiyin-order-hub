@@ -34,6 +34,34 @@ const GRAY: [number, number, number] = [100, 100, 100];
 const BLACK: [number, number, number] = [0, 0, 0];
 const DARK_TEXT: [number, number, number] = [30, 30, 30];
 
+function normalizeStateName(state: string): string {
+  return state
+    .trim()
+    .toLowerCase()
+    .replace(/\./g, '')
+    .replace(/\s+/g, ' ');
+}
+
+function resolveStateCode(state: string): string | null {
+  if (!state) return null;
+
+  const direct = STATE_GST_CODES[state];
+  if (direct) return direct;
+
+  const normalizedInput = normalizeStateName(state);
+  for (const [name, code] of Object.entries(STATE_GST_CODES)) {
+    if (normalizeStateName(name) === normalizedInput) {
+      return code;
+    }
+  }
+
+  // Handle common variants entered by customers
+  if (normalizedInput === 'tamilnadu') return '33';
+  if (normalizedInput === 'pondicherry') return '34';
+
+  return null;
+}
+
 export function generateInvoiceNumber(): string {
   const now = new Date();
   const y = now.getFullYear();
@@ -153,6 +181,9 @@ export async function generateInvoicePdf(data: InvoiceData) {
   const ph = doc.internal.pageSize.getHeight();
   const ml = 16; // margin left
   const mr = pw - 16; // margin right
+  const companyStateCode = COMPANY.gstin.slice(0, 2);
+  const customerStateCode = resolveStateCode(data.customerState) || companyStateCode;
+  const isIntraStateSupply = customerStateCode === companyStateCode;
   let y = 16;
 
   // ═══════════════════════════════════════════════════════
@@ -270,11 +301,12 @@ export async function generateInvoicePdf(data: InvoiceData) {
   doc.text(`Phone: ${data.customerPhone}`, ml, y);
   y += 4.5;
 
-  const stateCode = STATE_GST_CODES[data.customerState] || '33';
+  const stateCode = customerStateCode;
+  const customerStateLabel = data.customerState || 'Tamil Nadu';
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(...DARK_GREEN);
-  doc.text(`Place of Supply: ${data.customerState} (${stateCode})`, ml, y);
+  doc.text(`Place of Supply: ${customerStateLabel} (${stateCode})`, ml, y);
   y += 6;
 
   drawLine(doc, y, ml, mr);
@@ -401,11 +433,19 @@ export async function generateInvoicePdf(data: InvoiceData) {
 
   // Summary background box
   const summaryStartY = y;
-  const summaryItems = [
+  const summaryItems: { label: string; value: string; bold: boolean }[] = [
     { label: 'Subtotal', value: formatPrice(data.subtotal), bold: false },
     { label: 'Delivery Charge', value: data.deliveryCharge === 0 ? 'FREE' : formatPrice(data.deliveryCharge), bold: false },
-    { label: 'GST Included', value: formatPrice(totalGST), bold: false },
   ];
+  if (totalGST > 0) {
+    if (isIntraStateSupply) {
+      const halfGST = totalGST / 2;
+      summaryItems.push({ label: 'CGST Included', value: formatPrice(halfGST), bold: false });
+      summaryItems.push({ label: 'SGST Included', value: formatPrice(halfGST), bold: false });
+    } else {
+      summaryItems.push({ label: 'IGST Included', value: formatPrice(totalGST), bold: false });
+    }
+  }
   if (data.discount > 0) {
     const discLabel = data.couponCode ? `Discount (${data.couponCode})` : 'Discount';
     summaryItems.push({ label: discLabel, value: `- ${formatPrice(data.discount)}`, bold: false });
@@ -465,7 +505,16 @@ export async function generateInvoicePdf(data: InvoiceData) {
   doc.setTextColor(...GRAY);
   Object.entries(gstGroups).forEach(([rate, amount]) => {
     if (Number(rate) > 0) {
-      doc.text(`* Includes ${rate}% GST: ${formatPrice(amount)} (Tax inclusive pricing)`, ml, y);
+      if (isIntraStateSupply) {
+        const half = amount / 2;
+        doc.text(
+          `* Includes ${rate}% GST (CGST ${Number(rate) / 2}%: ${formatPrice(half)} + SGST ${Number(rate) / 2}%: ${formatPrice(half)})`,
+          ml,
+          y
+        );
+      } else {
+        doc.text(`* Includes ${rate}% IGST: ${formatPrice(amount)} (Tax inclusive pricing)`, ml, y);
+      }
       y += 3.5;
     }
   });

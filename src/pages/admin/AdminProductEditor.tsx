@@ -104,10 +104,10 @@ export default function AdminProductEditor() {
     stock_quantity: '',
     // Universal unit / weight
     unit_type: initialIsCombo ? 'combo' : 'g',
-    weight: '',                        // for Group A
-    quantity_count: '1',                // for Group B
-    per_unit_weight: '',                // for Group B
-    per_unit_weight_unit: 'g',          // for Group B
+    weight: '',                         // for Group A + combo total net weight
+    quantity_count: '1',                // for Group B + combo item count
+    per_unit_weight: '',                // for non-combo Group B
+    per_unit_weight_unit: 'g',          // weight unit (combo/non-combo Group B)
     gst_percentage: '5',
     hsn_code: '',
     is_available: true,
@@ -136,6 +136,13 @@ export default function AdminProductEditor() {
   const applyProductToForm = (product: Product) => {
     const unitType = (product.unit_type || product.unit || 'g').toLowerCase();
     const isCombo = !!product.is_combo;
+    const comboWeightUnit = (product.per_unit_weight_unit as 'g' | 'kg') || 'g';
+    const comboLegacyTotalWeight =
+      Number(product.quantity_count || 0) * Number(product.per_unit_weight || 0);
+    const comboDirectWeight = product.weight ? String(product.weight) : '';
+    const comboWeight = isCombo
+      ? (comboDirectWeight || (comboLegacyTotalWeight > 0 ? String(comboLegacyTotalWeight) : ''))
+      : '';
 
     setForm({
       is_combo: isCombo,
@@ -148,10 +155,10 @@ export default function AdminProductEditor() {
       category_id: product.category_id || '',
       stock_quantity: String(product.stock_quantity),
       unit_type: unitType,
-      weight: product.weight ? String(product.weight) : '',
+      weight: isCombo ? comboWeight : (product.weight ? String(product.weight) : ''),
       quantity_count: String(product.quantity_count ?? 1),
       per_unit_weight: product.per_unit_weight ? String(product.per_unit_weight) : '',
-      per_unit_weight_unit: (product.per_unit_weight_unit as 'g' | 'kg') || 'g',
+      per_unit_weight_unit: comboWeightUnit,
       gst_percentage: String(product.gst_percentage || 5),
       hsn_code: product.hsn_code || '',
       is_available: product.is_available,
@@ -214,6 +221,14 @@ export default function AdminProductEditor() {
   // When toggling unit_type, ensure conflicting fields are reset gracefully
   const handleUnitTypeChange = (next: string) => {
     setForm((prev) => {
+      if (prev.is_combo) {
+        return {
+          ...prev,
+          unit_type: 'combo',
+          per_unit_weight: '',
+        };
+      }
+
       const goingToB = isGroupB(next);
       const goingToA = isGroupA(next);
       return {
@@ -238,6 +253,11 @@ export default function AdminProductEditor() {
       if (!form.weight || Number(form.weight) <= 0) {
         toast.error('Please enter a weight value'); return;
       }
+    } else if (form.unit_type === 'combo') {
+      const qty = Number(form.quantity_count);
+      const totalWeight = Number(form.weight);
+      if (!qty || qty <= 0) { toast.error('Number of products is required'); return; }
+      if (!totalWeight || totalWeight <= 0) { toast.error('Total net weight is required'); return; }
     } else if (isGroupB(form.unit_type)) {
       const qty = Number(form.quantity_count);
       const pu = Number(form.per_unit_weight);
@@ -271,12 +291,15 @@ export default function AdminProductEditor() {
       const pathsToDelete = Array.from(previousPaths).filter((p) => !keptPaths.has(p));
 
       const newFiles = imageItems.filter((i) => i.file).map((i) => i.file!);
-      const uploaded = newFiles.length > 0 ? await uploadProductImages(newFiles, user.id) : [];
+      const uploaded = newFiles.length > 0 ? await uploadProductImages(newFiles, user.id, maxImages) : [];
 
       let uploadedIdx = 0;
       const finalUrls: string[] = imageItems.map((item) => {
         if (item.existingPath) return item.url;
         const result = uploaded[uploadedIdx++];
+        if (!result?.imageUrl) {
+          throw new Error('One or more product images failed to upload. Please try again.');
+        }
         return result.imageUrl;
       });
       const primaryUrl = finalUrls[0];
@@ -293,10 +316,10 @@ export default function AdminProductEditor() {
         // Universal unit fields
         unit_type: form.unit_type,
         unit: form.unit_type,                       // keep legacy `unit` in sync
-        weight: isGroupA(form.unit_type) ? String(form.weight || '') : '',
+        weight: (isGroupA(form.unit_type) || form.unit_type === 'combo') ? String(form.weight || '') : '',
         weight_kg: shippingKg,                       // legacy field stays in sync
-        quantity_count: isGroupB(form.unit_type) ? Number(form.quantity_count) || 1 : null,
-        per_unit_weight: isGroupB(form.unit_type) ? Number(form.per_unit_weight) || 0 : null,
+        quantity_count: (isGroupB(form.unit_type) || form.unit_type === 'combo') ? Number(form.quantity_count) || 1 : null,
+        per_unit_weight: form.unit_type === 'combo' ? null : (isGroupB(form.unit_type) ? Number(form.per_unit_weight) || 0 : null),
         per_unit_weight_unit: isGroupB(form.unit_type) ? form.per_unit_weight_unit : 'g',
         calculated_shipping_weight: shippingKg,
         gst_percentage: Number(form.gst_percentage),
@@ -492,10 +515,16 @@ export default function AdminProductEditor() {
                 <Select value={form.unit_type} onValueChange={handleUnitTypeChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Direct Weight</div>
-                    {GROUP_A_UNITS.map(u => <SelectItem key={u} value={u}>{UNIT_LABELS[u]}</SelectItem>)}
-                    <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-1">Count Units</div>
-                    {GROUP_B_UNITS.map(u => <SelectItem key={u} value={u}>{UNIT_LABELS[u]}</SelectItem>)}
+                    {form.is_combo ? (
+                      <SelectItem value="combo">{UNIT_LABELS.combo}</SelectItem>
+                    ) : (
+                      <>
+                        <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Direct Weight</div>
+                        {GROUP_A_UNITS.map(u => <SelectItem key={u} value={u}>{UNIT_LABELS[u]}</SelectItem>)}
+                        <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mt-1">Count Units</div>
+                        {GROUP_B_UNITS.map(u => <SelectItem key={u} value={u}>{UNIT_LABELS[u]}</SelectItem>)}
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -517,11 +546,13 @@ export default function AdminProductEditor() {
               )}
             </div>
 
-            {/* GROUP B: quantity + per-unit weight */}
+            {/* GROUP B: quantity + weight configuration */}
             {isGroupB(form.unit_type) && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Quantity count</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    {form.unit_type === 'combo' ? 'Number of products' : 'Quantity count'}
+                  </label>
                   <Input
                     type="number"
                     min="1"
@@ -531,13 +562,15 @@ export default function AdminProductEditor() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Weight per unit</label>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    {form.unit_type === 'combo' ? 'Total net weight' : 'Weight per unit'}
+                  </label>
                   <Input
                     type="number"
                     step="any"
                     placeholder="e.g. 5"
-                    value={form.per_unit_weight}
-                    onChange={e => setForm({ ...form, per_unit_weight: e.target.value })}
+                    value={form.unit_type === 'combo' ? form.weight : form.per_unit_weight}
+                    onChange={e => setForm({ ...form, [form.unit_type === 'combo' ? 'weight' : 'per_unit_weight']: e.target.value })}
                   />
                 </div>
                 <div>
@@ -557,9 +590,15 @@ export default function AdminProductEditor() {
             )}
 
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Shipping cost is always calculated using the kilograms shown above — the display unit (
-              <span className="font-medium">{form.unit_type}</span>
-              ) is what customers see on the product card.
+              {form.unit_type === 'combo'
+                ? 'For combos, shipping is calculated from the total net weight you enter (g/kg).'
+                : (
+                  <>
+                    Shipping cost is always calculated using the kilograms shown above — the display unit (
+                    <span className="font-medium">{form.unit_type}</span>
+                    ) is what customers see on the product card.
+                  </>
+                )}
             </p>
           </div>
 
