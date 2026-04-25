@@ -33,6 +33,11 @@ type VerifiedQuote = {
   subtotal: number;
   delivery_charge: number;
   discount: number;
+  gst_amount: number;
+  gst_type: 'cgst_sgst' | 'igst';
+  cgst_amount: number;
+  sgst_amount: number;
+  igst_amount: number;
   grand_total: number;
 };
 
@@ -174,15 +179,12 @@ export default function Checkout() {
     const effectiveDiscount = quote?.discount ?? discount;
     const effectiveDelivery = quote?.delivery_charge ?? effectiveDeliveryCharge;
     const effectiveGrandTotal = quote?.grand_total ?? (effectiveSubtotal - effectiveDiscount + effectiveDelivery);
-    const gstType = getGSTType(deliveryState || selectedAddress?.state || '');
-    let cgstAmount = 0, sgstAmount = 0, igstAmount = 0;
-    if (gstType === 'cgst_sgst') {
-      cgstAmount = gstAmount / 2;
-      sgstAmount = gstAmount / 2;
-    } else {
-      igstAmount = gstAmount;
-    }
-    const avgGstPercentage = total > 0 ? (gstAmount / total) * 100 : 0;
+    const gstAmount = quote?.gst_amount ?? calculatedGstAmount;
+    const gstType = quote?.gst_type ?? getGSTType(deliveryState || selectedAddress?.state || '');
+    const cgstAmount = quote?.cgst_amount ?? (gstType === 'cgst_sgst' ? gstAmount / 2 : 0);
+    const sgstAmount = quote?.sgst_amount ?? (gstType === 'cgst_sgst' ? gstAmount / 2 : 0);
+    const igstAmount = quote?.igst_amount ?? (gstType === 'igst' ? gstAmount : 0);
+    const avgGstPercentage = effectiveSubtotal > 0 ? (gstAmount / effectiveSubtotal) * 100 : 0;
 
     const invoiceNumber = generateInvoiceNumber();
 
@@ -201,7 +203,7 @@ export default function Checkout() {
       igst_amount: igstAmount,
       delivery_state: deliveryState || selectedAddress?.state || '',
       coupon_code: couponCode || null,
-      payment_method: paymentMethod === 'razorpay' ? 'stripe' as any : 'cod' as any,
+      payment_method: paymentMethod === 'razorpay' ? 'razorpay' as any : 'cod' as any,
       payment_status: 'pending' as any,
       delivery_address: selectedAddress as any,
       notes: notes || null,
@@ -426,6 +428,11 @@ export default function Checkout() {
         subtotal: Number(verifyResult.subtotal || 0),
         delivery_charge: Number(verifyResult.delivery_charge || 0),
         discount: Number(verifyResult.discount || 0),
+        gst_amount: Number(verifyResult.gst_amount || 0),
+        gst_type: verifyResult.gst_type === 'igst' ? 'igst' : 'cgst_sgst',
+        cgst_amount: Number(verifyResult.cgst_amount || 0),
+        sgst_amount: Number(verifyResult.sgst_amount || 0),
+        igst_amount: Number(verifyResult.igst_amount || 0),
         grand_total: Number(verifyResult.grand_total || 0),
       };
       setVerifiedQuote(quoteToUse);

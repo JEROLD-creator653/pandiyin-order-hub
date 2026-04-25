@@ -101,6 +101,10 @@ serve(async (req) => {
     const verifiedItems: any[] = [];
     let totalWeightKg = 0;
     let subtotal = 0;
+    let gstAmount = 0;
+    let cgstAmount = 0;
+    let sgstAmount = 0;
+    let igstAmount = 0;
 
     for (const item of cart_items) {
       const product = productMap.get(item.product_id);
@@ -121,17 +125,25 @@ serve(async (req) => {
         errors.push(`${product.name}: weight not configured`);
         continue;
       }
+      const gstPercentage = Number(product.gst_percentage) || 5;
+      const itemBasePrice = product.tax_inclusive !== false
+        ? Number(product.price) * 100 / (100 + gstPercentage)
+        : Number(product.price);
+      const itemGstAmount = (itemBasePrice * gstPercentage / 100) * item.quantity;
       totalWeightKg += weightKg * item.quantity;
       subtotal += Number(product.price) * item.quantity;
+      gstAmount += itemGstAmount;
       verifiedItems.push({
         product_id: product.id,
         product_name: product.name,
         product_price: Number(product.price),
         quantity: item.quantity,
         total: Number(product.price) * item.quantity,
-        gst_percentage: Number(product.gst_percentage) || 5,
+        gst_percentage: gstPercentage,
         hsn_code: product.hsn_code || '',
         tax_inclusive: product.tax_inclusive ?? true,
+        gst_amount: itemGstAmount,
+        product_base_price: itemBasePrice,
         weight_kg: weightKg,
       });
     }
@@ -190,6 +202,15 @@ serve(async (req) => {
       }
     }
 
+    const sameStateStates = new Set(['Tamil Nadu', 'Puducherry', 'Pondicherry']);
+    const gstType = sameStateStates.has(delivery_state.trim()) ? 'cgst_sgst' : 'igst';
+    if (gstType === 'cgst_sgst') {
+      cgstAmount = gstAmount / 2;
+      sgstAmount = gstAmount / 2;
+    } else {
+      igstAmount = gstAmount;
+    }
+
     const grandTotal = subtotal - discount + deliveryCharge;
 
     return new Response(JSON.stringify({
@@ -200,6 +221,11 @@ serve(async (req) => {
       delivery_zone: zone,
       delivery_charge: deliveryCharge,
       discount: discount,
+      gst_amount: gstAmount,
+      gst_type: gstType,
+      cgst_amount: cgstAmount,
+      sgst_amount: sgstAmount,
+      igst_amount: igstAmount,
       grand_total: grandTotal,
       items: verifiedItems,
     }), {
