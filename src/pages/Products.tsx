@@ -466,6 +466,31 @@ export default function Products() {
 
               <Separator />
 
+              {/* Product Type (Combo filter) */}
+              <div>
+                <h4 className="font-semibold text-sm mb-3">Product Type</h4>
+                <RadioGroup
+                  value={comboFilter}
+                  onValueChange={(v) => setComboFilter(v as 'all' | 'products' | 'combos')}
+                  className="space-y-2"
+                >
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <RadioGroupItem value="all" id="combo-all" />
+                    <span>All</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <RadioGroupItem value="products" id="combo-products" />
+                    <span>Products only</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <RadioGroupItem value="combos" id="combo-combos" />
+                    <span>Combos only</span>
+                  </label>
+                </RadioGroup>
+              </div>
+
+              <Separator />
+
               {/* Availability */}
               <div>
                 <h4 className="font-semibold text-sm mb-3">Availability</h4>
