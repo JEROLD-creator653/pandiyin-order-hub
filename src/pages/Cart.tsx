@@ -11,6 +11,7 @@ import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import { formatPrice } from '@/lib/formatters';
 import { Loader } from '@/components/ui/loader';
 import { getChargedWeight } from '@/lib/deliveryCalculations';
+import { getProductShippingWeightKg } from '@/lib/unitHelpers';
 import SEOHead from '@/components/SEOHead';
 
 function getPricingInfo(price: number, comparePrice?: number) {
@@ -26,7 +27,7 @@ export default function Cart() {
 
   const totalWeightKg = useMemo(() => {
     return items.reduce((sum, item) => {
-      const wkg = Number((item.product as any).weight_kg) || 0;
+      const wkg = getProductShippingWeightKg(item.product as any);
       return sum + wkg * item.quantity;
     }, 0);
   }, [items]);
