@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { convertImageToWebP } from './webpConverter';
 
 export const REVIEW_IMAGES_BUCKET = 'review-images';
-export const MAX_REVIEW_IMAGES = 5;
+export const MAX_REVIEW_IMAGES = 2;
 export const MAX_REVIEW_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB pre-conversion
 
 const ALLOWED_REVIEW_FORMATS = [
