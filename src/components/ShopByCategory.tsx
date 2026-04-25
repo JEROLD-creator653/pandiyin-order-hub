@@ -261,7 +261,10 @@ export default function ShopByCategory() {
                           <Leaf className="h-12 w-12 text-muted-foreground/30" />
                         )}
                         {p.is_combo && (
-                          <Badge className="absolute top-2 left-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-500 hover:to-orange-500 text-white text-[10px] md:text-xs border-0 shadow-md font-bold tracking-wide uppercase">
+                          <Badge
+                            className="absolute top-2 left-2 text-combo-foreground text-[10px] md:text-xs border-0 shadow-md font-bold tracking-wide uppercase"
+                            style={{ backgroundImage: 'var(--gradient-combo)' }}
+                          >
                             {p.combo_badge?.trim() || 'Combo Deal'}
                           </Badge>
                         )}
