@@ -9,6 +9,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { formatProductUnit } from '@/lib/unitHelpers';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -60,6 +62,7 @@ export default function Products() {
   const [manualMin, setManualMin] = useState('');
   const [manualMax, setManualMax] = useState('');
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [comboFilter, setComboFilter] = useState<'all' | 'products' | 'combos'>('all');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [filterOpen, setFilterOpen] = useState(false);
   const [maxPrice, setMaxPrice] = useState(5000);
@@ -210,7 +213,11 @@ export default function Products() {
     loadProducts();
   }, [searchFilter, endRouteLoad]);
 
-  const activeFilterCount = (selectedCategories.length > 0 ? 1 : 0) + (inStockOnly ? 1 : 0) + (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0);
+  const activeFilterCount =
+    (selectedCategories.length > 0 ? 1 : 0) +
+    (inStockOnly ? 1 : 0) +
+    (priceRange[0] > 0 || priceRange[1] < maxPrice ? 1 : 0) +
+    (comboFilter !== 'all' ? 1 : 0);
 
   const filtered = useMemo(() => {
     let result = [...products];
@@ -221,6 +228,13 @@ export default function Products() {
         const catName = (p as any).categories?.name;
         return catName && selectedCategories.includes(catName);
       });
+    }
+
+    // Combo filter (3-way: all / products only / combos only)
+    if (comboFilter === 'products') {
+      result = result.filter(p => !p.is_combo);
+    } else if (comboFilter === 'combos') {
+      result = result.filter(p => p.is_combo);
     }
 
     // Price filter
@@ -240,7 +254,7 @@ export default function Products() {
     }
 
     return result;
-  }, [products, selectedCategories, priceRange, inStockOnly, sortBy]);
+  }, [products, selectedCategories, priceRange, inStockOnly, sortBy, comboFilter]);
 
   const toggleCategory = (name: string) => {
     setSelectedCategories(prev =>
@@ -254,6 +268,7 @@ export default function Products() {
     setManualMin('');
     setManualMax('');
     setInStockOnly(false);
+    setComboFilter('all');
   };
 
   const applyManualPrice = () => {
@@ -451,6 +466,31 @@ export default function Products() {
 
               <Separator />
 
+              {/* Product Type (Combo filter) */}
+              <div>
+                <h4 className="font-semibold text-sm mb-3">Product Type</h4>
+                <RadioGroup
+                  value={comboFilter}
+                  onValueChange={(v) => setComboFilter(v as 'all' | 'products' | 'combos')}
+                  className="space-y-2"
+                >
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <RadioGroupItem value="all" id="combo-all" />
+                    <span>All</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <RadioGroupItem value="products" id="combo-products" />
+                    <span>Products only</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    <RadioGroupItem value="combos" id="combo-combos" />
+                    <span>Combos only</span>
+                  </label>
+                </RadioGroup>
+              </div>
+
+              <Separator />
+
               {/* Availability */}
               <div>
                 <h4 className="font-semibold text-sm mb-3">Availability</h4>
@@ -505,6 +545,14 @@ export default function Products() {
                     ) : (
                       <Leaf className="h-12 w-12 text-muted-foreground/30" />
                     )}
+                    {p.is_combo && (
+                      <Badge
+                        className="absolute top-2 left-2 text-combo-foreground text-[10px] md:text-xs border-0 shadow-md font-bold tracking-wide uppercase"
+                        style={{ backgroundImage: 'var(--gradient-combo)' }}
+                      >
+                        {p.combo_badge?.trim() || 'Combo Deal'}
+                      </Badge>
+                    )}
                     {p.stock_quantity <= 5 && p.stock_quantity > 0 && (
                       <Badge className="absolute top-2 right-2 bg-amber-500 hover:bg-amber-600 text-white text-[10px] md:text-xs border-0 shadow-sm">Few Left</Badge>
                     )}
@@ -515,7 +563,10 @@ export default function Products() {
                   <CardContent className="p-3 md:p-4 flex-1 flex flex-col">
                     <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5">{(p as any).categories?.name}</p>
                     <h3 className="font-semibold text-sm md:text-base font-sans line-clamp-2 mb-1 md:mb-1.5 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
-                    {p.weight && <p className="text-[10px] md:text-xs text-muted-foreground mb-1">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
+                    {(() => {
+                      const unitLabel = formatProductUnit(p) || (p.weight ? `${p.weight}${p.unit ? ` ${p.unit}` : ''}` : '');
+                      return unitLabel ? <p className="text-[10px] md:text-xs text-muted-foreground mb-1">{unitLabel}</p> : null;
+                    })()}
                     {Number(p.average_rating) > 0 && (
                       <div className="flex items-center gap-1.5 mb-2">
                         <span className="inline-flex items-center gap-0.5 bg-primary/10 text-primary text-sm sm:text-xs font-semibold px-2 sm:px-1.5 py-0.5 rounded">

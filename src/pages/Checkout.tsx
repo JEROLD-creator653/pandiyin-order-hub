@@ -20,6 +20,7 @@ import AddressManager, { Address } from '@/components/AddressManager';
 import { formatPrice } from '@/lib/formatters';
 import { ButtonLoader, Loader } from '@/components/ui/loader';
 import { STATE_ZONES, getChargedWeight, calculateDeliveryCharge, type ShippingZoneConfig } from '@/lib/deliveryCalculations';
+import { getProductShippingWeightKg } from '@/lib/unitHelpers';
 import { generateInvoiceNumber } from '@/lib/invoicePdf';
 import SEOHead from '@/components/SEOHead';
 
@@ -97,10 +98,10 @@ export default function Checkout() {
     setCalculatedGstAmount(totalGst);
   }, [items]);
 
-  // Weight-based delivery calculation
+  // Weight-based delivery calculation (uses calculated_shipping_weight when present)
   const totalWeightKg = useMemo(() => {
     return items.reduce((sum, item) => {
-      const wkg = Number((item.product as any).weight_kg) || 0;
+      const wkg = getProductShippingWeightKg(item.product as any);
       return sum + wkg * item.quantity;
     }, 0);
   }, [items]);

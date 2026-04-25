@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { formatPrice } from '@/lib/formatters';
+import { formatProductUnit } from '@/lib/unitHelpers';
 
 type Product = {
   id: string;
@@ -19,10 +20,14 @@ type Product = {
   image_url: string | null;
   weight: string | null;
   unit: string | null;
+  unit_type: string | null;
+  quantity_count: number | null;
   stock_quantity: number;
   average_rating: number | null;
   category_id: string | null;
   is_featured: boolean | null;
+  is_combo: boolean | null;
+  combo_badge: string | null;
   categories?: { name: string } | null;
 };
 
@@ -61,7 +66,7 @@ export default function ShopByCategory() {
         supabase.from('categories').select('id, name, sort_order').order('sort_order'),
         supabase
           .from('products')
-          .select('id, name, price, compare_price, image_url, weight, unit, stock_quantity, average_rating, category_id, is_featured, categories(name)')
+          .select('id, name, price, compare_price, image_url, weight, unit, unit_type, quantity_count, stock_quantity, average_rating, category_id, is_featured, is_combo, combo_badge, categories(name)')
           .eq('is_available', true)
           .order('created_at', { ascending: false })
           .limit(40),
@@ -255,7 +260,15 @@ export default function ShopByCategory() {
                         ) : (
                           <Leaf className="h-12 w-12 text-muted-foreground/30" />
                         )}
-                        {p.compare_price && Number(p.compare_price) > Number(p.price) && (
+                        {p.is_combo && (
+                          <Badge
+                            className="absolute top-2 left-2 text-combo-foreground text-[10px] md:text-xs border-0 shadow-md font-bold tracking-wide uppercase"
+                            style={{ backgroundImage: 'var(--gradient-combo)' }}
+                          >
+                            {p.combo_badge?.trim() || 'Combo Deal'}
+                          </Badge>
+                        )}
+                        {!p.is_combo && p.compare_price && Number(p.compare_price) > Number(p.price) && (
                           <Badge className="absolute top-2 left-2 bg-accent hover:bg-accent text-accent-foreground text-[10px] md:text-xs border-0 shadow-sm">
                             {Math.round(((Number(p.compare_price) - Number(p.price)) / Number(p.compare_price)) * 100)}% OFF
                           </Badge>
@@ -271,7 +284,10 @@ export default function ShopByCategory() {
                         <div>
                           <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5 md:mb-1">{p.categories?.name}</p>
                           <h3 className="font-semibold text-sm md:text-base font-sans line-clamp-2 mb-1 leading-tight group-hover:text-primary transition-colors">{p.name}</h3>
-                          {p.weight && <p className="text-[10px] md:text-xs text-muted-foreground mb-1 md:mb-2">{p.weight}{p.unit ? ` ${p.unit}` : ''}</p>}
+                          {(() => {
+                            const unitLabel = formatProductUnit(p) || (p.weight ? `${p.weight}${p.unit ? ` ${p.unit}` : ''}` : '');
+                            return unitLabel ? <p className="text-[10px] md:text-xs text-muted-foreground mb-1 md:mb-2">{unitLabel}</p> : null;
+                          })()}
                         </div>
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2 md:mb-3">
                           <div className="flex items-center gap-1.5 md:gap-2">

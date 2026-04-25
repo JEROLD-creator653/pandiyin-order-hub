@@ -23,6 +23,7 @@ import ProductImageGallery from '@/components/ProductImageGallery';
 import TaxInclusiveInfo from '@/components/TaxInclusiveInfo';
 import SEOHead, { buildProductSchema, buildBreadcrumbSchema } from '@/components/SEOHead';
 import { formatPrice } from '@/lib/formatters';
+import { formatProductUnit } from '@/lib/unitHelpers';
 import { Loader } from '@/components/ui/loader';
 import { getPricingInfo } from '@/lib/discountCalculations';
 
@@ -287,10 +288,25 @@ export default function ProductDetail() {
               <TaxInclusiveInfo variant="subtitle" />
             </div>
 
-            {/* Weight/Unit Info */}
-            {product.weight && (
-              <p className="text-sm text-muted-foreground mb-6">{product.weight} {product.unit}</p>
+            {/* Combo badge + Weight/Unit Info */}
+            {product.is_combo && (
+              <div className="mb-3">
+                <Badge
+                  className="text-combo-foreground border-0 shadow-md font-bold tracking-wide uppercase px-3 py-1"
+                  style={{ backgroundImage: 'var(--gradient-combo)' }}
+                >
+                  {product.combo_badge?.trim() || 'Combo Deal'}
+                </Badge>
+              </div>
             )}
+            {(() => {
+              const unitLabel = formatProductUnit(product) || (product.weight ? `${product.weight} ${product.unit || ''}`.trim() : '');
+              return unitLabel ? (
+                <p className="text-sm text-muted-foreground mb-6">
+                  {product.is_combo ? 'Net Weight: ' : ''}{unitLabel}
+                </p>
+              ) : null;
+            })()}
 
             {/* Quantity & Add to Cart Section */}
             <div ref={purchaseSectionRef} className="space-y-4 mb-8">
