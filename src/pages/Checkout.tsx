@@ -258,8 +258,18 @@ export default function Checkout() {
     }
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
+      // Get fresh session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session?.access_token) {
+        console.error('Session error:', sessionError);
+        setCheckoutError('Your session has expired. Please sign in again and try the payment.');
+        setLoading(false);
+        return;
+      }
+
+      const token = session.access_token;
+      console.log('[RAZORPAY] Token obtained, initiating payment...');
 
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-order`,
@@ -281,7 +291,10 @@ export default function Checkout() {
       );
 
       const razorpayOrder = await res.json();
-      if (!res.ok) throw new Error(razorpayOrder.error || 'Failed to create payment order');
+      if (!res.ok) {
+        console.error('[RAZORPAY] Error response:', razorpayOrder);
+        throw new Error(razorpayOrder.error || 'Failed to create payment order');
+      }
 
       // Get the public key from server response — never hardcode it
       const razorpayKeyId = razorpayOrder.key_id;
@@ -298,13 +311,21 @@ export default function Checkout() {
         order_id: razorpayOrder.id,
         handler: async (response: any) => {
           try {
+            // Get fresh token before verification (original token may have expired)
+            const { data: { session: freshSession }, error: freshError } = await supabase.auth.getSession();
+            if (freshError || !freshSession?.access_token) {
+              console.error('[RAZORPAY] Session expired before verification:', freshError);
+              setCheckoutError('Your session expired. Payment verification will be retried by server.');
+              return;
+            }
+
             const verifyRes = await fetch(
               `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-verify`,
               {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`,
+                  Authorization: `Bearer ${freshSession.access_token}`,
                   apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
                 },
                 body: JSON.stringify({

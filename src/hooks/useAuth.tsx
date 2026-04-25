@@ -43,11 +43,11 @@ async function getSafeSession(): Promise<Session | null> {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return null;
 
-    // If token expires within 60 s, proactively refresh
+    // If token expires within 5 minutes, proactively refresh (edge functions need fresh tokens)
     const expiresAt = session.expires_at ?? 0; // unix seconds
     const nowSec = Math.floor(Date.now() / 1000);
 
-    if (expiresAt - nowSec > 60) {
+    if (expiresAt - nowSec > 300) {
       return session; // still fresh
     }
 
