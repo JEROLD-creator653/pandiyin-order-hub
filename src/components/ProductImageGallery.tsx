@@ -80,33 +80,10 @@ export default function ProductImageGallery({
   return (
     <>
       <div className={cn('lg:sticky lg:top-28', className)}>
-        <div className="flex flex-col-reverse md:flex-row gap-3">
-          {/* Thumbnail strip - horizontal on mobile, vertical on desktop */}
-          {validImages.length > 1 && (
-            <div className="flex md:flex-col gap-2 md:gap-2 overflow-x-auto md:overflow-y-auto md:max-h-[520px] no-scrollbar md:pr-1">
-              {validImages.map((img, idx) => (
-                <button
-                  key={`${img}-${idx}`}
-                  type="button"
-                  onClick={() => setActiveIndex(idx)}
-                  className={cn(
-                    'flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all',
-                    'h-16 w-16 md:h-20 md:w-20',
-                    activeIndex === idx
-                      ? 'border-primary ring-2 ring-primary/30'
-                      : 'border-muted hover:border-muted-foreground/40'
-                  )}
-                  aria-label={`View image ${idx + 1}`}
-                >
-                  <img src={img} alt={`${productName} thumbnail ${idx + 1}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Main image with swipe + nav arrows */}
+        <div className="flex flex-col gap-3">
+          {/* Main image — fixed aspect frame, white bg, object-contain */}
           <div
-            className="relative flex-1 rounded-2xl overflow-hidden border border-muted shadow-sm bg-muted h-[320px] md:h-[520px] group"
+            className="relative w-full rounded-2xl overflow-hidden border border-muted shadow-sm bg-white aspect-square group"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
@@ -114,11 +91,10 @@ export default function ProductImageGallery({
             <img
               src={activeImage}
               alt={`${productName} - image ${activeIndex + 1}`}
-              className="w-full h-full object-contain block cursor-zoom-in"
+              className="absolute inset-0 w-full h-full object-contain p-4 cursor-zoom-in transition-opacity duration-300"
               onClick={() => setLightboxOpen(true)}
             />
 
-            {/* Zoom hint icon - desktop only on hover */}
             <button
               type="button"
               onClick={() => setLightboxOpen(true)}
@@ -128,7 +104,6 @@ export default function ProductImageGallery({
               <ZoomIn className="h-4 w-4" />
             </button>
 
-            {/* Nav arrows - shown when multiple images */}
             {validImages.length > 1 && (
               <>
                 <button
@@ -157,22 +132,42 @@ export default function ProductImageGallery({
                       onClick={() => setActiveIndex(idx)}
                       className={cn(
                         'rounded-full transition-all',
-                        activeIndex === idx
-                          ? 'w-6 h-2 bg-primary'
-                          : 'w-2 h-2 bg-background/70'
+                        activeIndex === idx ? 'w-6 h-2 bg-primary' : 'w-2 h-2 bg-foreground/30'
                       )}
                       aria-label={`Go to image ${idx + 1}`}
                     />
                   ))}
                 </div>
 
-                {/* Counter - top-left */}
                 <div className="absolute top-3 left-3 bg-background/90 text-foreground rounded-full px-2.5 py-1 text-xs font-medium shadow-sm">
                   {activeIndex + 1} / {validImages.length}
                 </div>
               </>
             )}
           </div>
+
+          {/* Thumbnail strip — BELOW the main image, centered, fixed-square */}
+          {validImages.length > 1 && (
+            <div className="flex gap-2 justify-center flex-wrap">
+              {validImages.map((img, idx) => (
+                <button
+                  key={`${img}-${idx}`}
+                  type="button"
+                  onClick={() => setActiveIndex(idx)}
+                  className={cn(
+                    'flex-shrink-0 rounded-lg overflow-hidden border-2 transition-all bg-white',
+                    'h-16 w-16 md:h-20 md:w-20',
+                    activeIndex === idx
+                      ? 'border-primary ring-2 ring-primary/30'
+                      : 'border-muted hover:border-muted-foreground/40'
+                  )}
+                  aria-label={`View image ${idx + 1}`}
+                >
+                  <img src={img} alt={`${productName} thumbnail ${idx + 1}`} className="w-full h-full object-contain p-1" />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

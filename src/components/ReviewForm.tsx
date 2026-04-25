@@ -202,7 +202,7 @@ export default function ReviewForm({
           <Label>
             Add Photos <span className="text-muted-foreground font-normal">(optional, up to {MAX_REVIEW_IMAGES})</span>
           </Label>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {imageItems.map((item) => (
               <div
                 key={item.id}
