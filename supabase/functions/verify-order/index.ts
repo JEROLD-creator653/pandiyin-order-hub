@@ -120,11 +120,9 @@ serve(async (req) => {
         errors.push(`${product.name}: only ${product.stock_quantity} in stock (requested ${item.quantity})`);
         continue;
       }
-      const weightKg = resolveShippingWeightKg(product);
-      if (weightKg <= 0) {
-        errors.push(`${product.name}: weight not configured`);
-        continue;
-      }
+      // Allow weight=0 (treat as zero shipping weight) so checkout never blocks
+      // on legacy products with missing weight metadata. Admin can fix later.
+      const weightKg = Math.max(0, resolveShippingWeightKg(product));
       const gstPercentage = Number(product.gst_percentage) || 5;
       const itemBasePrice = product.tax_inclusive !== false
         ? Number(product.price) * 100 / (100 + gstPercentage)
