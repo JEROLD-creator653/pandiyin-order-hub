@@ -11,6 +11,11 @@ const corsHeaders = {
 const RATE_LIMIT_MAX = 125;
 const RATE_LIMIT_WINDOW_SECONDS = 60;
 
+function getNormalizedEnv(name: string): string | undefined {
+  const value = Deno.env.get(name);
+  return value?.trim() || undefined;
+}
+
 async function checkRateLimit(
   adminClient: any,
   identifier: string
@@ -214,8 +219,8 @@ serve(async (req) => {
     }
 
     // Get Razorpay keys from environment ONLY — no hardcoded fallbacks
-    const RAZORPAY_KEY_ID = Deno.env.get("RAZORPAY_KEY_ID");
-    const RAZORPAY_KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
+    const RAZORPAY_KEY_ID = getNormalizedEnv("RAZORPAY_KEY_ID");
+    const RAZORPAY_KEY_SECRET = getNormalizedEnv("RAZORPAY_KEY_SECRET");
 
     if (!RAZORPAY_KEY_ID) {
       console.error("RAZORPAY_KEY_ID not configured");
