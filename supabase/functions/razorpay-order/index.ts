@@ -13,7 +13,10 @@ const RATE_LIMIT_WINDOW_SECONDS = 60;
 
 function getNormalizedEnv(name: string): string | undefined {
   const value = Deno.env.get(name);
-  return value?.trim() || undefined;
+  return value
+    ?.trim()
+    .replace(/^['\"]|['\"]$/g, "")
+    .replace(/\s+/g, "") || undefined;
 }
 
 async function checkRateLimit(
