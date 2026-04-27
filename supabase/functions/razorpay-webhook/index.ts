@@ -7,6 +7,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-razorpay-signature",
 };
 
+function getNormalizedEnv(name: string): string | undefined {
+  const value = Deno.env.get(name);
+  return value?.trim() || undefined;
+}
+
 async function hmacSha256(key: string, message: string): Promise<string> {
   const enc = new TextEncoder();
   const cryptoKey = await crypto.subtle.importKey(
@@ -45,7 +50,7 @@ serve(async (req) => {
   }
 
   try {
-    const RAZORPAY_WEBHOOK_SECRET = Deno.env.get("RAZORPAY_WEBHOOK_SECRET");
+    const RAZORPAY_WEBHOOK_SECRET = getNormalizedEnv("RAZORPAY_WEBHOOK_SECRET");
     if (!RAZORPAY_WEBHOOK_SECRET) {
       console.error("RAZORPAY_WEBHOOK_SECRET not configured");
       return new Response(JSON.stringify({ error: "Webhook not configured" }), {
