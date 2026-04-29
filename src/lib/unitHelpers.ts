@@ -118,7 +118,7 @@ export function formatProductUnit(p: {
       const weight = p.weight ? String(p.weight).trim() : '';
       const weightUnit = (p.per_unit_weight_unit || '').toLowerCase();
       if (weight) {
-        return weightUnit ? `${weight} ${weightUnit}` : weight;
+        return `${weight} ${weightUnit || 'g'}`;
       }
       // Fallback to quantity if weight not set
       const n = Number(p.quantity_count) || 0;
