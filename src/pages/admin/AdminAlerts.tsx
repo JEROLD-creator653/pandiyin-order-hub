@@ -32,7 +32,13 @@ export default function AdminAlerts() {
     setLoading(true);
     const [stockRes, ordersRes] = await Promise.all([
       supabase.from('products').select('id, name, stock_quantity, image_url').lte('stock_quantity', 10).order('stock_quantity', { ascending: true }).limit(20),
-      supabase.from('orders').select('id, order_number, total, status, created_at').order('created_at', { ascending: false }).limit(25),
+      supabase
+        .from('orders')
+        .select('id, order_number, total, status, payment_status, created_at')
+        .eq('payment_status', 'paid')
+        .neq('status', 'cancelled')
+        .order('created_at', { ascending: false })
+        .limit(25),
     ]);
     setLowStock(stockRes.data || []);
     setRecentOrders(ordersRes.data || []);
