@@ -117,8 +117,10 @@ export function formatProductUnit(p: {
     if (unit === 'combo') {
       const weight = p.weight ? String(p.weight).trim() : '';
       const weightUnit = (p.per_unit_weight_unit || '').toLowerCase();
+      const qty = Number(p.quantity_count) || 0;
       if (weight) {
-        return `${weight} ${weightUnit || 'g'}`;
+        const weightStr = `${weight} ${weightUnit || 'g'}`;
+        return qty ? `${qty} products, ${weightStr}` : weightStr;
       }
       // Fallback to quantity if weight not set
       const n = Number(p.quantity_count) || 0;

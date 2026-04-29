@@ -300,10 +300,29 @@ export default function ProductDetail() {
               </div>
             )}
             {(() => {
+              if (product.is_combo) {
+                const weight = product.weight ? String(product.weight).trim() : '';
+                const weightUnit = (product.per_unit_weight_unit || 'g').toLowerCase();
+                const qty = Number(product.quantity_count) || 0;
+                return (
+                  <div className="space-y-2 mb-6">
+                    {weight && (
+                      <p className="text-sm text-muted-foreground">
+                        Net Weight: {weight}{weightUnit}
+                      </p>
+                    )}
+                    {qty > 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        Total products: {qty}
+                      </p>
+                    )}
+                  </div>
+                );
+              }
               const unitLabel = formatProductUnit(product) || (product.weight ? `${product.weight} ${product.unit || ''}`.trim() : '');
               return unitLabel ? (
                 <p className="text-sm text-muted-foreground mb-6">
-                  {product.is_combo ? 'Net Weight: ' : ''}{unitLabel}
+                  {unitLabel}
                 </p>
               ) : null;
             })()}
