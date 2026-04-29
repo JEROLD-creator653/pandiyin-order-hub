@@ -133,6 +133,13 @@ export default function AdminProductEditor() {
     return `${Math.round(kg * 1000)} g`;
   };
 
+  const formatEnteredComboWeight = () => {
+    const weight = Number(form.weight);
+    const weightUnit = form.per_unit_weight_unit || 'g';
+    if (!weight || !weightUnit) return '—';
+    return `${weight} ${weightUnit}`;
+  };
+
   const applyProductToForm = (product: Product) => {
     const unitType = (product.unit_type || product.unit || 'g').toLowerCase();
     const isCombo = !!product.is_combo;
@@ -505,7 +512,9 @@ export default function AdminProductEditor() {
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-semibold">Unit & Shipping Weight *</h4>
               <Badge variant="outline" className="text-xs font-mono">
-                Ships as: {formatShipping(previewShippingKg)}
+                {form.unit_type === 'combo'
+                  ? `Net weight: ${formatEnteredComboWeight()}`
+                  : `Ships as: ${formatShipping(previewShippingKg)}`}
               </Badge>
             </div>
 

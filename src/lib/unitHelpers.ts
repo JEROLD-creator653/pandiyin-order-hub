@@ -95,12 +95,14 @@ export function getProductShippingWeightKg(product: any): number {
   return computeShippingWeightKg(product || {});
 }
 
-/** Pretty display: "250 g", "1 kg", "10 pcs", "2 bottles", "1 combo pack". */
+/** Pretty display: "250 g", "1 kg", "10 pcs", "2 bottles", "10 kg" (for combos). */
 export function formatProductUnit(p: {
   unit_type?: string | null;
   unit?: string | null;
   weight?: string | number | null;
   quantity_count?: number | null;
+  per_unit_weight?: number | null;
+  per_unit_weight_unit?: string | null;
 }): string {
   const unit = (p.unit_type || p.unit || '').toLowerCase();
   if (!unit) return '';
@@ -111,9 +113,20 @@ export function formatProductUnit(p: {
   }
 
   if (isGroupB(unit)) {
+    // For combos, show the net weight they entered in the admin form (stored in `weight`)
+    if (unit === 'combo') {
+      const weight = p.weight ? String(p.weight).trim() : '';
+      const weightUnit = (p.per_unit_weight_unit || '').toLowerCase();
+      if (weight) {
+        return weightUnit ? `${weight} ${weightUnit}` : weight;
+      }
+      // Fallback to quantity if weight not set
+      const n = Number(p.quantity_count) || 0;
+      return n ? `${n} combo pack${n > 1 ? 's' : ''}` : '';
+    }
+    
     const n = Number(p.quantity_count) || 0;
     if (!n) return '';
-    if (unit === 'combo') return `${n} combo pack${n > 1 ? 's' : ''}`;
     const plural = n > 1 && unit !== 'pcs' ? `${unit}s` : unit;
     return `${n} ${plural}`;
   }
