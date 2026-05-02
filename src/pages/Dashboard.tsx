@@ -35,15 +35,39 @@ export default function Dashboard() {
 
     // Only fetch orders if user exists
     if (user) {
-      supabase
-        .from('orders')
-        .select('*, order_items(*, products(image_url, name))')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .then(({ data }) => {
-          setOrders(data || []);
-          setLoadingOrders(false);
-        });
+      const loadOrders = async () => {
+        const { data } = await supabase
+          .from('orders')
+          .select('*, order_items(*, products(image_url, name))')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        const fetchedOrders = data || [];
+        const pendingRazorpayOrders = fetchedOrders.filter(
+          (order) => order.payment_method === 'razorpay' && order.payment_status === 'pending'
+        );
+
+        if (pendingRazorpayOrders.length > 0) {
+          const syncResults = await Promise.all(
+            pendingRazorpayOrders.map(async (order) => {
+              const { data: syncData } = await supabase.functions.invoke('razorpay-sync-order', {
+                body: { order_id: order.id },
+              });
+
+              return syncData?.order || order;
+            })
+          );
+
+          const syncedOrderMap = new Map(syncResults.map((order) => [order.id, order]));
+          setOrders(fetchedOrders.map((order) => syncedOrderMap.get(order.id) || order));
+        } else {
+          setOrders(fetchedOrders);
+        }
+
+        setLoadingOrders(false);
+      };
+
+      loadOrders();
     } else if (!loading) {
       setLoadingOrders(false);
     }
