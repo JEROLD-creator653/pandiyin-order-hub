@@ -44,7 +44,23 @@ export default function OrderDetail() {
 
   useEffect(() => {
     if (!id) return;
-    supabase.from('orders').select('*').eq('id', id).maybeSingle().then(({ data }) => setOrder(data));
+
+    const loadOrder = async () => {
+      const { data } = await supabase.from('orders').select('*').eq('id', id).maybeSingle();
+      setOrder(data);
+
+      if (data?.payment_method === 'razorpay' && data?.payment_status === 'pending') {
+        const { data: syncData } = await supabase.functions.invoke('razorpay-sync-order', {
+          body: { order_id: id },
+        });
+
+        if (syncData?.order) {
+          setOrder(syncData.order);
+        }
+      }
+    };
+
+    loadOrder();
     supabase.from('order_items').select('*, products(image_url)').eq('order_id', id).then(({ data }) => setItems(data || []));
   }, [id]);
 
@@ -91,7 +107,7 @@ export default function OrderDetail() {
       grandTotal: Number(order.total),
       paymentMethod: order.payment_mode ? getPaymentModeLabel(order.payment_mode) : (order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'),
       paymentGateway: order.payment_method === 'cod' ? undefined : 'Razorpay',
-      paymentStatus: order.payment_status === 'paid' ? 'Paid' : 'Pending',
+      paymentStatus: order.payment_status === 'paid' ? 'Paid' : order.payment_status === 'failed' ? 'Failed' : 'Pending',
       paymentId: order.stripe_payment_id || undefined,
     };
 
