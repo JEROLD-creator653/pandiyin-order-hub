@@ -305,6 +305,15 @@ export default function Checkout() {
       const razorpayKeyId = razorpayOrder.key_id;
       if (!razorpayKeyId) throw new Error('Payment gateway configuration error');
 
+      const { error: razorpayOrderSaveError } = await supabase
+        .from('orders')
+        .update({ razorpay_order_id: razorpayOrder.id })
+        .eq('id', order.id);
+
+      if (razorpayOrderSaveError) {
+        throw new Error('Failed to sync payment order. Please try again.');
+      }
+
       const options = {
         key: razorpayKeyId,
         amount: razorpayOrder.amount,
