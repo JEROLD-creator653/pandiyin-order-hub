@@ -304,6 +304,15 @@ export default function Checkout() {
 
       const order = await createOrder(quote);
 
+      const { error: razorpayOrderSaveError } = await supabase
+        .from('orders')
+        .update({ razorpay_order_id: razorpayOrder.id })
+        .eq('id', order.id);
+
+      if (razorpayOrderSaveError) {
+        throw new Error('Failed to sync payment order. Please try again.');
+      }
+
       const options = {
         key: razorpayKeyId,
         amount: razorpayOrder.amount,
@@ -351,9 +360,11 @@ export default function Checkout() {
               });
             } else {
               setCheckoutError('Payment verification failed. Please contact support.');
+              setLoading(false);
             }
           } catch (err: any) {
             setCheckoutError(err.message || 'Verification error. Please try again.');
+            setLoading(false);
           }
         },
         prefill: {
@@ -363,7 +374,6 @@ export default function Checkout() {
         theme: { color: '#16a34a' },
         modal: {
           ondismiss: () => {
-            supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
             setCheckoutError('Payment cancelled. Your order has been saved. You can retry payment.');
             setLoading(false);
           },
@@ -373,7 +383,6 @@ export default function Checkout() {
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', (response: any) => {
         console.error('Payment failed:', response.error);
-        supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
         setCheckoutError(response.error?.description || 'Payment failed. Please try again.');
         setLoading(false);
       });

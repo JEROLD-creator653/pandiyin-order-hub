@@ -114,65 +114,61 @@ serve(async (req) => {
     }
 
     // Handle specific events
-    if (event === "payment.captured" && paymentEntity) {
+    if ((event === "payment.captured" || event === "payment.failed") && paymentEntity?.order_id) {
       const razorpayOrderId = paymentEntity.order_id;
-      const razorpayPaymentId = paymentEntity.id;
-      const paymentMode = paymentEntity.method || null;
+      const { data: matchingOrder, error: orderLookupError } = await supabaseAdmin
+        .from("orders")
+        .select("id, payment_status")
+        .eq("razorpay_order_id", razorpayOrderId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      // Find the order by checking if stripe_payment_id is not yet set
-      // or by matching the razorpay order notes
-      if (razorpayOrderId) {
-        // Look for orders where payment might not have been confirmed via frontend
-        const { data: orders } = await supabaseAdmin
-          .from("orders")
-          .select("id, payment_status")
-          .eq("payment_status", "pending")
-          .order("created_at", { ascending: false })
-          .limit(50);
-
-        // Since we store razorpay_payment_id as stripe_payment_id,
-        // check if any pending order needs updating
-        if (orders && orders.length > 0) {
-          // Update any order that has this payment but wasn't confirmed
-          const { data: existingLog } = await supabaseAdmin
-            .from("payment_logs")
-            .select("order_id")
-            .eq("razorpay_order_id", razorpayOrderId)
-            .eq("event_type", "order_created")
-            .limit(1);
-
-          if (existingLog && existingLog.length > 0 && existingLog[0].order_id) {
-            const orderId = existingLog[0].order_id;
-            
-            // Only update if still pending (idempotent)
-            await supabaseAdmin
-              .from("orders")
-              .update({
-                payment_status: "paid",
-                stripe_payment_id: razorpayPaymentId,
-                payment_mode: paymentMode,
-              })
-              .eq("id", orderId)
-              .eq("payment_status", "pending");
-          }
-        }
+      if (orderLookupError) {
+        console.error("Failed to look up order for webhook:", orderLookupError);
+        return new Response(JSON.stringify({ error: "Order lookup failed" }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
-    } else if (event === "payment.failed" && paymentEntity) {
-      const razorpayOrderId = paymentEntity.order_id;
-      if (razorpayOrderId) {
-        const { data: existingLog } = await supabaseAdmin
-          .from("payment_logs")
-          .select("order_id")
-          .eq("razorpay_order_id", razorpayOrderId)
-          .eq("event_type", "order_created")
-          .limit(1);
 
-        if (existingLog && existingLog.length > 0 && existingLog[0].order_id) {
-          await supabaseAdmin
-            .from("orders")
-            .update({ payment_status: "failed" })
-            .eq("id", existingLog[0].order_id)
-            .eq("payment_status", "pending");
+      if (!matchingOrder) {
+        console.error("Webhook order not found for razorpay_order_id:", razorpayOrderId);
+        return new Response(JSON.stringify({ error: "Order not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (event === "payment.captured") {
+        const { error: updateError } = await supabaseAdmin
+          .from("orders")
+          .update({
+            payment_status: "paid",
+            stripe_payment_id: paymentEntity.id,
+            payment_mode: paymentEntity.method || null,
+          })
+          .eq("id", matchingOrder.id);
+
+        if (updateError) {
+          console.error("Failed to mark order as paid from webhook:", updateError);
+          return new Response(JSON.stringify({ error: "Order update failed" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      } else {
+        const { error: updateError } = await supabaseAdmin
+          .from("orders")
+          .update({ payment_status: "failed" })
+          .eq("id", matchingOrder.id);
+
+        if (updateError) {
+          console.error("Failed to mark order as failed from webhook:", updateError);
+          return new Response(JSON.stringify({ error: "Order update failed" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
       }
     }
