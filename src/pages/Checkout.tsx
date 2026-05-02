@@ -260,6 +260,8 @@ export default function Checkout() {
     }
 
     try {
+      const order = await createOrder(quote);
+
       // Get fresh session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
@@ -283,6 +285,7 @@ export default function Checkout() {
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
+            order_id: order.id,
             cart_items: items.map(i => ({ product_id: i.product_id, quantity: i.quantity })),
             delivery_state: selectedAddress?.state || '',
             coupon_code: couponCode,
@@ -301,8 +304,6 @@ export default function Checkout() {
       // Get the public key from server response — never hardcode it
       const razorpayKeyId = razorpayOrder.key_id;
       if (!razorpayKeyId) throw new Error('Payment gateway configuration error');
-
-      const order = await createOrder(quote);
 
       const options = {
         key: razorpayKeyId,
@@ -351,9 +352,11 @@ export default function Checkout() {
               });
             } else {
               setCheckoutError('Payment verification failed. Please contact support.');
+              setLoading(false);
             }
           } catch (err: any) {
             setCheckoutError(err.message || 'Verification error. Please try again.');
+            setLoading(false);
           }
         },
         prefill: {
@@ -363,7 +366,6 @@ export default function Checkout() {
         theme: { color: '#16a34a' },
         modal: {
           ondismiss: () => {
-            supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
             setCheckoutError('Payment cancelled. Your order has been saved. You can retry payment.');
             setLoading(false);
           },
@@ -373,7 +375,6 @@ export default function Checkout() {
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', (response: any) => {
         console.error('Payment failed:', response.error);
-        supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
         setCheckoutError(response.error?.description || 'Payment failed. Please try again.');
         setLoading(false);
       });
