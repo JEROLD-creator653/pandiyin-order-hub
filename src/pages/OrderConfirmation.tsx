@@ -56,7 +56,19 @@ export default function OrderConfirmation() {
         return;
       }
 
-      setOrder(orderData);
+      let resolvedOrder = orderData;
+
+      if (orderData.payment_method === 'razorpay' && orderData.payment_status === 'pending') {
+        const { data: syncData } = await supabase.functions.invoke('razorpay-sync-order', {
+          body: { order_id: id },
+        });
+
+        if (syncData?.order) {
+          resolvedOrder = syncData.order;
+        }
+      }
+
+      setOrder(resolvedOrder);
 
       const { data: itemsData } = await supabase
         .from('order_items')
@@ -134,7 +146,7 @@ export default function OrderConfirmation() {
       grandTotal: Number(order.total),
       paymentMethod: order.payment_mode ? getPaymentModeLabel(order.payment_mode) : (order.payment_method === 'cod' ? 'Cash on Delivery' : 'Online'),
       paymentGateway: order.payment_method === 'cod' ? undefined : 'Razorpay',
-      paymentStatus: order.payment_status === 'paid' ? 'Paid' : 'Pending',
+      paymentStatus: order.payment_status === 'paid' ? 'Paid' : order.payment_status === 'failed' ? 'Failed' : 'Pending',
       paymentId: order.stripe_payment_id || undefined,
     };
 
