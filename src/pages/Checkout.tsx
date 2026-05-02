@@ -260,8 +260,6 @@ export default function Checkout() {
     }
 
     try {
-      const order = await createOrder(quote);
-
       // Get fresh session
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
@@ -285,7 +283,6 @@ export default function Checkout() {
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
-            order_id: order.id,
             cart_items: items.map(i => ({ product_id: i.product_id, quantity: i.quantity })),
             delivery_state: selectedAddress?.state || '',
             coupon_code: couponCode,
@@ -304,6 +301,8 @@ export default function Checkout() {
       // Get the public key from server response — never hardcode it
       const razorpayKeyId = razorpayOrder.key_id;
       if (!razorpayKeyId) throw new Error('Payment gateway configuration error');
+
+      const order = await createOrder(quote);
 
       const { error: razorpayOrderSaveError } = await supabase
         .from('orders')
