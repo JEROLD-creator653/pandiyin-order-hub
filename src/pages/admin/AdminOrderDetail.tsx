@@ -55,10 +55,70 @@ export default function AdminOrderDetail() {
 
   const updateStatus = async (status: string) => {
     if (!order) return;
+
+    // Guard: when admin marks order as confirmed, ensure payment is verified first
+    if (status === 'confirmed' && order.payment_method === 'razorpay') {
+      try {
+        await supabase.functions.invoke('razorpay-sync-order', {
+          body: { order_id: order.id },
+        });
+      } catch (syncErr) {
+        console.warn('[ADMIN] Sync failed before confirm:', syncErr);
+      }
+
+      const { data: latest } = await supabase
+        .from('orders')
+        .select('payment_status, order_number')
+        .eq('id', order.id)
+        .maybeSingle();
+
+      if (latest && latest.payment_status !== 'paid') {
+        const proceed = window.confirm(
+          `Payment Not Verified\n\nOrder ${latest.order_number} has payment_status "${latest.payment_status}".\nRazorpay payment could not be confirmed.\n\nConfirm this order anyway?`
+        );
+        if (!proceed) {
+          toast({
+            title: 'Order confirmation cancelled',
+            description: 'Verify payment in Razorpay dashboard first.',
+            variant: 'destructive',
+          });
+          return;
+        }
+      } else if (latest) {
+        // Refresh local payment_status if sync updated it
+        setOrder((prev: any) => ({ ...prev, payment_status: latest.payment_status }));
+      }
+    }
+
     await supabase.from('orders').update({ status } as any).eq('id', order.id);
     toast({ title: `Order status updated to ${status}` });
     setOrder((prev: any) => ({ ...prev, status }));
     setNewStatus(status);
+  };
+
+  const handleSyncPayment = async () => {
+    if (!order) return;
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('razorpay-sync-order', {
+        body: { order_id: order.id, razorpay_order_id: order.razorpay_order_id || undefined },
+      });
+      if (error) throw error;
+      const { data: latest } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', order.id)
+        .maybeSingle();
+      if (latest) setOrder(latest);
+      toast({
+        title: 'Payment synced',
+        description: `Payment status: ${(data as any)?.payment_status ?? latest?.payment_status ?? 'unknown'}`,
+      });
+    } catch (err: any) {
+      toast({ title: 'Sync failed', description: String(err?.message || err), variant: 'destructive' });
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const copyToClipboard = (text: string, label: string) => {
