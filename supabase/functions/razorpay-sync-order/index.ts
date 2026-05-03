@@ -64,7 +64,7 @@ serve(async (req) => {
       });
     }
 
-    const { order_id, razorpay_order_id } = await req.json().catch(() => ({}));
+    const { order_id, razorpay_order_id, razorpay_payment_id } = await req.json().catch(() => ({}));
 
     if (!order_id && !razorpay_order_id) {
       return new Response(JSON.stringify({ error: "Order reference is required" }), {
