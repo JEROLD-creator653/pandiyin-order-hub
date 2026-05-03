@@ -1,8 +1,9 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { supabase } from '@/integrations/supabase/client';
 import { formatPrice } from './formatters';
 
-const COMPANY = {
+const DEFAULT_COMPANY = {
   name: 'PANDIYIN Nature In Pack',
   tagline: 'Premium Homemade & Natural Products',
   addressLine1: '802, VPM House, Mandhaikaliamman Kovil Street',
@@ -13,6 +14,10 @@ const COMPANY = {
   website: 'pandiyin-natureinpack.vercel.app',
   gstin: '33HADPM5916B1ZZ',
 };
+
+type InvoiceCompany = typeof DEFAULT_COMPANY;
+
+let tamilFontPromise: Promise<string | null> | null = null;
 
 const STATE_GST_CODES: Record<string, string> = {
   'Jammu and Kashmir': '01', 'Himachal Pradesh': '02', 'Punjab': '03', 'Chandigarh': '04',
@@ -33,6 +38,70 @@ const LIGHTER_GREEN: [number, number, number] = [230, 245, 233];
 const GRAY: [number, number, number] = [100, 100, 100];
 const BLACK: [number, number, number] = [0, 0, 0];
 const DARK_TEXT: [number, number, number] = [30, 30, 30];
+
+async function loadTamilFontBase64(): Promise<string | null> {
+  try {
+    const response = await fetch('/fonts/NotoSansTamil-Regular.ttf');
+    if (!response.ok) return null;
+    const buffer = await response.arrayBuffer();
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    return btoa(binary);
+  } catch {
+    return null;
+  }
+}
+
+async function ensureTamilFont(doc: jsPDF) {
+  try {
+    if (!tamilFontPromise) {
+      tamilFontPromise = loadTamilFontBase64();
+    }
+    const fontBase64 = await tamilFontPromise;
+    if (!fontBase64) return;
+
+    const fontFileName = 'NotoSansTamil-Regular.ttf';
+    const fontFamily = 'NotoSansTamil';
+    
+    // Only add if not already in VFS
+    try {
+      doc.addFileToVFS(fontFileName, fontBase64);
+      doc.addFont(fontFileName, fontFamily, 'normal');
+    } catch (e) {
+      // Font already added or error, continue anyway
+    }
+  } catch (error) {
+    // Silently fail - Tamil font is optional, don't break invoice generation
+  }
+}
+
+async function loadInvoiceCompany(): Promise<InvoiceCompany> {
+  const [storeRes, gstRes] = await Promise.all([
+    supabase.from('store_settings').select('store_name, address, phone, email, gst_number').limit(1).maybeSingle(),
+    supabase.from('gst_settings').select('business_name, business_address, gst_number').limit(1).maybeSingle(),
+  ]);
+
+  const store = storeRes.data as any;
+  const gst = gstRes.data as any;
+  const businessAddress = String(gst?.business_address || '');
+  const addressParts = businessAddress.split('\n').filter(Boolean);
+
+  return {
+    name: store?.store_name || gst?.business_name || DEFAULT_COMPANY.name,
+    tagline: DEFAULT_COMPANY.tagline,
+    addressLine1: store?.address || addressParts[0] || DEFAULT_COMPANY.addressLine1,
+    addressLine2: addressParts[1] || DEFAULT_COMPANY.addressLine2,
+    addressLine3: addressParts[2] || DEFAULT_COMPANY.addressLine3,
+    phone: store?.phone || DEFAULT_COMPANY.phone,
+    email: store?.email || DEFAULT_COMPANY.email,
+    website: DEFAULT_COMPANY.website,
+    gstin: store?.gst_number || gst?.gst_number || DEFAULT_COMPANY.gstin,
+  };
+}
 
 function normalizeStateName(state: string): string {
   return state
@@ -181,7 +250,10 @@ export async function generateInvoicePdf(data: InvoiceData) {
   const ph = doc.internal.pageSize.getHeight();
   const ml = 16; // margin left
   const mr = pw - 16; // margin right
-  const companyStateCode = COMPANY.gstin.slice(0, 2);
+  const company = await loadInvoiceCompany();
+  // Tamil font temporarily disabled to fix invoice generation
+  // await ensureTamilFont(doc);
+  const companyStateCode = company.gstin.slice(0, 2);
   const customerStateCode = resolveStateCode(data.customerState) || companyStateCode;
   const isIntraStateSupply = customerStateCode === companyStateCode;
   let y = 16;
@@ -202,28 +274,28 @@ export async function generateInvoicePdf(data: InvoiceData) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(14);
   doc.setTextColor(...DARK_GREEN);
-  doc.text(COMPANY.name.toUpperCase(), textStartX, y);
+  doc.text(company.name.toUpperCase(), textStartX, y);
   y += 4;
 
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(7);
   doc.setTextColor(...GRAY);
-  doc.text(COMPANY.tagline, textStartX, y);
+  doc.text(company.tagline, textStartX, y);
   y += 5.5;
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(...DARK_TEXT);
-  doc.text(COMPANY.addressLine1, textStartX, y); y += 3.5;
-  doc.text(COMPANY.addressLine2, textStartX, y); y += 3.5;
-  doc.text(COMPANY.addressLine3, textStartX, y); y += 4;
-  doc.text(`Phone: ${COMPANY.phone}`, textStartX, y); y += 3.5;
-  doc.text(`Email: ${COMPANY.email}`, textStartX, y); y += 3.5;
-  doc.text(`Website: ${COMPANY.website}`, textStartX, y); y += 3.5;
+  doc.text(company.addressLine1, textStartX, y); y += 3.5;
+  doc.text(company.addressLine2, textStartX, y); y += 3.5;
+  doc.text(company.addressLine3, textStartX, y); y += 4;
+  doc.text(`Phone: ${company.phone}`, textStartX, y); y += 3.5;
+  doc.text(`Email: ${company.email}`, textStartX, y); y += 3.5;
+  doc.text(`Website: ${company.website}`, textStartX, y); y += 3.5;
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(7.5);
-  doc.text(`GSTIN: ${COMPANY.gstin}`, textStartX, y);
+  doc.text(`GSTIN: ${company.gstin}`, textStartX, y);
 
   // Right side: Invoice meta (right-aligned)
   const rightCol = mr;
@@ -527,7 +599,7 @@ export async function generateInvoicePdf(data: InvoiceData) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.setTextColor(...GRAY);
-  doc.text('For ' + COMPANY.name, mr, sigY, { align: 'right' });
+  doc.text('For ' + company.name, mr, sigY, { align: 'right' });
   doc.text('Authorized Signatory', mr, sigY + 12, { align: 'right' });
   drawLine(doc, sigY + 8, mr - 45, mr, GRAY, 0.2);
 
@@ -547,7 +619,7 @@ export async function generateInvoicePdf(data: InvoiceData) {
   doc.setFontSize(6.5);
   doc.setTextColor(...GRAY);
   doc.text(
-    `Phone: ${COMPANY.phone}  •  Email: ${COMPANY.email}  •  Website: ${COMPANY.website}`,
+    `Phone: ${company.phone}  •  Email: ${company.email}  •  Website: ${company.website}`,
     pw / 2,
     footerY + 9.5,
     { align: 'center' }

@@ -14,6 +14,7 @@ import { formatPrice } from '@/lib/formatters';
 import { TableSkeleton } from '@/components/ui/loader';
 
 const statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+const ADMIN_ORDERS_TOGGLE_KEY = 'admin-orders-show-unpaid';
 
 export default function AdminOrders() {
   const navigate = useNavigate();
@@ -22,17 +23,21 @@ export default function AdminOrders() {
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showUnpaid, setShowUnpaid] = useState(false);
+  const [showUnpaid, setShowUnpaid] = useState(() => localStorage.getItem(ADMIN_ORDERS_TOGGLE_KEY) === 'true');
+
+  useEffect(() => {
+    localStorage.setItem(ADMIN_ORDERS_TOGGLE_KEY, String(showUnpaid));
+  }, [showUnpaid]);
 
   const load = async () => {
     setLoading(true);
     try {
       let q = supabase.from('orders').select('*, order_items(*, products(image_url, name))').order('created_at', { ascending: false });
       if (filter !== 'all') q = q.eq('status', filter as any);
-      // By default, hide unpaid/failed/cancelled orders. Show only real revenue:
-      // online payments that succeeded (paid) OR COD orders that haven't been cancelled.
       if (!showUnpaid) {
-        q = q.or('payment_status.eq.paid,payment_method.eq.cod').neq('status', 'cancelled');
+        q = q.eq('payment_status', 'paid').neq('status', 'cancelled');
+      } else {
+        q = q.in('payment_status', ['pending', 'failed']).neq('status', 'cancelled');
       }
       if (debouncedSearch && debouncedSearch.trim() !== '') {
         q = q.ilike('order_number', `%${debouncedSearch}%`);
@@ -77,7 +82,7 @@ export default function AdminOrders() {
           <div className="flex items-center gap-2">
             <Switch id="show-unpaid" checked={showUnpaid} onCheckedChange={setShowUnpaid} />
             <Label htmlFor="show-unpaid" className="text-xs cursor-pointer text-muted-foreground">
-              Show failed/cancelled
+              Show pending/failed
             </Label>
           </div>
           <Select value={filter} onValueChange={setFilter}>
