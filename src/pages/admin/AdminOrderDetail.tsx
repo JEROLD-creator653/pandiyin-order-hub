@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Copy, FileText, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Copy, FileText, ClipboardList, RefreshCw, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -30,6 +30,7 @@ export default function AdminOrderDetail() {
   const [trackingId, setTrackingId] = useState('');
   const [courierName, setCourierName] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     if (!orderNumber) return;
@@ -54,10 +55,70 @@ export default function AdminOrderDetail() {
 
   const updateStatus = async (status: string) => {
     if (!order) return;
+
+    // Guard: when admin marks order as confirmed, ensure payment is verified first
+    if (status === 'confirmed' && order.payment_method === 'razorpay') {
+      try {
+        await supabase.functions.invoke('razorpay-sync-order', {
+          body: { order_id: order.id },
+        });
+      } catch (syncErr) {
+        console.warn('[ADMIN] Sync failed before confirm:', syncErr);
+      }
+
+      const { data: latest } = await supabase
+        .from('orders')
+        .select('payment_status, order_number')
+        .eq('id', order.id)
+        .maybeSingle();
+
+      if (latest && latest.payment_status !== 'paid') {
+        const proceed = window.confirm(
+          `Payment Not Verified\n\nOrder ${latest.order_number} has payment_status "${latest.payment_status}".\nRazorpay payment could not be confirmed.\n\nConfirm this order anyway?`
+        );
+        if (!proceed) {
+          toast({
+            title: 'Order confirmation cancelled',
+            description: 'Verify payment in Razorpay dashboard first.',
+            variant: 'destructive',
+          });
+          return;
+        }
+      } else if (latest) {
+        // Refresh local payment_status if sync updated it
+        setOrder((prev: any) => ({ ...prev, payment_status: latest.payment_status }));
+      }
+    }
+
     await supabase.from('orders').update({ status } as any).eq('id', order.id);
     toast({ title: `Order status updated to ${status}` });
     setOrder((prev: any) => ({ ...prev, status }));
     setNewStatus(status);
+  };
+
+  const handleSyncPayment = async () => {
+    if (!order) return;
+    setIsSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('razorpay-sync-order', {
+        body: { order_id: order.id, razorpay_order_id: order.razorpay_order_id || undefined },
+      });
+      if (error) throw error;
+      const { data: latest } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', order.id)
+        .maybeSingle();
+      if (latest) setOrder(latest);
+      toast({
+        title: 'Payment synced',
+        description: `Payment status: ${(data as any)?.payment_status ?? latest?.payment_status ?? 'unknown'}`,
+      });
+    } catch (err: any) {
+      toast({ title: 'Sync failed', description: String(err?.message || err), variant: 'destructive' });
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const copyToClipboard = (text: string, label: string) => {
@@ -235,8 +296,19 @@ export default function AdminOrderDetail() {
             )}
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Payment Status</span>
-              <Badge variant="outline" className={`capitalize text-xs px-2.5 py-0.5 ${order.payment_status === 'paid' ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-amber-300 bg-amber-50 text-amber-700'}`}>{order.payment_status}</Badge>
+              <Badge variant="outline" className={`capitalize text-xs px-2.5 py-0.5 ${order.payment_status === 'paid' ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : order.payment_status === 'failed' ? 'border-red-300 bg-red-50 text-red-700' : 'border-amber-300 bg-amber-50 text-amber-700'}`}>{order.payment_status}</Badge>
             </div>
+            {order.payment_method === 'razorpay' && (
+              <div className="flex items-center justify-end pt-2">
+                <Button variant="outline" size="sm" onClick={handleSyncPayment} disabled={isSyncing}>
+                  {isSyncing ? (
+                    <><Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />Syncing...</>
+                  ) : (
+                    <><RefreshCw className="mr-2 h-3.5 w-3.5" />Sync Payment Status</>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 

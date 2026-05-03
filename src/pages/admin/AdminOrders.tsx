@@ -58,6 +58,28 @@ export default function AdminOrders() {
   }, [search]);
 
   const updateStatus = async (id: string, status: string) => {
+    if (status === 'confirmed') {
+      // Sync from Razorpay first; only block if still not paid
+      try {
+        await supabase.functions.invoke('razorpay-sync-order', { body: { order_id: id } });
+      } catch (e) {
+        console.warn('[ADMIN] sync before confirm failed', e);
+      }
+      const { data: latest } = await supabase
+        .from('orders')
+        .select('payment_status, order_number, payment_method')
+        .eq('id', id)
+        .maybeSingle();
+      if (latest?.payment_method === 'razorpay' && latest.payment_status !== 'paid') {
+        const proceed = window.confirm(
+          `Payment Not Verified\n\nOrder ${latest.order_number} payment_status: "${latest.payment_status}".\nConfirm anyway?`
+        );
+        if (!proceed) {
+          toast({ title: 'Confirmation cancelled', description: 'Verify payment in Razorpay dashboard first.', variant: 'destructive' });
+          return;
+        }
+      }
+    }
     await supabase.from('orders').update({ status } as any).eq('id', id);
     toast({ title: `Order status updated to ${status}` });
     load();

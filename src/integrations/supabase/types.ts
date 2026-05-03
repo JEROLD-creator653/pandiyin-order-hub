@@ -549,6 +549,7 @@ export type Database = {
           payment_method: Database["public"]["Enums"]["payment_method"]
           payment_mode: string | null
           payment_status: Database["public"]["Enums"]["payment_status"]
+          razorpay_order_id: string | null
           sgst_amount: number | null
           status: Database["public"]["Enums"]["order_status"]
           stripe_payment_id: string | null
@@ -581,6 +582,7 @@ export type Database = {
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_mode?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          razorpay_order_id?: string | null
           sgst_amount?: number | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_payment_id?: string | null
@@ -613,6 +615,7 @@ export type Database = {
           payment_method?: Database["public"]["Enums"]["payment_method"]
           payment_mode?: string | null
           payment_status?: Database["public"]["Enums"]["payment_status"]
+          razorpay_order_id?: string | null
           sgst_amount?: number | null
           status?: Database["public"]["Enums"]["order_status"]
           stripe_payment_id?: string | null

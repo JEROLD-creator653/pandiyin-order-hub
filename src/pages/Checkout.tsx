@@ -304,6 +304,28 @@ export default function Checkout() {
 
       const order = await createOrder(quote);
 
+      const { error: razorpayOrderSaveError } = await supabase
+        .from('orders')
+        .update({ razorpay_order_id: razorpayOrder.id })
+        .eq('id', order.id);
+
+      if (razorpayOrderSaveError) {
+        throw new Error('Failed to sync payment order. Please try again.');
+      }
+
+      const syncOrderPaymentStatus = async () => {
+        try {
+          await supabase.functions.invoke('razorpay-sync-order', {
+            body: {
+              order_id: order.id,
+              razorpay_order_id: razorpayOrder.id,
+            },
+          });
+        } catch (syncError) {
+          console.error('Failed to sync Razorpay order status:', syncError);
+        }
+      };
+
       const options = {
         key: razorpayKeyId,
         amount: razorpayOrder.amount,
@@ -312,48 +334,71 @@ export default function Checkout() {
         description: `Order #${order.order_number}`,
         order_id: razorpayOrder.id,
         handler: async (response: any) => {
+          let verified = false;
           try {
             // Get fresh token before verification (original token may have expired)
-            const { data: { session: freshSession }, error: freshError } = await supabase.auth.getSession();
-            if (freshError || !freshSession?.access_token) {
-              console.error('[RAZORPAY] Session expired before verification:', freshError);
-              setCheckoutError('Your session expired. Payment verification will be retried by server.');
-              return;
+            const { data: { session: freshSession } } = await supabase.auth.getSession();
+
+            if (freshSession?.access_token) {
+              try {
+                const verifyRes = await fetch(
+                  `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-verify`,
+                  {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      Authorization: `Bearer ${freshSession.access_token}`,
+                      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                    },
+                    body: JSON.stringify({
+                      razorpay_order_id: response.razorpay_order_id,
+                      razorpay_payment_id: response.razorpay_payment_id,
+                      razorpay_signature: response.razorpay_signature,
+                      order_id: order.id,
+                    }),
+                  }
+                );
+                if (verifyRes.ok) {
+                  const verifyData = await verifyRes.json();
+                  if (verifyData.verified === true) verified = true;
+                } else {
+                  console.warn('[CHECKOUT] razorpay-verify returned non-OK; falling back to sync.');
+                }
+              } catch (verifyErr) {
+                console.error('[CHECKOUT] razorpay-verify threw; falling back to sync.', verifyErr);
+              }
+            } else {
+              console.warn('[CHECKOUT] Session expired after payment; falling back to sync.');
             }
 
-            const verifyRes = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/razorpay-verify`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${freshSession.access_token}`,
-                  apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-                },
-                body: JSON.stringify({
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_signature: response.razorpay_signature,
-                  order_id: order.id,
-                }),
+            // FALLBACK: directly sync with Razorpay API regardless of why verify failed
+            if (!verified) {
+              try {
+                await supabase.functions.invoke('razorpay-sync-order', {
+                  body: {
+                    order_id: order.id,
+                    razorpay_order_id: response.razorpay_order_id,
+                    razorpay_payment_id: response.razorpay_payment_id,
+                  },
+                });
+              } catch (syncErr) {
+                console.error('[CHECKOUT] Sync fallback also failed:', syncErr);
               }
-            );
-            const verifyData = await verifyRes.json();
-            if (verifyData.verified) {
-              clearCart();
-              setLoading(false);
-              navigate(`/order-confirmation/${order.id}`, {
-                state: {
-                  showSuccessModal: true,
-                  successTitle: 'Payment Successful',
-                  successMessage: 'Your payment was successful. Your order has been placed and will be processed within 2-5 working days.',
-                },
-              });
-            } else {
-              setCheckoutError('Payment verification failed. Please contact support.');
             }
+
+            clearCart();
+            setLoading(false);
+            navigate(`/order-confirmation/${order.id}`, {
+              state: {
+                showSuccessModal: true,
+                successTitle: 'Payment Successful',
+                successMessage: 'Your payment was successful. Your order has been placed and will be processed within 2-5 working days.',
+              },
+            });
           } catch (err: any) {
-            setCheckoutError(err.message || 'Verification error. Please try again.');
+            // Never leave the user stuck — redirect anyway; webhook is the final safety net
+            setLoading(false);
+            navigate(`/order-confirmation/${order.id}`);
           }
         },
         prefill: {
@@ -363,7 +408,7 @@ export default function Checkout() {
         theme: { color: '#16a34a' },
         modal: {
           ondismiss: () => {
-            supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
+            void syncOrderPaymentStatus();
             setCheckoutError('Payment cancelled. Your order has been saved. You can retry payment.');
             setLoading(false);
           },
@@ -373,7 +418,7 @@ export default function Checkout() {
       const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', (response: any) => {
         console.error('Payment failed:', response.error);
-        supabase.from('orders').update({ payment_status: 'failed' }).eq('id', order.id);
+        void syncOrderPaymentStatus();
         setCheckoutError(response.error?.description || 'Payment failed. Please try again.');
         setLoading(false);
       });

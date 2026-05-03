@@ -165,19 +165,21 @@ serve(async (req) => {
       );
     }
 
-    if (order_id) {
+    let resolvedOrderId = order_id || null;
+
+    if (resolvedOrderId) {
       // Verify order ownership: the order must belong to the authenticated user
       const { data: orderData, error: orderError } = await supabaseAdmin
         .from("orders")
-        .select("user_id")
-        .eq("id", order_id)
+        .select("id, user_id")
+        .eq("id", resolvedOrderId)
         .single();
 
       if (orderError || !orderData || orderData.user_id !== userId) {
         // Log unauthorized access attempt
         try {
           await supabaseAdmin.from("payment_logs").insert({
-            order_id,
+            order_id: resolvedOrderId,
             user_id: userId,
             event_type: "unauthorized_access",
             razorpay_order_id,
@@ -194,50 +196,78 @@ serve(async (req) => {
           { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-
-      // Fetch payment details from Razorpay to get the method
-      if (RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
-        try {
-          const paymentRes = await fetch(
-            `https://api.razorpay.com/v1/payments/${razorpay_payment_id}`,
-            {
-              headers: {
-                Authorization: "Basic " + btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`),
-              },
-            }
-          );
-          if (paymentRes.ok) {
-            const paymentData = await paymentRes.json();
-            paymentMode = paymentData.method || null;
-          }
-        } catch (e) {
-          console.error("Failed to fetch payment method:", e);
-        }
-      }
-
-      await supabaseAdmin
+    } else {
+      const { data: fallbackOrder, error: fallbackOrderError } = await supabaseAdmin
         .from("orders")
-        .update({
-          payment_status: "paid",
-          stripe_payment_id: razorpay_payment_id,
-          payment_mode: paymentMode,
-        })
-        .eq("id", order_id);
+        .select("id, user_id")
+        .eq("razorpay_order_id", razorpay_order_id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      // Log successful payment verification
-      try {
-        await supabaseAdmin.from("payment_logs").insert({
-          order_id,
-          user_id: userId,
-          event_type: "payment_success",
-          razorpay_order_id,
-          razorpay_payment_id,
-          metadata: { payment_mode: paymentMode, signature_verified: true },
-          ip_address: clientIp,
-        });
-      } catch (logErr) {
-        console.error("Failed to log payment success:", logErr);
+      if (fallbackOrderError || !fallbackOrder || fallbackOrder.user_id !== userId) {
+        return new Response(
+          JSON.stringify({ error: "Order not found for payment", verified: false }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
       }
+
+      resolvedOrderId = fallbackOrder.id;
+    }
+
+    // Fetch payment details from Razorpay to get the method
+    if (RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
+      try {
+        const paymentRes = await fetch(
+          `https://api.razorpay.com/v1/payments/${razorpay_payment_id}`,
+          {
+            headers: {
+              Authorization: "Basic " + btoa(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`),
+            },
+          }
+        );
+        if (paymentRes.ok) {
+          const paymentData = await paymentRes.json();
+          paymentMode = paymentData.method || null;
+        }
+      } catch (e) {
+        console.error("Failed to fetch payment method:", e);
+      }
+    }
+
+    const { data: updatedOrder, error: updateError } = await supabaseAdmin
+      .from("orders")
+      .update({
+        payment_status: "paid",
+        razorpay_order_id,
+        stripe_payment_id: razorpay_payment_id,
+        payment_mode: paymentMode,
+      })
+      .eq("id", resolvedOrderId)
+      .select("id")
+      .maybeSingle();
+
+    if (updateError || !updatedOrder) {
+      console.error("Failed to update order after payment verification:", updateError);
+      return new Response(
+        JSON.stringify({ error: "Payment verified but order update failed", verified: false }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Log successful payment verification
+    try {
+      await supabaseAdmin.from("payment_logs").insert({
+        order_id: resolvedOrderId,
+        user_id: userId,
+        event_type: "payment_success",
+        razorpay_order_id,
+        razorpay_payment_id,
+        metadata: { payment_mode: paymentMode, signature_verified: true },
+        ip_address: clientIp,
+      });
+    } catch (logErr) {
+      console.error("Failed to log payment success:", logErr);
     }
 
     return new Response(
