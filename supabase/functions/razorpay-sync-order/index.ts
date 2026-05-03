@@ -22,17 +22,15 @@ function getAuthHeaders(keyId: string, keySecret: string) {
   };
 }
 
-function getPaymentStatus(orderStatus: string | null, latestPayment: any) {
+function getPaymentStatus(orderStatus: string | null, latestPayment: any): string {
   const latestPaymentStatus = latestPayment?.status ?? null;
 
-  if (orderStatus === "paid" || latestPaymentStatus === "captured") {
-    return "paid";
-  }
-
-  if (latestPaymentStatus === "failed") {
-    return "failed";
-  }
-
+  if (orderStatus === "paid") return "paid";
+  if (latestPaymentStatus === "captured") return "paid";
+  // "authorized" = bank reserved funds. Treat as paid from app perspective.
+  if (latestPaymentStatus === "authorized") return "paid";
+  if (latestPaymentStatus === "failed") return "failed";
+  if (latestPaymentStatus === "created") return "pending";
   return "pending";
 }
 
