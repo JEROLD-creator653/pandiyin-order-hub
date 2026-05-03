@@ -22,17 +22,15 @@ function getAuthHeaders(keyId: string, keySecret: string) {
   };
 }
 
-function getPaymentStatus(orderStatus: string | null, latestPayment: any) {
+function getPaymentStatus(orderStatus: string | null, latestPayment: any): string {
   const latestPaymentStatus = latestPayment?.status ?? null;
 
-  if (orderStatus === "paid" || latestPaymentStatus === "captured") {
-    return "paid";
-  }
-
-  if (latestPaymentStatus === "failed") {
-    return "failed";
-  }
-
+  if (orderStatus === "paid") return "paid";
+  if (latestPaymentStatus === "captured") return "paid";
+  // "authorized" = bank reserved funds. Treat as paid from app perspective.
+  if (latestPaymentStatus === "authorized") return "paid";
+  if (latestPaymentStatus === "failed") return "failed";
+  if (latestPaymentStatus === "created") return "pending";
   return "pending";
 }
 
@@ -66,7 +64,7 @@ serve(async (req) => {
       });
     }
 
-    const { order_id, razorpay_order_id } = await req.json().catch(() => ({}));
+    const { order_id, razorpay_order_id, razorpay_payment_id } = await req.json().catch(() => ({}));
 
     if (!order_id && !razorpay_order_id) {
       return new Response(JSON.stringify({ error: "Order reference is required" }), {
@@ -139,17 +137,40 @@ serve(async (req) => {
       }
     }
 
-    if (!resolvedRazorpayOrderId) {
-      return new Response(JSON.stringify({ synced: false, reason: "missing_razorpay_order_id", order }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const RAZORPAY_KEY_ID = getNormalizedEnv("RAZORPAY_KEY_ID");
     const RAZORPAY_KEY_SECRET = getNormalizedEnv("RAZORPAY_KEY_SECRET");
 
     if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
       throw new Error("Razorpay credentials are not configured");
+    }
+
+    // Final fallback: if we still don't have a razorpay_order_id but the client passed
+    // a razorpay_payment_id, look up the payment in Razorpay to recover its order_id.
+    if (!resolvedRazorpayOrderId && razorpay_payment_id) {
+      try {
+        const paymentRes = await fetch(
+          `https://api.razorpay.com/v1/payments/${razorpay_payment_id}`,
+          { headers: getAuthHeaders(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET) }
+        );
+        if (paymentRes.ok) {
+          const paymentDetails = await paymentRes.json();
+          if (paymentDetails?.order_id) {
+            resolvedRazorpayOrderId = paymentDetails.order_id;
+            await adminClient
+              .from("orders")
+              .update({ razorpay_order_id: resolvedRazorpayOrderId })
+              .eq("id", order.id);
+          }
+        }
+      } catch (lookupErr) {
+        console.error("Payment-id fallback lookup failed:", lookupErr);
+      }
+    }
+
+    if (!resolvedRazorpayOrderId) {
+      return new Response(JSON.stringify({ synced: false, reason: "missing_razorpay_order_id", order }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const authHeaders = getAuthHeaders(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET);

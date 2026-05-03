@@ -114,63 +114,91 @@ serve(async (req) => {
     }
 
     // Handle specific events
-    if ((event === "payment.captured" || event === "payment.failed") && paymentEntity?.order_id) {
+    if (
+      (event === "payment.captured" || event === "payment.failed" || event === "order.paid") &&
+      paymentEntity
+    ) {
       const razorpayOrderId = paymentEntity.order_id;
-      const { data: matchingOrder, error: orderLookupError } = await supabaseAdmin
-        .from("orders")
-        .select("id, payment_status")
-        .eq("razorpay_order_id", razorpayOrderId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const razorpayPaymentId = paymentEntity.id;
+      const newPaymentStatus =
+        event === "payment.failed" ? "failed" : "paid";
 
-      if (orderLookupError) {
-        console.error("Failed to look up order for webhook:", orderLookupError);
-        return new Response(JSON.stringify({ error: "Order lookup failed" }), {
+      console.log("[WEBHOOK] event:", event, "razorpay_order_id:", razorpayOrderId, "payment_id:", razorpayPaymentId);
+
+      let matchedOrderId: string | null = null;
+
+      // Strategy A: razorpay_order_id on orders table
+      if (razorpayOrderId) {
+        const { data } = await supabaseAdmin
+          .from("orders")
+          .select("id")
+          .eq("razorpay_order_id", razorpayOrderId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data) matchedOrderId = data.id;
+      }
+
+      // Strategy B: notes.order_id (set by razorpay-order)
+      if (!matchedOrderId && paymentEntity?.notes?.order_id) {
+        const { data } = await supabaseAdmin
+          .from("orders")
+          .select("id")
+          .eq("id", paymentEntity.notes.order_id)
+          .maybeSingle();
+        if (data) {
+          matchedOrderId = data.id;
+          if (razorpayOrderId) {
+            await supabaseAdmin
+              .from("orders")
+              .update({ razorpay_order_id: razorpayOrderId })
+              .eq("id", matchedOrderId);
+          }
+        }
+      }
+
+      // Strategy C: payment_logs lookup
+      if (!matchedOrderId && razorpayOrderId) {
+        const { data } = await supabaseAdmin
+          .from("payment_logs")
+          .select("order_id, user_id, amount")
+          .eq("razorpay_order_id", razorpayOrderId)
+          .not("order_id", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data?.order_id) matchedOrderId = data.order_id;
+      }
+
+      if (!matchedOrderId) {
+        console.error("[WEBHOOK] Could not find order for razorpay_order_id:", razorpayOrderId);
+        // Return 200 so Razorpay does not retry forever; we logged it for manual review
+        return new Response(JSON.stringify({ status: "order_not_found" }), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const updatePayload: any = { payment_status: newPaymentStatus };
+      if (newPaymentStatus === "paid") {
+        updatePayload.stripe_payment_id = razorpayPaymentId;
+        updatePayload.payment_mode = paymentEntity.method || null;
+        if (razorpayOrderId) updatePayload.razorpay_order_id = razorpayOrderId;
+      }
+
+      const { error: updateError } = await supabaseAdmin
+        .from("orders")
+        .update(updatePayload)
+        .eq("id", matchedOrderId);
+
+      if (updateError) {
+        console.error("[WEBHOOK] Failed to update order:", updateError);
+        return new Response(JSON.stringify({ error: "Order update failed" }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-
-      if (!matchingOrder) {
-        console.error("Webhook order not found for razorpay_order_id:", razorpayOrderId);
-        return new Response(JSON.stringify({ error: "Order not found" }), {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      if (event === "payment.captured") {
-        const { error: updateError } = await supabaseAdmin
-          .from("orders")
-          .update({
-            payment_status: "paid",
-            stripe_payment_id: paymentEntity.id,
-            payment_mode: paymentEntity.method || null,
-          })
-          .eq("id", matchingOrder.id);
-
-        if (updateError) {
-          console.error("Failed to mark order as paid from webhook:", updateError);
-          return new Response(JSON.stringify({ error: "Order update failed" }), {
-            status: 500,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      } else {
-        const { error: updateError } = await supabaseAdmin
-          .from("orders")
-          .update({ payment_status: "failed" })
-          .eq("id", matchingOrder.id);
-
-        if (updateError) {
-          console.error("Failed to mark order as failed from webhook:", updateError);
-          return new Response(JSON.stringify({ error: "Order update failed" }), {
-            status: 500,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      }
+      console.log("[WEBHOOK] Updated order", matchedOrderId, "->", newPaymentStatus);
     }
 
     return new Response(JSON.stringify({ status: "ok" }), {
