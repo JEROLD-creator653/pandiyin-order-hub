@@ -296,8 +296,19 @@ export default function AdminOrderDetail() {
             )}
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Payment Status</span>
-              <Badge variant="outline" className={`capitalize text-xs px-2.5 py-0.5 ${order.payment_status === 'paid' ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-amber-300 bg-amber-50 text-amber-700'}`}>{order.payment_status}</Badge>
+              <Badge variant="outline" className={`capitalize text-xs px-2.5 py-0.5 ${order.payment_status === 'paid' ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : order.payment_status === 'failed' ? 'border-red-300 bg-red-50 text-red-700' : 'border-amber-300 bg-amber-50 text-amber-700'}`}>{order.payment_status}</Badge>
             </div>
+            {order.payment_method === 'razorpay' && (
+              <div className="flex items-center justify-end pt-2">
+                <Button variant="outline" size="sm" onClick={handleSyncPayment} disabled={isSyncing}>
+                  {isSyncing ? (
+                    <><Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />Syncing...</>
+                  ) : (
+                    <><RefreshCw className="mr-2 h-3.5 w-3.5" />Sync Payment Status</>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
