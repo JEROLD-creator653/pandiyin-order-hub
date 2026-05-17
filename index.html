@@ -38,6 +38,7 @@
     <link rel="preload" as="image" href="/auth-bg.webp" type="image/webp" />
 
     <!-- Inline script: preload cached hero banner before React loads -->
+    
     <script>
       (function() {
         try {
@@ -99,39 +100,55 @@
     </style>
     
     <script type="application/ld+json">
-{
- "@context": "https://schema.org",
- "@type": "WebSite",
- "name": "PANDIYIN - Nature In Pack",
- "url": "https://pandiyin-natureinpack.vercel.app/",
- "description": "Authentic homemade foods from Madurai. Traditional pickles, snacks, spice powders and sweets.",
- "publisher": {
-   "@type": "Organization",
-   "name": "PANDIYIN - Nature In Pack",
-   "logo": {
-     "@type": "ImageObject",
-     "url": "https://pandiyin-natureinpack.vercel.app/logo.ico"
-   }
- }
-}
+  {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "PANDIYIN - Nature In Pack",
+  "url": "https://pandiyin-natureinpack.vercel.app/",
+  "description": "Authentic homemade foods from Madurai. Traditional pickles, snacks, spice powders and sweets.",
+  "publisher": {
+    "@type": "Organization",
+    "name": "PANDIYIN - Nature In Pack",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://pandiyin-natureinpack.vercel.app/logo.ico"
+    }
+  }
+  }
 </script>
 
 <script type="application/ld+json">
-{
- "@context": "https://schema.org",
- "@type": "Organization",
- "name": "PANDIYIN - Nature In Pack",
- "url": "https://pandiyin-natureinpack.vercel.app/",
- "logo": "https://pandiyin-natureinpack.vercel.app/logo.ico",
- "sameAs": [
-   "https://instagram.com/pandiyin_nature_in_pack"
- ]
-}
+  {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "PANDIYIN - Nature In Pack",
+  "url": "https://pandiyin-natureinpack.vercel.app/",
+  "logo": "https://pandiyin-natureinpack.vercel.app/logo.ico",
+  "sameAs": [
+    "https://instagram.com/pandiyin_nature_in_pack"
+  ]
+  }
 </script>
-    
+  <script>
+    !function (f, b, e, v, n, t, s) {
+      if (f.fbq) return; n = f.fbq = function () {
+        n.callMethod ?
+        n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+      };
+      if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+      n.queue = []; t = b.createElement(e); t.async = !0;
+      t.src = v; s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '962826566368029');
+    fbq('track', 'PageView');
+  </script>
   </head>
 
   <body>
+    <noscript><img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=962826566368029&ev=PageView&noscript=1" /></noscript>
     <div id="root">
       <!-- Static placeholder shown until React hydrates - prevents layout shift -->
       <div class="hero-banner-placeholder" id="static-hero-placeholder"></div>
