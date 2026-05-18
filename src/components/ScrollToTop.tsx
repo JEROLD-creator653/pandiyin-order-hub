@@ -1,26 +1,26 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
+import { trackPageView } from '@/lib/metaPixel';
 
 /**
  * ScrollToTop Component
- * Automatically scrolls page to top whenever the route changes.
- * 
- * Must be placed inside <BrowserRouter> and above <Routes>
- * 
- * Usage:
- * <BrowserRouter>
- *   <ScrollToTop />
- *   <Routes>...</Routes>
- * </BrowserRouter>
+ * Scrolls to top and fires a Meta Pixel PageView on every client-side route change.
+ * The initial PageView is already fired by the inline pixel script in index.html,
+ * so we skip the first pathname to avoid duplicates.
  */
 export default function ScrollToTop() {
   const { pathname } = useLocation();
+  const isFirst = useRef(true);
 
   useEffect(() => {
-    // Scroll to top instantly on route change
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    if (isFirst.current) {
+      isFirst.current = false;
+      return;
+    }
+    trackPageView();
   }, [pathname]);
 
-  // This component doesn't render anything
   return null;
 }
+
