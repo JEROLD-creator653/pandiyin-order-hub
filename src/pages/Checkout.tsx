@@ -22,6 +22,7 @@ import { ButtonLoader, Loader } from '@/components/ui/loader';
 import { STATE_ZONES, getChargedWeight, calculateDeliveryCharge, type ShippingZoneConfig } from '@/lib/deliveryCalculations';
 import { generateInvoiceNumber } from '@/lib/invoicePdf';
 import SEOHead from '@/components/SEOHead';
+import { trackInitiateCheckout } from '@/lib/metaPixel';
 
 declare global {
   interface Window {
@@ -446,6 +447,11 @@ export default function Checkout() {
     }
 
     setLoading(true);
+
+    trackInitiateCheckout({
+      items: items.map(i => ({ product_id: i.product_id, quantity: i.quantity })),
+      value: items.reduce((s, i) => s + i.product.price * i.quantity, 0),
+    });
 
     let quoteToUse: VerifiedQuote | null = null;
 
