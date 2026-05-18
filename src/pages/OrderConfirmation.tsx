@@ -83,7 +83,7 @@ export default function OrderConfirmation() {
       if (isPaid || isCod) {
         trackPurchase({
           id: resolvedOrder.id,
-          value: Number(resolvedOrder.grand_total) || 0,
+          value: Number((resolvedOrder as any).total) || 0,
           content_ids: (itemsData || []).map((it: any) => it.product_id).filter(Boolean),
         });
       }
