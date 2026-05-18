@@ -73,6 +73,11 @@ export default function ProductDetail() {
       .then(({ data }) => {
         setProduct(data);
         setLoading(false);
+        if (data) {
+          import('@/lib/metaPixel').then(({ trackViewContent }) =>
+            trackViewContent({ id: data.id, name: data.name, price: Number(data.price) || 0 })
+          );
+        }
       });
   }, [id]);
 

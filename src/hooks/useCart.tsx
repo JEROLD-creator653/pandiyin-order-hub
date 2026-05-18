@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from '@/hooks/use-toast';
+import { trackAddToCart } from '@/lib/metaPixel';
 
 interface CartProduct {
   id: string;
@@ -122,12 +123,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items]);
 
   const addMutation = useMutation({
-    mutationFn: async ({ productId, quantity }: { productId: string; quantity: number }) => {
+    mutationFn: async ({ productId, quantity, delta }: { productId: string; quantity: number; delta: number }) => {
       if (!user) throw new Error('Not logged in');
       // Fetch latest stock before adding
       const { data: product } = await supabase
         .from('products')
-        .select('stock_quantity, is_available, price')
+        .select('id, name, stock_quantity, is_available, price')
         .eq('id', productId)
         .maybeSingle();
       if (!product || !product.is_available) throw new Error('Product is no longer available');
@@ -137,10 +138,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
         { onConflict: 'user_id,product_id' }
       );
       if (error) throw error;
+      return { product, delta };
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
       toast({ title: 'Added to cart!' });
+      if (result?.product && result.delta > 0) {
+        trackAddToCart(
+          { id: result.product.id, name: result.product.name, price: Number(result.product.price) || 0 },
+          result.delta,
+        );
+      }
     },
     onError: (error: Error) => {
       toast({ title: 'Could not add to cart', description: error.message, variant: 'destructive' });
@@ -198,7 +206,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
         const existing = items.find(i => i.product_id === productId);
         const newQty = existing ? existing.quantity + quantity : quantity;
-        await addMutation.mutateAsync({ productId, quantity: newQty }); // Resolve/reject by mutation outcome.
+        await addMutation.mutateAsync({ productId, quantity: newQty, delta: quantity }); // Resolve/reject by mutation outcome.
       },
       updateQuantity: (itemId, quantity) => {
         const item = items.find(i => i.id === itemId);
