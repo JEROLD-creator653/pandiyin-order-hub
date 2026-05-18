@@ -206,7 +206,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         }
         const existing = items.find(i => i.product_id === productId);
         const newQty = existing ? existing.quantity + quantity : quantity;
-        await addMutation.mutateAsync({ productId, quantity: newQty }); // Resolve/reject by mutation outcome.
+        await addMutation.mutateAsync({ productId, quantity: newQty, delta: quantity }); // Resolve/reject by mutation outcome.
       },
       updateQuantity: (itemId, quantity) => {
         const item = items.find(i => i.id === itemId);
