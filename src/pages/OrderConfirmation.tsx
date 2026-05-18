@@ -11,6 +11,7 @@ import { formatPrice } from '@/lib/formatters';
 import { generateInvoicePdf, type InvoiceData, type InvoiceItem } from '@/lib/invoicePdf';
 import SEOHead from '@/components/SEOHead';
 import SuccessModal from '@/components/SuccessModal';
+import { trackPurchase } from '@/lib/metaPixel';
 
 const getPaymentModeLabel = (mode: string): string => {
   const labels: Record<string, string> = {
@@ -75,6 +76,17 @@ export default function OrderConfirmation() {
         .select('*')
         .eq('order_id', id);
       setItems(itemsData || []);
+
+      // Fire Meta Pixel Purchase only after confirmed success (paid online or COD/pending-COD orders).
+      const isPaid = resolvedOrder.payment_status === 'paid';
+      const isCod = resolvedOrder.payment_method === 'cod';
+      if (isPaid || isCod) {
+        trackPurchase({
+          id: resolvedOrder.id,
+          value: Number(resolvedOrder.total_amount) || 0,
+          content_ids: (itemsData || []).map((it: any) => it.product_id).filter(Boolean),
+        });
+      }
     };
 
     fetchOrder();
